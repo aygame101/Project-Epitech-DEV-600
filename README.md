@@ -1,8 +1,39 @@
-# Welcome to your Expo app 👋
+# Project-Epitech-T-DEV-600
+Créer une app de gestion de projet à la Trello.  
+  
+  
+## Gestion Avancement du Projet
+| Avancement | Tâches |
+| :--------- |:------ |
+| 🟠 In progress | Possibilité de créer, lire/afficher, modifier et supprimer un espace de travail |
+| 🔴 To do | Possibilité de créer, lire/afficher, modifier et supprimer un tableau |
+| 🔴 To do | Possibilité de créer, lire/afficher, modifier et supprimer une liste |
+| 🔴 To do | Possibilité de créer, lire/afficher, modifier et supprimer une carte |
+| 🔴 To do | Possibilité de créer des tableaux à partir d'un modèle, puis de les lire/afficher, modifier et supprimer |
+| 🔴 To do | Possibilité d'assigner un ou plusieurs utilisateurs à une carte |
+| 🔴 To do | Les "guidelines" de la plateforme choisie sont respectées et correctement intégrées, les étudiants peuvent expliquer ces directives et comment ils les ont mises en œuvre |
+| 🔴 To do | Une identité visuelle (choix des couleurs, icônes, taille de police, typographie, ...) est définie et utilisée pour maintenir la cohérence |
+| 🔴 To do | Le rendu offre une UX et une UI de haute qualité et soignées : les interfaces sont bien conçues pour offrir une bonne expérience à ses utilisateurs |
+| 🔴 To do | Les étudiants peuvent justifier leurs choix d'UI/UX (style, couleurs, icônes, éléments, ...) |
+| 🔴 To do | Le rendu est fonctionnel |
+| 🔴 To do | Le code est facilement maintenable (noms lisibles, atomicité des fonctions, structure de code claire, syntaxe propre) |
+| 🔴 To do | Au moins 3 tests unitaires sont livrés dans le dépôt |
+| 🔴 To do | Une séquence de tests unitaires est fournie et facilement exécutable |
+| 🔴 To do | Les étudiants intègrent un framework de test dans leur projet pour rendre leur stratégie de test plus complète |
+| 🟠 In progress | Les étudiants utilisent un outil de versioning avec un workflow approprié, incluant une stratégie de branchement, des commits réguliers, des messages descriptifs et un fichier gitignore |
+| 🟢 Done | Les étudiants fournissent un fichier README résumant le projet et son utilisation (prérequis, installation, déploiement, frameworks, ...) |
+| 🔴 To do | Au moins un diagramme est fourni pour illustrer et expliquer les parties importantes de la solution (architecture, classe, séquence, cycle de vie, ...) |
+| 🔴 To do | Le projet est présenté de manière claire et professionnelle, en utilisant un support pertinent (diapositives et/ou démo) |
+| 🔴 To do | Les étudiants étayent leur présentation ou leurs choix techniques avec des arguments bien structurés, fournissant des explications logiques et des preuves |
+| 🔴 To do | Toutes les tâches ont été effectuées |
+
+
+
+#### Welcome to your Expo app 👋
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Get started
+#### Get started
 
 1. Install dependencies
 
@@ -24,27 +55,3 @@ In the output, you'll find options to open the app in a
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
