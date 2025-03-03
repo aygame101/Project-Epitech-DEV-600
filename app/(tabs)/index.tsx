@@ -1,4 +1,5 @@
-import { Image, StyleSheet, Platform, Button } from 'react-native';
+import { useState } from 'react';
+import { Image, StyleSheet, Platform, Button, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { HelloWave } from '@/components/HelloWave';
@@ -7,8 +8,26 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
 export default function HomeScreen() {
-
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleAllLists = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        'https://api.trello.com/1/boards/67c57c68fba2da997c1e5616/lists?key=625a06c8525ea14e94d75b7f03cf6051&token=ATTA75822e9f3501426780c7190ff61203b040e0e98bf64106f13f27ad4950990137C0A0BA60&fields=name,id,idBoard,closed'
+      );
+      
+      if (!response.ok) throw new Error('Échec de la récupération des listes');
+      
+      const data = await response.json();
+      router.push({ pathname: '/listes', params: { listsData: JSON.stringify(data) } });
+    } catch (error) {
+      Alert.alert('Erreur', error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <ParallaxScrollView
@@ -58,6 +77,14 @@ export default function HomeScreen() {
         <Button
           title="Tableaux"
           onPress={() => router.push('/tableaux')}
+        />
+      </ThemedView>
+
+      <ThemedView style={styles.stepContainer}>
+        <Button
+          title={isLoading ? "Chargement..." : "ALL LISTS"}
+          onPress={handleAllLists}
+          disabled={isLoading}
         />
       </ThemedView>
     </ParallaxScrollView>
