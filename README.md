@@ -29,9 +29,9 @@ Créer une app de gestion de projet à la Trello.
 
 
 ### Installation du projet
-```npm i```
-```npx expo install expo-router react-native-screens react-native-safe-area-context @react-navigation/native @react-navigation/native-stackD```
-```npx expo start```
+```npm i```  
+```npx expo install expo-router react-native-screens react-native-safe-area-context @react-navigation/native @react-navigation/native-stackD```  
+```npx expo start```  
 
 
 In the output, you'll find options to open the app in a
