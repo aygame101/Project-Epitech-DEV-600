@@ -30,7 +30,8 @@ Créer une app de gestion de projet à la Trello.
 
 ### Installation du projet
 ```npm i```  
-```npx expo install expo-router react-native-screens react-native-safe-area-context @react-navigation/native @react-navigation/native-stackD```  
+```npx expo install expo-router react-native-screens react-native-safe-area-context @react-navigation/native @react-navigation/native-stackD``` 
+si probleme windows : ```npx expo install expo-router react-native-screens react-native-safe-area-context @react-navigation/native @react-navigation/native-stack``` 
 ```npx expo start```  
 
 
