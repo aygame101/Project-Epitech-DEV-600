@@ -75,14 +75,14 @@ export default function HomeScreen() {
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
         <Button
-          title="Tableaux"
-          onPress={() => router.push('/tableaux')}
+          title="Add List"
+          onPress={() => router.push('/add_list')}
         />
       </ThemedView>
 
       <ThemedView style={styles.stepContainer}>
         <Button
-          title={isLoading ? "Chargement..." : "ALL LISTS"}
+          title={isLoading ? "Chargement..." : "All List"}
           onPress={handleAllLists}
           disabled={isLoading}
         />
