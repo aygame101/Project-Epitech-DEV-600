@@ -49,39 +49,36 @@ export default function TableauxScreen() {
 
   return (
     <ThemedView style={{ flex: 1 }}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.container}
-        >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 85 : 0}
+        style={styles.container}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView
-            contentContainerStyle={[
-              styles.scrollContainer,
-              { paddingBottom: Platform.OS === 'android' ? 40 : 20 }
-            ]}
+            contentContainerStyle={styles.scrollContainer}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
           >
             <ThemedText type="title" style={styles.title}>
               Tableaux Screen
             </ThemedText>
 
-            <ThemedView style={styles.inputWrapper}>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    color: colorScheme === 'dark' ? '#fff' : '#000',
-                    borderColor: colorScheme === 'dark' ? '#404040' : '#ddd'
-                  }
-                ]}
-                placeholder="Nom de la liste"
-                placeholderTextColor={colorScheme === 'dark' ? '#8e8e93' : '#888'}
-                value={listName}
-                onChangeText={setListName}
-                onSubmitEditing={handleAddList}
-                returnKeyType="done"
-              />
-            </ThemedView>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  color: colorScheme === 'dark' ? '#fff' : '#000',
+                  borderColor: colorScheme === 'dark' ? '#404040' : '#ddd'
+                }
+              ]}
+              placeholder="Nom de la liste"
+              placeholderTextColor={colorScheme === 'dark' ? '#8e8e93' : '#888'}
+              value={listName}
+              onChangeText={setListName}
+              onSubmitEditing={handleAddList}
+              returnKeyType="done"
+            />
 
             <View style={styles.buttonContainer}>
               <Button
@@ -91,8 +88,8 @@ export default function TableauxScreen() {
               />
             </View>
           </ScrollView>
-        </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }
@@ -105,21 +102,17 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 20
+    paddingHorizontal: 20,
+    paddingTop: 40, // Ajouté pour l'espacement initial
+    paddingBottom: 60 // Prévoit l'espace pour le clavier
   },
   title: {
     marginBottom: 30,
-    marginTop: Platform.OS === 'ios' ? 40 : 20,
     textAlign: 'center'
-  },
-  inputWrapper: {
-    width: '100%',
-    maxWidth: 300,
-    borderRadius: 8,
-    overflow: 'hidden'
   },
   input: {
     width: '100%',
+    maxWidth: 300,
     borderWidth: 1,
     borderRadius: 8,
     padding: 12,
