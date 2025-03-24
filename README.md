@@ -1,6 +1,7 @@
 # Project-Epitech-T-DEV-600
 Créer une app de gestion de projet à la Trello.  
   
+Date de rendu : 6 avril 2025 à 23h42  
   
 ## Gestion Avancement du Projet
 | Avancement | Tâches |
