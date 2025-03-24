@@ -2,6 +2,10 @@
   "expo": {
     "name": "trello",
     "slug": "trello",
+    "extra": {
+      "TRELLO_API_KEY": "your_api_key",
+      "TRELLO_API_TOKEN": "your_api_token"
+    },
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

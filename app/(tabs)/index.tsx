@@ -1,105 +1,363 @@
-import { useState } from 'react';
-import { Image, StyleSheet, Platform, Button, Alert } from 'react-native';
+import { useState, useEffect } from 'react';
+import { Image, StyleSheet, Platform, Alert, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
+
+// Configuration Trello
+const API_KEY = Constants.expoConfig?.extra?.TRELLO_API_KEY;
+const API_TOKEN = Constants.expoConfig?.extra?.TRELLO_API_TOKEN;
+
+type TrelloBoard = {
+  id: string;
+  name: string;
+  desc?: string;
+  url: string;
+  prefs?: {
+    backgroundImage?: string;
+  };
+};
 
 export default function HomeScreen() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newWorkspaceName, setNewWorkspaceName] = useState('');
+  const [boards, setBoards] = useState<TrelloBoard[]>([]);
+  const [joinCode, setJoinCode] = useState('');
 
-  const handleAllLists = async () => {
-    setIsLoading(true);
+  // Charger les boards au montage
+  useEffect(() => {
+    const fetchBoards = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(
+          `https://api.trello.com/1/members/me/boards?key=${API_KEY}&token=${API_TOKEN}&fields=name,desc,url,prefs`
+        );
+        
+        if (!response.ok) throw new Error('Failed to load boards');
+        
+        const data = await response.json();
+        setBoards(data);
+      } catch (error) {
+        Alert.alert('Error', error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchBoards();
+  }, []);
+
+  const handleCreateWorkspace = async () => {
+    if (!newWorkspaceName.trim()) {
+      Alert.alert('Error', 'Workspace name is required');
+      return;
+    }
+    
     try {
       const response = await fetch(
-        'https://api.trello.com/1/boards/67c57c68fba2da997c1e5616/lists?key=625a06c8525ea14e94d75b7f03cf6051&token=ATTA75822e9f3501426780c7190ff61203b040e0e98bf64106f13f27ad4950990137C0A0BA60&fields=name,id,idBoard,closed'
+        `https://api.trello.com/1/boards/?key=${API_KEY}&token=${API_TOKEN}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: newWorkspaceName,
+            defaultLists: false
+          })
+        }
       );
       
-      if (!response.ok) throw new Error('Échec de la récupération des listes');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create board');
+      }
       
-      const data = await response.json();
-      router.push({ pathname: '/listes', params: { listsData: JSON.stringify(data) } });
+      const newBoard = await response.json();
+      setBoards([...boards, newBoard]);
+      setShowCreateModal(false);
+      setNewWorkspaceName('');
     } catch (error) {
-      Alert.alert('Erreur', error.message);
-    } finally {
-      setIsLoading(false);
+      Alert.alert('Error', error.message);
     }
   };
 
+  const handleJoinWorkspace = async () => {
+    if (!joinCode.trim()) {
+      Alert.alert('Error', 'Please enter a valid board ID');
+      return;
+    }
+    
+    try {
+      const response = await fetch(
+        `https://api.trello.com/1/boards/${joinCode}?key=${API_KEY}&token=${API_TOKEN}&fields=id,name`
+      );
+      
+      if (!response.ok) throw new Error('Board not found');
+      
+      const board = await response.json();
+      router.push(`/workspaces/${board.id}`);
+      setJoinCode('');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
+
+  const handleDeleteWorkspace = async (boardId: string) => {
+    try {
+      const response = await fetch(
+        `https://api.trello.com/1/boards/${boardId}?key=${API_KEY}&token=${API_TOKEN}`,
+        { method: 'DELETE' }
+      );
+      
+      if (!response.ok) throw new Error('Failed to delete board');
+      
+      setBoards(boards.filter(board => board.id !== boardId));
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <ThemedView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0079bf" />
+        <ThemedText type="subtitle">Loading workspaces...</ThemedText>
+      </ThemedView>
+    );
+  }
+
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+      headerBackgroundColor={{ light: '#0079bf', dark: '#1D3D47' }}
       headerImage={
         <Image
           source={require('@/assets/images/partial-react-logo.png')}
           style={styles.reactLogo}
         />
       }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">TrellUWU</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Button
-          title="Add List"
-          onPress={() => router.push('/add_list')}
-        />
+      <ThemedView style={styles.header}>
+        <ThemedText type="title">Trello Workspaces</ThemedText>
       </ThemedView>
 
-      <ThemedView style={styles.stepContainer}>
-        <Button
-          title={isLoading ? "Chargement..." : "All List"}
-          onPress={handleAllLists}
-          disabled={isLoading}
-        />
+      <ThemedView style={styles.workspaceList}>
+        {boards.map((board) => (
+          <ThemedView key={board.id} style={styles.workspaceCard}>
+            {board.prefs?.backgroundImage && (
+              <Image
+                source={{ uri: board.prefs.backgroundImage }}
+                style={styles.boardBackground}
+              />
+            )}
+            <Pressable
+              onPress={() => router.push(`/workspaces/${board.id}`)}
+              style={styles.cardContent}>
+              <MaterialIcons name="dashboard" size={24} color="white" />
+              <ThemedText style={styles.workspaceName}>{board.name}</ThemedText>
+              {board.desc && (
+                <ThemedText style={styles.workspaceDesc}>{board.desc}</ThemedText>
+              )}
+            </Pressable>
+            <Pressable
+              onPress={() => handleDeleteWorkspace(board.id)}
+              style={styles.deleteButton}>
+              <AntDesign name="close" size={16} color="white" />
+            </Pressable>
+          </ThemedView>
+        ))}
+      </ThemedView>
+
+      {showCreateModal && (
+        <ThemedView style={styles.modalOverlay}>
+          <ThemedView style={styles.modalContent}>
+            <ThemedText type="subtitle">Create New Workspace</ThemedText>
+            <TextInput
+              style={styles.input}
+              placeholder="Workspace name"
+              value={newWorkspaceName}
+              onChangeText={setNewWorkspaceName}
+              autoFocus
+            />
+            <ThemedView style={styles.modalActions}>
+              <Pressable
+                style={[styles.button, styles.cancelButton]}
+                onPress={() => setShowCreateModal(false)}>
+                <ThemedText>Cancel</ThemedText>
+              </Pressable>
+              <Pressable
+                style={[styles.button, styles.createButton]}
+                onPress={handleCreateWorkspace}>
+                <ThemedText>Create</ThemedText>
+              </Pressable>
+            </ThemedView>
+          </ThemedView>
+        </ThemedView>
+      )}
+
+      <ThemedView style={styles.actionsContainer}>
+        <Pressable
+          style={styles.actionButton}
+          onPress={() => setShowCreateModal(true)}>
+          <AntDesign name="pluscircleo" size={20} color="white" />
+          <ThemedText style={styles.buttonText}>New Workspace</ThemedText>
+        </Pressable>
+
+        <ThemedView style={styles.joinContainer}>
+          <TextInput
+            style={styles.joinInput}
+            placeholder="Enter board ID"
+            value={joinCode}
+            onChangeText={setJoinCode}
+            placeholderTextColor="#666"
+          />
+          <Pressable
+            style={styles.joinButton}
+            onPress={handleJoinWorkspace}>
+            <ThemedText style={styles.buttonText}>Join</ThemedText>
+          </Pressable>
+        </ThemedView>
       </ThemedView>
     </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  header: {
     alignItems: 'center',
-    gap: 8,
+    paddingVertical: 20,
+    backgroundColor: 'rgba(0, 121, 191, 0.1)',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  workspaceList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    marginBottom: 20,
+  },
+  workspaceCard: {
+    width: '48%',
+    height: 150,
+    borderRadius: 8,
+    marginVertical: 8,
+    overflow: 'hidden',
+    position: 'relative',
+    backgroundColor: '#0079bf',
+  },
+  boardBackground: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.4,
+  },
+  cardContent: {
+    flex: 1,
+    padding: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  workspaceName: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  workspaceDesc: {
+    color: 'white',
+    fontSize: 12,
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    padding: 5,
+    borderRadius: 15,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  actionsContainer: {
+    paddingHorizontal: 15,
+    gap: 15,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    backgroundColor: '#5aac44',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: '500',
+    fontSize: 16,
+  },
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    width: '80%',
+    padding: 20,
+    borderRadius: 10,
+    gap: 15,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 6,
+    padding: 12,
+    fontSize: 16,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+  button: {
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  createButton: {
+    backgroundColor: '#5aac44',
+  },
+  cancelButton: {
+    backgroundColor: '#ebecf0',
+  },
+  joinContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+  },
+  joinInput: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  joinButton: {
+    backgroundColor: '#61bd4f',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 20,
+    backgroundColor: '#fff',
   },
   reactLogo: {
     height: 178,
