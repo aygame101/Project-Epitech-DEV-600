@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Image, StyleSheet, Platform, Alert, TextInput, Pressable, ActivityIndicator } from 'react-native';
+import { Image, StyleSheet, Platform, Alert, TextInput, Pressable, ActivityIndicator, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -29,7 +29,6 @@ export default function HomeScreen() {
   const [boards, setBoards] = useState<TrelloBoard[]>([]);
   const [joinCode, setJoinCode] = useState('');
 
-  // Charger les boards au montage
   useEffect(() => {
     const fetchBoards = async () => {
       setIsLoading(true);
@@ -38,12 +37,12 @@ export default function HomeScreen() {
           `https://api.trello.com/1/members/me/boards?key=${API_KEY}&token=${API_TOKEN}&fields=name,desc,url,prefs`
         );
         
-        if (!response.ok) throw new Error('Failed to load boards');
+        if (!response.ok) throw new Error('Échec du chargement des tableaux');
         
         const data = await response.json();
         setBoards(data);
       } catch (error) {
-        Alert.alert('Error', error.message);
+        Alert.alert('Erreur', error.message);
       } finally {
         setIsLoading(false);
       }
@@ -54,7 +53,7 @@ export default function HomeScreen() {
 
   const handleCreateWorkspace = async () => {
     if (!newWorkspaceName.trim()) {
-      Alert.alert('Error', 'Workspace name is required');
+      Alert.alert('Erreur', 'Le nom du tableau est requis');
       return;
     }
     
@@ -71,17 +70,14 @@ export default function HomeScreen() {
         }
       );
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create board');
-      }
+      if (!response.ok) throw new Error(await response.text());
       
       const newBoard = await response.json();
       setBoards([...boards, newBoard]);
       setShowCreateModal(false);
       setNewWorkspaceName('');
     } catch (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Erreur', error.message);
     }
   };
 
@@ -132,6 +128,7 @@ export default function HomeScreen() {
 
   return (
     <ParallaxScrollView
+      contentContainerStyle={styles.container}
       headerBackgroundColor={{ light: '#0079bf', dark: '#1D3D47' }}
       headerImage={
         <Image
@@ -139,11 +136,18 @@ export default function HomeScreen() {
           style={styles.reactLogo}
         />
       }>
+      
       <ThemedView style={styles.header}>
-        <ThemedText type="title">Trello Workspaces</ThemedText>
+        <ThemedText type="title">Tableaux Trello</ThemedText>
       </ThemedView>
 
-      <ThemedView style={styles.workspaceList}>
+      {boards.length === 0 ? (
+        <ThemedView style={styles.emptyState}>
+          <MaterialIcons name="workspaces" size={60} color="#0079bf" />
+          <ThemedText type="subtitle">Aucun tableau trouvé</ThemedText>
+        </ThemedView>
+      ) : (
+        <ThemedView style={styles.workspaceList}>
         {boards.map((board) => (
           <ThemedView key={board.id} style={styles.workspaceCard}>
             {board.prefs?.backgroundImage && (
@@ -169,73 +173,121 @@ export default function HomeScreen() {
           </ThemedView>
         ))}
       </ThemedView>
+      )}
+
+      <View style={styles.fixedFooter}>
+        <Pressable
+          style={styles.createButton}
+          onPress={() => setShowCreateModal(true)}>
+          <AntDesign name="plus" size={24} color="white" />
+          <ThemedText style={styles.buttonText}>Nouveau tableau</ThemedText>
+        </Pressable>
+      </View>
 
       {showCreateModal && (
-        <ThemedView style={styles.modalOverlay}>
+        <View style={styles.modalOverlay}>
           <ThemedView style={styles.modalContent}>
-            <ThemedText type="subtitle">Create New Workspace</ThemedText>
+            <ThemedText type="title">Créer un tableau</ThemedText>
             <TextInput
               style={styles.input}
-              placeholder="Workspace name"
+              placeholder="Nom du tableau"
               value={newWorkspaceName}
               onChangeText={setNewWorkspaceName}
               autoFocus
             />
-            <ThemedView style={styles.modalActions}>
+            <View style={styles.buttonRow}>
               <Pressable
-                style={[styles.button, styles.cancelButton]}
+                style={[styles.modalButton, styles.cancelButton]}
                 onPress={() => setShowCreateModal(false)}>
-                <ThemedText>Cancel</ThemedText>
+                <ThemedText>Annuler</ThemedText>
               </Pressable>
               <Pressable
-                style={[styles.button, styles.createButton]}
+                style={[styles.modalButton, styles.confirmButton]}
                 onPress={handleCreateWorkspace}>
-                <ThemedText>Create</ThemedText>
+                <ThemedText style={{ color: 'white' }}>Créer</ThemedText>
               </Pressable>
-            </ThemedView>
+            </View>
           </ThemedView>
-        </ThemedView>
+        </View>
       )}
-
-      <ThemedView style={styles.actionsContainer}>
-        <Pressable
-          style={styles.actionButton}
-          onPress={() => setShowCreateModal(true)}>
-          <AntDesign name="pluscircleo" size={20} color="white" />
-          <ThemedText style={styles.buttonText}>New Workspace</ThemedText>
-        </Pressable>
-
-        <ThemedView style={styles.joinContainer}>
-          <TextInput
-            style={styles.joinInput}
-            placeholder="Enter board ID"
-            value={joinCode}
-            onChangeText={setJoinCode}
-            placeholderTextColor="#666"
-          />
-          <Pressable
-            style={styles.joinButton}
-            onPress={handleJoinWorkspace}>
-            <ThemedText style={styles.buttonText}>Join</ThemedText>
-          </Pressable>
-        </ThemedView>
-      </ThemedView>
     </ParallaxScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    minHeight: '100%',
+  },
   header: {
     alignItems: 'center',
     paddingVertical: 20,
-    backgroundColor: 'rgba(0, 121, 191, 0.1)',
   },
   workspaceList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    marginBottom: 20,
+    padding: 10,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 300,
+    padding: 20,
+  },
+  fixedFooter: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    zIndex: 1,
+  },
+  createButton: {
+    flexDirection: 'row',
+    backgroundColor: '#5aac44',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    width: '90%',
+    padding: 20,
+    borderRadius: 10,
+    gap: 15,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+  modalButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  cancelButton: {
+    backgroundColor: '#ebecf0',
+  },
+  confirmButton: {
+    backgroundColor: '#5aac44',
   },
   workspaceCard: {
     width: '48%',
@@ -295,26 +347,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontSize: 16,
   },
-  modalOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    width: '80%',
-    padding: 20,
-    borderRadius: 10,
-    gap: 15,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 6,
-    padding: 12,
-    fontSize: 16,
-  },
+
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -325,12 +358,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     borderRadius: 5,
     alignItems: 'center',
-  },
-  createButton: {
-    backgroundColor: '#5aac44',
-  },
-  cancelButton: {
-    backgroundColor: '#ebecf0',
   },
   joinContainer: {
     flexDirection: 'row',
