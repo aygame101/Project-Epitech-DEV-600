@@ -8,8 +8,8 @@ import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 
 // Configuration Trello
-const API_KEY = Constants.expoConfig?.extra?.TRELLO_API_KEY;
-const API_TOKEN = Constants.expoConfig?.extra?.TRELLO_API_TOKEN;
+const API_KEY = Constants.expoConfig?.extra?.apiKey;
+const API_TOKEN = Constants.expoConfig?.extra?.token;
 
 type TrelloBoard = {
   id: string;
