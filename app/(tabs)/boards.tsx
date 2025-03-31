@@ -2,14 +2,15 @@ import { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Alert, FlatList, SafeAreaView, TouchableOpacity, TouchableWithoutFeedback, ActivityIndicator, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { boardServices } from '@/services/boardService';
+import { Board } from '@/types/Board';
 
 export default function BoardsScreen() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [boards, setBoards] = useState([]);
+  const [boards, setBoards] = useState<Board[]>([]);
   const [newBoardName, setNewBoardName] = useState('');
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editingBoard, setEditingBoard] = useState(null);
+  const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const [updatedBoardName, setUpdatedBoardName] = useState('');
 
   useEffect(() => {
@@ -22,7 +23,8 @@ export default function BoardsScreen() {
       const data = await boardServices.getBoards();
       setBoards(data);
     } catch (error) {
-      Alert.alert('Erreur', error.message);
+      const message = error instanceof Error ? error.message : 'Une erreur est survenue';
+      Alert.alert('Erreur', message);
     } finally {
       setIsLoading(false);
     }
@@ -40,13 +42,14 @@ export default function BoardsScreen() {
       setBoards([...boards, newBoard]);
       setNewBoardName('');
     } catch (error) {
-      Alert.alert('Erreur', error.message);
+      const message = error instanceof Error ? error.message : 'Une erreur est survenue';
+      Alert.alert('Erreur', message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleEditButtonPress = (board) => {
+  const handleEditButtonPress = (board: Board) => {
     setEditingBoard(board);
     setUpdatedBoardName(board.name);
     setEditModalVisible(true);
@@ -60,26 +63,26 @@ export default function BoardsScreen() {
     
     setIsLoading(true);
     try {
-      // Supposons que boardServices a une méthode updateBoard
-      await boardServices.updateBoard(editingBoard.id, { name: updatedBoardName });
+      if (editingBoard) {
+        await boardServices.updateBoard(editingBoard.id, { name: updatedBoardName });
+        
+        setBoards(boards.map(board => 
+          board.id === editingBoard.id 
+            ? { ...board, name: updatedBoardName }
+            : board
+        ));
+      }
       
-      // Mettre à jour l'état local des tableaux
-      setBoards(boards.map(board => 
-        board.id === editingBoard.id 
-          ? { ...board, name: updatedBoardName }
-          : board
-      ));
-      
-      // Fermer le modal
       setEditModalVisible(false);
     } catch (error) {
-      Alert.alert('Erreur', error.message);
+      const message = error instanceof Error ? error.message : 'Une erreur est survenue';
+      Alert.alert('Erreur', message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDeleteBoard = async (boardId) => {
+  const handleDeleteBoard = async (boardId: string) => {
     Alert.alert(
       'Confirmation',
       'Êtes-vous sûr de vouloir supprimer ce tableau ?',
@@ -92,8 +95,9 @@ export default function BoardsScreen() {
             try {
               await boardServices.deleteBoard(boardId);
               setBoards(boards.filter(board => board.id !== boardId));
-            } catch (error) {
-              Alert.alert('Erreur', error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Une erreur est survenue';
+      Alert.alert('Erreur', message);
             } finally {
               setIsLoading(false);
             }
@@ -104,11 +108,11 @@ export default function BoardsScreen() {
     );
   };
 
-  const handleBoardPress = (board) => {
+  const handleBoardPress = (board: Board) => {
     router.push(`/board/${board.id}`);
   };
 
-  const renderBoardItem = ({ item }) => (
+  const renderBoardItem = ({ item }: { item: Board }) => (
     <TouchableWithoutFeedback onPress={() => handleBoardPress(item)}>
       <View style={styles.boardCard}>
         <Text style={styles.boardName}>{item.name}</Text>
@@ -116,6 +120,7 @@ export default function BoardsScreen() {
         
         <View style={styles.boardActions}>
           <TouchableOpacity 
+            testID={`edit-button-${item.id}`}
             style={styles.editButton}
             onPress={(e) => {
               e.stopPropagation();
@@ -126,6 +131,7 @@ export default function BoardsScreen() {
           </TouchableOpacity>
           
           <TouchableOpacity 
+            testID={`delete-button-${item.id}`}
             style={styles.deleteButton}
             onPress={(e) => {
               e.stopPropagation();
@@ -139,7 +145,6 @@ export default function BoardsScreen() {
     </TouchableWithoutFeedback>
   );
   
-  // Modal pour éditer le nom du tableau
   const renderEditModal = () => (
     <Modal
       transparent={true}
@@ -192,6 +197,7 @@ export default function BoardsScreen() {
         
         <View style={styles.createContainer}>
           <TextInput
+            testID="board-name-input"
             style={styles.input}
             placeholder="Nom du tableau à créer"
             placeholderTextColor="#ccc"
@@ -199,6 +205,7 @@ export default function BoardsScreen() {
             onChangeText={setNewBoardName}
           />
           <TouchableOpacity 
+            testID="create-board-button"
             style={styles.createButton} 
             onPress={handleCreateBoard} 
             disabled={isLoading || !newBoardName.trim()}
@@ -211,7 +218,7 @@ export default function BoardsScreen() {
         
         {isLoading && boards.length === 0 ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#FFA500" />
+            <ActivityIndicator testID="loading-indicator" size="large" color="#FFA500" />
           </View>
         ) : (
           <>
@@ -221,6 +228,7 @@ export default function BoardsScreen() {
               </View>
             ) : (
               <FlatList
+                testID="boards-list"
                 data={boards}
                 keyExtractor={(item) => item.id}
                 renderItem={renderBoardItem}
@@ -362,7 +370,6 @@ const styles = StyleSheet.create({
   deleteButton: {
     padding: 5,
   },
-  // Styles pour le modal
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
