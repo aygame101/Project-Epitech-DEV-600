@@ -6,30 +6,33 @@ const API_KEY = Constants.expoConfig?.extra?.apiKey;
 const TOKEN = Constants.expoConfig?.extra?.token;
 
 
-export const getCards = async (boardId: string, listId: string) => {
-  try {
-    const response = await axios.get(`${API_URL}lists/${listId}/cards`, {
-      params: {
-        key: API_KEY,
-        token: TOKEN,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching cards:', error);
-    throw error;
-  }
-};
-
-// ajouter une nouvelle carte à une liste
-export const addCard = async (listId: string, name: string, desc?: string) => {
+// Récupère les cards
+export const getCards = async (listId: string) => {
     try {
-      const response = await axios.post(`${API_URL}cards/`, {
-        name,
-        desc,
-        idList: listId,
-        key: API_KEY,
-        token: TOKEN,
+      const response = await axios.get(`${API_URL}lists/${listId}/cards`, {
+        params: {
+          key: API_KEY,
+          token: TOKEN,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching cards:', error);
+      throw error;
+    }
+  };
+  
+  // Ajoute une card
+  export const addCard = async (listId: string, name: string, desc?: string) => {
+    try {
+      const response = await axios.post(`${API_URL}cards/`, null, {
+        params: {
+          name,
+          desc,
+          idList: listId,
+          key: API_KEY,
+          token: TOKEN,
+        },
       });
       return response.data;
     } catch (error) {
@@ -38,7 +41,7 @@ export const addCard = async (listId: string, name: string, desc?: string) => {
     }
   };
   
-  // supprimer une carte
+  // Supprime une card
   export const deleteCard = async (cardId: string) => {
     try {
       const response = await axios.delete(`${API_URL}cards/${cardId}`, {
@@ -54,14 +57,16 @@ export const addCard = async (listId: string, name: string, desc?: string) => {
     }
   };
   
-  //  mettre à jour une carte
+  // Met à jour une card
   export const updateCard = async (cardId: string, name?: string, desc?: string) => {
     try {
-      const response = await axios.put(`${API_URL}cards/${cardId}`, {
-        name,
-        desc,
-        key: API_KEY,
-        token: TOKEN,
+      const response = await axios.put(`${API_URL}cards/${cardId}`, null, {
+        params: {
+          name,
+          desc,
+          key: API_KEY,
+          token: TOKEN,
+        },
       });
       return response.data;
     } catch (error) {
@@ -69,5 +74,3 @@ export const addCard = async (listId: string, name: string, desc?: string) => {
       throw error;
     }
   };
-
-
