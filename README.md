@@ -6,10 +6,10 @@ Date de rendu : 6 avril 2025 à 23h42
 ## Gestion Avancement du Projet
 | Avancement | Tâches |
 | :--------- |:------ |
-| 🟠 In progress | Possibilité de créer, lire/afficher, modifier et supprimer un espace de travail |
-| 🔴 To do | Possibilité de créer, lire/afficher, modifier et supprimer un tableau |
-| 🔴 To do | Possibilité de créer, lire/afficher, modifier et supprimer une liste |
-| 🔴 To do | Possibilité de créer, lire/afficher, modifier et supprimer une carte |
+| 🟢 Done | Possibilité de créer, lire/afficher, modifier et supprimer un espace de travail |
+| 🟠 In progress | Possibilité de créer, lire/afficher, modifier et supprimer un tableau |
+| 🟠 In progress | Possibilité de créer, lire/afficher, modifier et supprimer une liste |
+| 🟠 In progress | Possibilité de créer, lire/afficher, modifier et supprimer une carte |
 | 🔴 To do | Possibilité de créer des tableaux à partir d'un modèle, puis de les lire/afficher, modifier et supprimer |
 | 🔴 To do | Possibilité d'assigner un ou plusieurs utilisateurs à une carte |
 | 🔴 To do | Les "guidelines" de la plateforme choisie sont respectées et correctement intégrées, les étudiants peuvent expliquer ces directives et comment ils les ont mises en œuvre |
