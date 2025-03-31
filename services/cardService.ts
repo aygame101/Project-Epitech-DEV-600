@@ -25,21 +25,28 @@ export const getCards = async (listId: string) => {
   // Ajoute une card
   export const addCard = async (listId: string, name: string, desc?: string) => {
     try {
-      const response = await axios.post(`${API_URL}cards/`, null, {
-        params: {
-          name,
-          desc,
-          idList: listId,
-          key: API_KEY,
-          token: TOKEN,
-        },
-      });
+      console.log('Adding card with parameters:', { listId, name, desc, API_KEY, TOKEN });
+  
+      const response = await axios.post(
+        `${API_URL}cards/`,
+        null,
+        {
+          params: {
+            name,
+            desc,
+            idList: listId,
+            key: API_KEY,
+            token: TOKEN,
+          },
+        }
+      );
       return response.data;
     } catch (error) {
-      console.error('Error adding card:', error);
+      console.error('Error adding card:', error.response ? error.response.data : error.message);
       throw error;
     }
   };
+  
   
   // Supprime une card
   export const deleteCard = async (cardId: string) => {
