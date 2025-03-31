@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Button, TextInput, Alert } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import { addCard } from '@/services/cardService'; // Assurez-vous que le chemin est correct
+import { cardServices } from '@/services/cardService';
 
 type CardProps = {
   id: string;
   name: string;
   desc?: string;
-  listId: string; // Ajoutez listId pour savoir où ajouter la carte
+  listId: string;
 };
 
 const Card: React.FC<CardProps> = ({ id, name, desc, listId }) => {
@@ -17,12 +17,11 @@ const Card: React.FC<CardProps> = ({ id, name, desc, listId }) => {
 
   const handleAddCard = async () => {
     try {
-      const card = await addCard(listId, newCardName, newCardDesc);
-      Alert.success('Card added successfully!', card);
-      // Vous pouvez également mettre à jour l'interface utilisateur ici pour refléter la nouvelle carte
+      const card = await cardServices.addCard(listId, newCardName, newCardDesc);
+      Alert.alert('Success', `Card added successfully! ${JSON.stringify(card)}`);
     } catch (error) {
       console.error('Error adding card:', error);
-      Alert.error('Failed to add card.');
+      Alert.alert('Error', 'Failed to add card.');
     }
   };
 
