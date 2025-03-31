@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import Constants from 'expo-constants';
 
@@ -12,7 +12,12 @@ const WorkspaceBoardsModal = () => {
   const { workspaceId, workspaceName } = route.params;
   const [boards, setBoards] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [newBoardName, setNewBoardName] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  
 
+
+  
   useEffect(() => {
     const fetchBoards = async () => {
       setIsLoading(true);
@@ -35,15 +40,65 @@ const WorkspaceBoardsModal = () => {
     fetchBoards();
   }, [workspaceId]);
 
+  const handleCreateBoard = async () => {
+    if (!newBoardName.trim()) return;
+    
+    setIsCreating(true);
+    try {
+      const response = await fetch(
+        `https://api.trello.com/1/boards/?name=${encodeURIComponent(newBoardName)}&idOrganization=${workspaceId}&key=${API_KEY}&token=${API_TOKEN}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) throw new Error('Échec de la création du tableau');
+
+      const newBoard = await response.json();
+      setBoards([...boards, newBoard]);
+      setNewBoardName(''); // Réinitialiser le champ
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Workspace : {workspaceName}</Text>
+      
+      {/* Champ d'ajout de tableau */}
+      <View style={styles.addBoardContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Nom du nouveau tableau"
+          placeholderTextColor="#999"
+          value={newBoardName}
+          onChangeText={setNewBoardName}
+        />
+        <TouchableOpacity 
+          style={styles.addButton} 
+          onPress={handleCreateBoard}
+          disabled={isCreating || !newBoardName.trim()}
+        >
+          {isCreating ? (
+            <ActivityIndicator size="small" color="#FFF" />
+          ) : (
+            <Text style={styles.addButtonText}>Ajouter</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+
       {isLoading ? (
         <ActivityIndicator size="large" color="#FFA500" />
       ) : (
         <FlatList
           data={boards}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           renderItem={({ item }) => (
             <View style={styles.boardItemContainer}>
               <Text style={styles.boardItem}>{item.name}</Text>
@@ -67,6 +122,30 @@ const styles = StyleSheet.create({
     color: '#FFA500',
     marginBottom: 16,
     alignSelf: 'flex-start',
+  },
+  addBoardContainer: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  input: {
+    flex: 1,
+    backgroundColor: '#1f1f1f',
+    color: '#FFFFFF',
+    padding: 12,
+    borderRadius: 5,
+    marginRight: 8,
+  },
+  addButton: {
+    backgroundColor: '#FFA500',
+    padding: 12,
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addButtonText: {
+    color: '#121212',
+    fontWeight: 'bold',
   },
   boardItemContainer: {
     padding: 16,
