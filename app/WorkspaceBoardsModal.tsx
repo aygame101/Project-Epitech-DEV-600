@@ -75,7 +75,7 @@ const WorkspaceBoardsModal = () => {
       <View style={styles.addBoardContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Nom du nouveau tableau"
+          placeholder="Nom du tableau à créer"
           placeholderTextColor="#999"
           value={newBoardName}
           onChangeText={setNewBoardName}

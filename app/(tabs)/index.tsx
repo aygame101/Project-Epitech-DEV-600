@@ -110,7 +110,7 @@ const handleWorkspacePress = (workspace) => {
         <View style={styles.createContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Nom du workspace"
+            placeholder="Nom du workspace à créer"
             placeholderTextColor="#ccc"
             value={workspaceName}
             onChangeText={setWorkspaceName}

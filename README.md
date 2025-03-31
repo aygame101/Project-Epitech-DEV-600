@@ -7,7 +7,7 @@ Date de rendu : 6 avril 2025 à 23h42
 | Avancement | Tâches |
 | :--------- |:------ |
 | 🟢 Done | Possibilité de créer, lire/afficher, modifier et supprimer un espace de travail |
-| 🟠 In progress | Possibilité de créer, lire/afficher, modifier et supprimer un tableau |
+| 🟢 Done | Possibilité de créer, lire/afficher, modifier et supprimer un tableau |
 | 🟠 In progress | Possibilité de créer, lire/afficher, modifier et supprimer une liste |
 | 🟠 In progress | Possibilité de créer, lire/afficher, modifier et supprimer une carte |
 | 🔴 To do | Possibilité de créer des tableaux à partir d'un modèle, puis de les lire/afficher, modifier et supprimer |
