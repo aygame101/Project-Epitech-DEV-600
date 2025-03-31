@@ -37,7 +37,7 @@ const WorkspaceBoardsModal = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{workspaceName}</Text>
+      <Text style={styles.title}>Workspace : {workspaceName}</Text>
       {isLoading ? (
         <ActivityIndicator size="large" color="#FFA500" />
       ) : (
