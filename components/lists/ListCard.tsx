@@ -10,9 +10,10 @@ type ListCardProps = {
   onUpdate: (listId: string, newName: string) => Promise<void>;
   onArchive: (listId: string) => Promise<void>;
   onAddCard: (listId: string) => void;
+  isLoading?: boolean;
 };
 
-export default function ListCard({ list, onUpdate, onArchive, onAddCard }: ListCardProps) {
+export default function ListCard({ list, onUpdate, onArchive, onAddCard, isLoading = false }: ListCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(list.name);
   const [showMenu, setShowMenu] = useState(false);
@@ -26,61 +27,69 @@ export default function ListCard({ list, onUpdate, onArchive, onAddCard }: ListC
 
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        {isEditing ? (
-          <View style={styles.editContainer}>
-            <TextInput
-              style={styles.input}
-              value={newName}
-              onChangeText={setNewName}
-              autoFocus
-              onBlur={handleSave}
-              onSubmitEditing={handleSave}
-            />
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ThemedText>Chargement...</ThemedText>
+        </View>
+      ) : (
+        <>
+          <View style={styles.header}>
+            {isEditing ? (
+              <View style={styles.editContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={newName}
+                  onChangeText={setNewName}
+                  autoFocus
+                  onBlur={handleSave}
+                  onSubmitEditing={handleSave}
+                />
+              </View>
+            ) : (
+              <Pressable 
+                style={styles.titleContainer} 
+                onPress={() => setIsEditing(true)}
+              >
+                <ThemedText style={styles.title}>{list.name}</ThemedText>
+              </Pressable>
+            )}
+            
+            <Pressable 
+              style={styles.menuButton}
+              onPress={() => setShowMenu(!showMenu)}
+            >
+              <Feather name="more-horizontal" size={20} color="#6B778C" />
+            </Pressable>
           </View>
-        ) : (
+          
+          {showMenu && (
+            <ThemedView style={styles.menu}>
+              <Pressable 
+                style={styles.menuItem}
+                onPress={() => {
+                  onArchive(list.id);
+                  setShowMenu(false);
+                }}
+              >
+                <MaterialIcons name="archive" size={16} color="#6B778C" />
+                <ThemedText>Archiver cette liste</ThemedText>
+              </Pressable>
+            </ThemedView>
+          )}
+          
+          <View style={styles.cardContainer}>
+            {/* Les cartes seraient rendues ici */}
+          </View>
+          
           <Pressable 
-            style={styles.titleContainer} 
-            onPress={() => setIsEditing(true)}
+            style={styles.addCardButton}
+            onPress={() => onAddCard(list.id)}
           >
-            <ThemedText style={styles.title}>{list.name}</ThemedText>
+            <MaterialIcons name="add" size={20} color="#6B778C" />
+            <ThemedText style={styles.addCardText}>Ajouter une carte</ThemedText>
           </Pressable>
-        )}
-        
-        <Pressable 
-          style={styles.menuButton}
-          onPress={() => setShowMenu(!showMenu)}
-        >
-          <Feather name="more-horizontal" size={20} color="#6B778C" />
-        </Pressable>
-      </View>
-      
-      {showMenu && (
-        <ThemedView style={styles.menu}>
-          <Pressable 
-            style={styles.menuItem}
-            onPress={() => {
-              onArchive(list.id);
-              setShowMenu(false);
-            }}
-          >
-            <MaterialIcons name="archive" size={16} color="#6B778C" />
-            <ThemedText>Archiver cette liste</ThemedText>
-          </Pressable>
-        </ThemedView>
+        </>
       )}
-      
-      <View style={styles.cardContainer}>
-        {/* Les cartes seraient rendues ici */}
-      </View>
-      
-      <Pressable 
-        style={styles.addCardButton}
-        onPress={() => onAddCard(list.id)}
-      >
-        <MaterialIcons name="add" size={20} color="#6B778C" />
-        <ThemedText style={styles.addCardText}>Ajouter une carte</ThemedText>
-      </Pressable>
     </ThemedView>
   );
 }
@@ -156,5 +165,10 @@ const styles = StyleSheet.create({
   addCardText: {
     color: '#6B778C',
     fontSize: 14,
+  },
+  loadingContainer: {
+    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   }
 });
