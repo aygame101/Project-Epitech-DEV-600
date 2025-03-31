@@ -1,23 +1,48 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Button, TextInput, Alert } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { cardServices } from '@/services/cardService';
+import { listServices } from '@/services/listService'; 
 
 type CardProps = {
   id: string;
   name: string;
   desc?: string;
-  listId: string;
+  boardId: string; 
 };
 
-const Card: React.FC<CardProps> = ({ id, name, desc, listId }) => {
+const Card: React.FC<CardProps> = ({ id, name, desc, boardId }) => {
   const [newCardName, setNewCardName] = useState('');
   const [newCardDesc, setNewCardDesc] = useState('');
+  const [lists, setLists] = useState<{ id: string; name: string }[]>([]);
+  const [selectedListId, setSelectedListId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchLists = async () => {
+      try {
+        const lists = await listServices.getLists(boardId);
+        setLists(lists);
+        if (lists.length > 0) {
+          setSelectedListId(lists[0].id); 
+        }
+      } catch (error) {
+        console.error('Error fetching lists:', error);
+      }
+    };
+
+    fetchLists();
+  }, [boardId]);
 
   const handleAddCard = async () => {
+    if (!selectedListId) {
+      console.error('No list selected');
+      Alert.alert('Error', 'No list selected.');
+      return;
+    }
+
     try {
-      const card = await cardServices.addCard(listId, newCardName, newCardDesc);
+      const card = await cardServices.addCard(selectedListId, newCardName, newCardDesc);
       Alert.alert('Success', `Card added successfully! ${JSON.stringify(card)}`);
     } catch (error) {
       console.error('Error adding card:', error);
@@ -41,6 +66,18 @@ const Card: React.FC<CardProps> = ({ id, name, desc, listId }) => {
         onChangeText={setNewCardDesc}
         style={styles.input}
       />
+      {lists.length > 0 && (
+        <View>
+          <Text>Select List:</Text>
+          {lists.map((list) => (
+            <Button
+              key={list.id}
+              title={list.name}
+              onPress={() => setSelectedListId(list.id)}
+            />
+          ))}
+        </View>
+      )}
       <Button title="Add Card" onPress={handleAddCard} />
     </ThemedView>
   );
