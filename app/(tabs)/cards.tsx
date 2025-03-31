@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card as CardType } from './types'; // Assuming you have a Card type definition
+import { Card as CardType } from './types'; // a modifier pour visuel diiférent
 
 interface CardProps {
   card: CardType;
