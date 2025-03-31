@@ -28,14 +28,16 @@ export default function HomeScreen() {
   };
 
   const handleCreateWorkspace = async () => {
-    if (!workspaceName.trim()) {
+    const trimmedName = workspaceName.trimEnd();
+
+    if (!trimmedName) {
       Alert.alert('Erreur', 'Le nom du workspace ne peut pas être vide');
       return;
     }
     
     setIsLoading(true);
     try {
-      const data = await createWorkspace(workspaceName);
+      const data = await createWorkspace(trimmedName);
       setWorkspaces([...workspaces, data]);
       setWorkspaceName('');
     } catch (error) {
@@ -168,6 +170,7 @@ const handleWorkspacePress = (workspace) => {
               style={styles.modalInput}
               value={newWorkspaceName}
               onChangeText={setNewWorkspaceName}
+              onBlur={() => setNewWorkspaceName(newWorkspaceName.trimEnd())}
               placeholder="Nouveau nom du workspace"
               placeholderTextColor="#aaa"
             />
