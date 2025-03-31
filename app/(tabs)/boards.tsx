@@ -1,116 +1,71 @@
 import { useState, useEffect } from 'react';
-import { Image, StyleSheet, Platform, Alert, TextInput, Pressable, ActivityIndicator, View } from 'react-native';
+import { Image, StyleSheet, Alert, TextInput, Pressable, ActivityIndicator, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
-import Constants from 'expo-constants';
+import { boardServices } from '@/services/boardService';
+import { Board } from '@/types/Board';
 
-// Configuration Trello
-const API_KEY = Constants.expoConfig?.extra?.apiKey;
-const API_TOKEN = Constants.expoConfig?.extra?.token;
-
-type TrelloBoard = {
-  id: string;
-  name: string;
-  desc?: string;
-  url: string;
-  prefs?: {
-    backgroundImage?: string;
-  };
-};
-
-export default function HomeScreen() {
+export default function BoardsScreen() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newWorkspaceName, setNewWorkspaceName] = useState('');
-  const [boards, setBoards] = useState<TrelloBoard[]>([]);
+  const [newBoardName, setNewBoardName] = useState('');
+  const [boards, setBoards] = useState<Board[]>([]);
   const [joinCode, setJoinCode] = useState('');
 
   useEffect(() => {
-    const fetchBoards = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(
-          `https://api.trello.com/1/members/me/boards?key=${API_KEY}&token=${API_TOKEN}&fields=name,desc,url,prefs`
-        );
-        
-        if (!response.ok) throw new Error('Échec du chargement des tableaux');
-        
-        const data = await response.json();
-        setBoards(data);
-      } catch (error) {
-        Alert.alert('Erreur', error.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     fetchBoards();
   }, []);
 
-  const handleCreateWorkspace = async () => {
-    if (!newWorkspaceName.trim()) {
+  const fetchBoards = async () => {
+    setIsLoading(true);
+    try {
+      const data = await boardServices.getBoards();
+      setBoards(data);
+    } catch (error) {
+      Alert.alert('Erreur', error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateBoard = async () => {
+    if (!newBoardName.trim()) {
       Alert.alert('Erreur', 'Le nom du tableau est requis');
       return;
     }
     
     try {
-      const response = await fetch(
-        `https://api.trello.com/1/boards/?key=${API_KEY}&token=${API_TOKEN}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: newWorkspaceName,
-            defaultLists: false
-          })
-        }
-      );
-      
-      if (!response.ok) throw new Error(await response.text());
-      
-      const newBoard = await response.json();
+      const newBoard = await boardServices.createBoard(newBoardName);
       setBoards([...boards, newBoard]);
       setShowCreateModal(false);
-      setNewWorkspaceName('');
+      setNewBoardName('');
     } catch (error) {
       Alert.alert('Erreur', error.message);
     }
   };
 
-  const handleJoinWorkspace = async () => {
+  const handleJoinBoard = async () => {
     if (!joinCode.trim()) {
       Alert.alert('Error', 'Please enter a valid board ID');
       return;
     }
     
     try {
-      const response = await fetch(
-        `https://api.trello.com/1/boards/${joinCode}?key=${API_KEY}&token=${API_TOKEN}&fields=id,name`
-      );
-      
-      if (!response.ok) throw new Error('Board not found');
-      
-      const board = await response.json();
-      router.push(`/workspaces/${board.id}`);
+      const board = await boardServices.getBoardById(joinCode);
+      router.push(`/board/${board.id}`);
       setJoinCode('');
     } catch (error) {
       Alert.alert('Error', error.message);
     }
   };
 
-  const handleDeleteWorkspace = async (boardId: string) => {
+  const handleDeleteBoard = async (boardId: string) => {
     try {
-      const response = await fetch(
-        `https://api.trello.com/1/boards/${boardId}?key=${API_KEY}&token=${API_TOKEN}`,
-        { method: 'DELETE' }
-      );
-      
-      if (!response.ok) throw new Error('Failed to delete board');
-      
+      await boardServices.deleteBoard(boardId);
       setBoards(boards.filter(board => board.id !== boardId));
     } catch (error) {
       Alert.alert('Error', error.message);
@@ -121,7 +76,7 @@ export default function HomeScreen() {
     return (
       <ThemedView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0079bf" />
-        <ThemedText type="subtitle">Loading workspaces...</ThemedText>
+        <ThemedText type="subtitle">Loading boards...</ThemedText>
       </ThemedView>
     );
   }
@@ -143,13 +98,13 @@ export default function HomeScreen() {
 
       {boards.length === 0 ? (
         <ThemedView style={styles.emptyState}>
-          <MaterialIcons name="workspaces" size={60} color="#0079bf" />
+          <MaterialIcons name="dashboard" size={60} color="#0079bf" />
           <ThemedText type="subtitle">Aucun tableau trouvé</ThemedText>
         </ThemedView>
       ) : (
-        <ThemedView style={styles.workspaceList}>
+        <ThemedView style={styles.boardList}>
         {boards.map((board) => (
-          <ThemedView key={board.id} style={styles.workspaceCard}>
+          <ThemedView key={board.id} style={styles.boardCard}>
             {board.prefs?.backgroundImage && (
               <Image
                 source={{ uri: board.prefs.backgroundImage }}
@@ -157,16 +112,16 @@ export default function HomeScreen() {
               />
             )}
             <Pressable
-              onPress={() => router.push(`/workspaces/${board.id}`)}
+              onPress={() => router.push(`/board/${board.id}`)}
               style={styles.cardContent}>
               <MaterialIcons name="dashboard" size={24} color="white" />
-              <ThemedText style={styles.workspaceName}>{board.name}</ThemedText>
+              <ThemedText style={styles.boardName}>{board.name}</ThemedText>
               {board.desc && (
-                <ThemedText style={styles.workspaceDesc}>{board.desc}</ThemedText>
+                <ThemedText style={styles.boardDesc}>{board.desc}</ThemedText>
               )}
             </Pressable>
             <Pressable
-              onPress={() => handleDeleteWorkspace(board.id)}
+              onPress={() => handleDeleteBoard(board.id)}
               style={styles.deleteButton}>
               <AntDesign name="close" size={16} color="white" />
             </Pressable>
@@ -191,8 +146,8 @@ export default function HomeScreen() {
             <TextInput
               style={styles.input}
               placeholder="Nom du tableau"
-              value={newWorkspaceName}
-              onChangeText={setNewWorkspaceName}
+              value={newBoardName}
+              onChangeText={setNewBoardName}
               autoFocus
             />
             <View style={styles.buttonRow}>
@@ -203,7 +158,7 @@ export default function HomeScreen() {
               </Pressable>
               <Pressable
                 style={[styles.modalButton, styles.confirmButton]}
-                onPress={handleCreateWorkspace}>
+                onPress={handleCreateBoard}>
                 <ThemedText style={{ color: 'white' }}>Créer</ThemedText>
               </Pressable>
             </View>
@@ -223,7 +178,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 20,
   },
-  workspaceList: {
+  boardList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
@@ -289,7 +244,7 @@ const styles = StyleSheet.create({
   confirmButton: {
     backgroundColor: '#5aac44',
   },
-  workspaceCard: {
+  boardCard: {
     width: '48%',
     height: 150,
     borderRadius: 8,
@@ -308,14 +263,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  workspaceName: {
+  boardName: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
     marginTop: 8,
     textAlign: 'center',
   },
-  workspaceDesc: {
+  boardDesc: {
     color: 'white',
     fontSize: 12,
     marginTop: 4,
@@ -347,7 +302,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontSize: 16,
   },
-
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
