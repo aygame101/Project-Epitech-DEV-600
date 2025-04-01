@@ -67,9 +67,7 @@ export const boardServices = {
     if (!response.ok) throw new Error('Failed to delete board');
   },
 
-  /**
-   * Met à jour un tableau
-   */
+
   /**
  * Met à jour un tableau
  */
