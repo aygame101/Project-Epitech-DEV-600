@@ -1,0 +1,107 @@
+import { listServices } from '../services/listService';
+import { mockLists } from './mocks/listMocks';
+
+// Mock global fetch
+global.fetch = jest.fn();
+
+// Mock expo constants
+jest.mock('expo-constants', () => ({
+  expoConfig: {
+    extra: {
+      apiKey: 'test-api-key',
+      token: 'test-token'
+    }
+  }
+}));
+
+describe('listServices', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (fetch as jest.Mock).mockReset();
+  });
+
+  describe('getListsByBoardId', () => {
+    it('should return lists for a board', async () => {
+      (fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockLists)
+      });
+
+      const lists = await listServices.getListsByBoardId('board123');
+      expect(lists).toEqual(mockLists);
+      expect(fetch).toHaveBeenCalledWith(
+        'https://api.trello.com/1/boards/board123/lists?key=test-api-key&token=test-token'
+      );
+    });
+
+    it('should throw error when fetch fails', async () => {
+      (fetch as jest.Mock).mockResolvedValueOnce({
+        ok: false,
+        text: () => Promise.resolve('Error message')
+      });
+
+      await expect(listServices.getListsByBoardId('board123'))
+        .rejects.toThrow('Échec du chargement des listes');
+    });
+  });
+
+  describe('createList', () => {
+    it('should create a new list', async () => {
+      const mockResponse = { id: 'list789', name: 'New List', idBoard: 'board123' };
+      (fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse)
+      });
+
+      const result = await listServices.createList('board123', 'New List');
+      expect(result).toEqual(mockResponse);
+      expect(fetch).toHaveBeenCalledWith(
+        'https://api.trello.com/1/lists?key=test-api-key&token=test-token',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: 'New List',
+            idBoard: 'board123',
+            pos: 'bottom'
+          })
+        }
+      );
+    });
+  });
+
+  describe('updateList', () => {
+    it('should update a list', async () => {
+      const updates = { name: 'Updated Name' };
+      const mockResponse = { id: 'list123', name: 'Updated Name' };
+      (fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse)
+      });
+
+      const result = await listServices.updateList('list123', updates);
+      expect(result).toEqual(mockResponse);
+      expect(fetch).toHaveBeenCalledWith(
+        'https://api.trello.com/1/lists/list123?key=test-api-key&token=test-token',
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates)
+        }
+      );
+    });
+  });
+
+  describe('archiveList', () => {
+    it('should archive a list', async () => {
+      const mockResponse = { id: 'list123', closed: true };
+      (fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse)
+      });
+
+      const result = await listServices.archiveList('list123');
+      expect(result).toEqual(mockResponse);
+    });
+  });
+});

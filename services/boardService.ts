@@ -11,12 +11,14 @@ export const boardServices = {
    */
   getBoards: async (): Promise<Board[]> => {
     const response = await fetch(
-      `https://api.trello.com/1/members/me/boards?key=${API_KEY}&token=${API_TOKEN}&fields=name,desc,url,prefs`
+      `https://api.trello.com/1/members/me/boards?key=${API_KEY}&token=${API_TOKEN}&fields=name,desc,url,prefs,closed`
     );
     
     if (!response.ok) throw new Error('Échec du chargement des tableaux');
     
-    return await response.json();
+    const boards = await response.json();
+
+    return boards.filter((board: Board) => !board.closed);
   },
 
   /**
@@ -70,7 +72,7 @@ export const boardServices = {
    */
   updateBoard: async (boardId: string, updates: Partial<Board>): Promise<Board> => {
     const response = await fetch(
-      `https://api.trello.com/1/boards/${boardId}?key=${API_KEY}&token=${API_TOKEN}`,
+      `https://api.trello.com/1/members/me/boards?key=${API_KEY}&token=${API_TOKEN}&fields=name,desc,url,prefs,closed`,
       {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -80,6 +82,8 @@ export const boardServices = {
     
     if (!response.ok) throw new Error('Failed to update board');
     
-    return await response.json();
+    const boards = await response.json();
+
+    return boards.filter((board: Board) => !board.closed);
   }
 };
