@@ -20,16 +20,19 @@ import { Board } from '@/types/Board';
 import useLists from '@/hooks/useLists';
 
 // Card component to display within a list
-function CardItem({ card }) {
+function CardItem({ card, onEditCard }) {
   return (
     <View style={styles.cardItem}>
       <Text style={styles.cardTitle}>{card.name}</Text>
       {card.desc && <Text style={styles.cardDescription}>{card.desc}</Text>}
+      <Pressable onPress={() => onEditCard(card.id)} style={styles.editButton}>
+        <AntDesign name="edit" size={18} color="#000" />
+      </Pressable>
     </View>
   );
 }
 
-function ListCard({ list, cards, onUpdate, onArchive, onAddCard, onEdit }) {
+function ListCard({ list, cards, onUpdate, onArchive, onAddCard, onEdit, onEditCard }) {
   // Filter cards that belong to this list
   const listCards = cards.filter(card => card.idList === list.id);
 
@@ -45,7 +48,7 @@ function ListCard({ list, cards, onUpdate, onArchive, onAddCard, onEdit }) {
       {/* Cards container */}
       <ScrollView style={styles.cardsContainer}>
         {listCards.map(card => (
-          <CardItem key={card.id} card={card} />
+          <CardItem key={card.id} card={card} onEditCard={onEditCard} />
         ))}
       </ScrollView>
 
@@ -83,6 +86,12 @@ export default function BoardDetailScreen() {
   const [newCardName, setNewCardName] = useState('');
   const [newCardDesc, setNewCardDesc] = useState('');
   const [selectedListId, setSelectedListId] = useState(null);
+
+  // Card edit modal
+  const [showEditCardModal, setShowEditCardModal] = useState(false);
+  const [editingCardId, setEditingCardId] = useState(null);
+  const [editingCardName, setEditingCardName] = useState('');
+  const [editingCardDesc, setEditingCardDesc] = useState('');
 
   const {
     lists,
@@ -158,12 +167,12 @@ export default function BoardDetailScreen() {
 
     try {
       await cardServices.addCard(selectedListId, newCardName, newCardDesc);
-      
+
       // Reset form and close modal
       setNewCardName('');
       setNewCardDesc('');
       setShowCardModal(false);
-      
+
       // Refresh cards to show the new one
       fetchCards();
     } catch (error: any) {
@@ -191,6 +200,40 @@ export default function BoardDetailScreen() {
     setEditingListId(null);
     setEditingListName('');
   };
+
+  const handleEditCard = (cardId: string) => {
+    const cardToEdit = cards.find(card => card.id === cardId);
+    if (cardToEdit) {
+      setEditingCardId(cardId);
+      setEditingCardName(cardToEdit.name);
+      setEditingCardDesc(cardToEdit.desc || '');
+      setShowEditCardModal(true);
+    }
+  };
+
+  const handleSaveEditCard = async () => {
+    if (!editingCardName.trim()) {
+      Alert.alert('Erreur', 'Le nom de la carte est requis');
+      return;
+    }
+  
+    try {
+      // Assuming updateCard is a method in cardServices that takes card ID, name, and description
+      await cardServices.updateCard(editingCardId, editingCardName, editingCardDesc);
+  
+      // Reset form and close modal
+      setEditingCardId(null);
+      setEditingCardName('');
+      setEditingCardDesc('');
+      setShowEditCardModal(false);
+  
+      // Refresh cards to show the updated one
+      fetchCards();
+    } catch (error: any) {
+      Alert.alert('Erreur', error.message || 'Impossible de mettre à jour la carte');
+    }
+  };
+  
 
   if (isLoading || !board) {
     return (
@@ -230,6 +273,7 @@ export default function BoardDetailScreen() {
               onArchive={handleArchiveList}
               onAddCard={handleAddCard}
               onEdit={handleEditList}
+              onEditCard={handleEditCard}
             />
           ))}
 
@@ -374,6 +418,59 @@ export default function BoardDetailScreen() {
                     onPress={handleCreateCard}
                   >
                     <Text style={styles.confirmButtonText}>Créer</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* Card edit modal */}
+      <Modal
+        transparent
+        visible={showEditCardModal}
+        animationType="fade"
+        onRequestClose={() => setShowEditCardModal(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowEditCardModal(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Éditer la carte</Text>
+
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Titre de la carte"
+                  placeholderTextColor="#888"
+                  value={editingCardName}
+                  onChangeText={setEditingCardName}
+                  autoFocus
+                />
+
+                <TextInput
+                  style={[styles.modalInput, styles.textareaInput]}
+                  placeholder="Description (optionnelle)"
+                  placeholderTextColor="#888"
+                  value={editingCardDesc}
+                  onChangeText={setEditingCardDesc}
+                  multiline
+                  numberOfLines={3}
+                />
+
+                <View style={styles.modalButtonsContainer}>
+                  <Pressable
+                    style={[styles.modalButton, styles.cancelButton]}
+                    onPress={() => setShowEditCardModal(false)}
+                  >
+                    <Text style={styles.cancelButtonText}>Annuler</Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={[styles.modalButton, styles.confirmButton]}
+                    onPress={handleSaveEditCard}
+                  >
+                    <Text style={styles.confirmButtonText}>Enregistrer</Text>
                   </Pressable>
                 </View>
               </View>
