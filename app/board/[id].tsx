@@ -18,7 +18,7 @@ import { boardServices } from '@/services/boardService';
 import { cardServices } from '@/services/cardService';
 import { Board } from '@/types/Board';
 import useLists from '@/hooks/useLists';
-import { styles } from '../styles/idStyle';
+import { styles } from '../../styles/idStyle';
 
 // Card component to display within a list
 function CardItem({ card, onEditCard, onViewCard }) {
@@ -59,11 +59,11 @@ function ListCard({ list, cards, onUpdate, onArchive, onAddCard, onEdit, onEditC
       {/* Cards container */}
       <ScrollView style={styles.cardsContainer}>
         {listCards.map(card => (
-          <CardItem 
-            key={card.id} 
-            card={card} 
-            onEditCard={onEditCard} 
-            onViewCard={onViewCard} 
+          <CardItem
+            key={card.id}
+            card={card}
+            onEditCard={onEditCard}
+            onViewCard={onViewCard}
           />
         ))}
       </ScrollView>
@@ -174,6 +174,17 @@ export default function BoardDetailScreen() {
     await fetchBoardDetails();
   };
 
+  const handleArchiveCard = async (cardId: string) => {
+    try {
+      await cardServices.archiveCard(cardId);
+      setShowCardViewModal(false); // Fermez la modale après l'archivage
+      fetchCards(); // Rechargez les cartes pour mettre à jour l'affichage
+    } catch (error: any) {
+      Alert.alert('Erreur', error.message || 'Impossible d\'archiver la carte');
+    }
+  };
+  
+
   const handleAddCard = (listId: string) => {
     setSelectedListId(listId);
     setShowCardModal(true);
@@ -244,27 +255,27 @@ export default function BoardDetailScreen() {
       Alert.alert('Erreur', 'Le nom de la carte est requis');
       return;
     }
-  
+
     try {
       // Correction: passing an object instead of individual parameters
       await cardServices.updateCard(editingCardId, {
         name: editingCardName,
         desc: editingCardDesc
       });
-  
+
       // Reset form and close modal
       setEditingCardId(null);
       setEditingCardName('');
       setEditingCardDesc('');
       setShowEditCardModal(false);
-  
+
       // Refresh cards to show the updated one
       fetchCards();
     } catch (error: any) {
       Alert.alert('Erreur', error.message || 'Impossible de mettre à jour la carte');
     }
   };
-  
+
 
   if (isLoading || !board) {
     return (
@@ -522,8 +533,16 @@ export default function BoardDetailScreen() {
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
               <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>{viewingCard?.name}</Text>
-                
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>{viewingCard?.name}</Text>
+                  <Pressable
+                    onPress={() => setShowCardViewModal(false)}
+                    style={styles.closeButton}
+                  >
+                    <AntDesign name="close" size={24} color="#000" />
+                  </Pressable>
+                </View>
+
                 {viewingCard?.desc ? (
                   <ScrollView style={styles.cardViewDescription}>
                     <Text>{viewingCard.desc}</Text>
@@ -531,15 +550,8 @@ export default function BoardDetailScreen() {
                 ) : (
                   <Text style={styles.noDescriptionText}>Pas de description</Text>
                 )}
-                
-                <View style={styles.modalButtonsContainer}>
-                  <Pressable
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={() => setShowCardViewModal(false)}
-                  >
-                    <Text style={styles.cancelButtonText}>Fermer</Text>
-                  </Pressable>
 
+                <View style={styles.modalButtonsContainer}>
                   <Pressable
                     style={[styles.modalButton, styles.confirmButton]}
                     onPress={() => {
@@ -549,12 +561,21 @@ export default function BoardDetailScreen() {
                   >
                     <Text style={styles.confirmButtonText}>Modifier</Text>
                   </Pressable>
+
+                  <Pressable
+                    style={[styles.modalButton, styles.archiveButton]}
+                    onPress={() => handleArchiveCard(viewingCard.id)}
+                  >
+                    <Text style={styles.archiveButtonText}>Archiver</Text>
+                  </Pressable>
                 </View>
               </View>
             </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
+
     </View>
   );
 }
