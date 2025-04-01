@@ -45,12 +45,13 @@ export default function BoardDetailScreen() {
   const [newListName, setNewListName] = useState('');
 
   // On importe nos fonctions depuis le hook
-  const { 
-    lists, 
-    isLoading: listsLoading, 
-    createList, 
-    updateList, 
-    archiveList 
+  const {
+    lists,
+    isLoading: listsLoading,
+    createList,
+    updateList,
+    archiveList,
+    fetchLists  // Utiliser fetchLists pour rafraîchir les listes
   } = useLists(id as string);
 
   // **Définition hors useEffect pour pouvoir le rappeler après l'archivage**
@@ -77,7 +78,7 @@ export default function BoardDetailScreen() {
       Alert.alert('Erreur', 'Le nom de la liste est requis');
       return;
     }
-    
+
     await createList(newListName);
     setShowCreateModal(false);
     setNewListName('');
@@ -90,6 +91,7 @@ export default function BoardDetailScreen() {
   // ICI on force la réactualisation (fetchBoardDetails) après l'archivage
   const handleArchiveList = async (listId: string) => {
     await archiveList(listId);
+    await fetchLists();  // Rafraîchit les listes après l'archivage
     await fetchBoardDetails();
   };
 
@@ -129,9 +131,9 @@ export default function BoardDetailScreen() {
           showsHorizontalScrollIndicator={false}
         >
           {lists.map(list => (
-            <ListCard 
-              key={list.id} 
-              list={list} 
+            <ListCard
+              key={list.id}
+              list={list}
               onUpdate={handleUpdateList}
               onArchive={handleArchiveList}
               onAddCard={handleAddCard}
@@ -161,7 +163,7 @@ export default function BoardDetailScreen() {
             <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
               <View style={styles.modalContent}>
                 <Text style={styles.modalTitle}>Créer une liste</Text>
-                
+
                 <TextInput
                   style={styles.modalInput}
                   placeholder="Nom de la liste"
@@ -170,7 +172,7 @@ export default function BoardDetailScreen() {
                   onChangeText={setNewListName}
                   autoFocus
                 />
-                
+
                 <View style={styles.modalButtonsContainer}>
                   <Pressable
                     style={[styles.modalButton, styles.cancelButton]}
@@ -178,7 +180,7 @@ export default function BoardDetailScreen() {
                   >
                     <Text style={styles.cancelButtonText}>Annuler</Text>
                   </Pressable>
-                  
+
                   <Pressable
                     style={[styles.modalButton, styles.confirmButton]}
                     onPress={handleCreateList}
