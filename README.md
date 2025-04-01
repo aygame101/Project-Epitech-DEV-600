@@ -10,8 +10,8 @@ Date de rendu : 6 avril 2025 à 23h42
 | 🟢 Done | Possibilité de créer, lire/afficher, modifier et supprimer un tableau |
 | 🟢 Done | Possibilité de créer, lire/afficher, modifier et supprimer une liste |
 | 🟠 In progress | Possibilité de créer, lire/afficher, modifier et supprimer une carte |
-| 🔴 To do | Possibilité de créer des tableaux à partir d'un modèle, puis de les lire/afficher, modifier et supprimer | ?? temmlate api trello
-| 🔴 To do | Possibilité d'assigner un ou plusieurs utilisateurs à une carte |
+| 🔴 To do | Possibilité de créer des tableaux à partir d'un modèle, puis de les lire/afficher, modifier et supprimer | ?? template api trello
+| 🔴 To do | Possibilité d'assigner un ou plusieurs utilisateurs à une carte | route user -> compte trello
 | 🔴 To do | Les "guidelines" de la plateforme choisie sont respectées et correctement intégrées, les étudiants peuvent expliquer ces directives et comment ils les ont mises en œuvre |
 | 🟠 In progress | Une identité visuelle (choix des couleurs, icônes, taille de police, typographie, ...) est définie et utilisée pour maintenir la cohérence |
 | 🟠 In progress | Le rendu offre une UX et une UI de haute qualité et soignées : les interfaces sont bien conçues pour offrir une bonne expérience à ses utilisateurs |
