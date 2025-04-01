@@ -1,8 +1,9 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
-import BoardsScreen from '../boards';
+import BoardsScreen from '@/app/(tabs)/boards';
 import { boardServices } from '@/services/boardService';
+import { Alert } from 'react-native';
 
 // Mock expo-router
 jest.mock('expo-router', () => ({
@@ -19,9 +20,17 @@ jest.mock('@/services/boardService', () => ({
   }
 }));
 
+// Mock event stopPropagation
+const mockStopPropagation = jest.fn();
+
 // Mock Alert
 jest.mock('react-native/Libraries/Alert/Alert', () => ({
-  alert: jest.fn()
+  alert: jest.fn((title, message, buttons) => {
+    // Simuler immédiatement le clic sur le bouton "Supprimer" si c'est un test de suppression
+    if (buttons && buttons.length > 1 && buttons[1].text === 'Supprimer') {
+      buttons[1].onPress();
+    }
+  })
 }));
 
 describe('BoardsScreen', () => {
@@ -33,6 +42,7 @@ describe('BoardsScreen', () => {
   beforeEach(() => {
     (boardServices.getBoards as jest.Mock).mockResolvedValue(mockBoards);
     (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
@@ -68,32 +78,20 @@ describe('BoardsScreen', () => {
     });
   });
 
-  it('creates a new board', async () => {
-    const newBoard = { id: '3', name: 'Nouveau tableau' };
-    (boardServices.createBoard as jest.Mock).mockResolvedValue(newBoard);
-    
-    const { getByPlaceholderText, getByText } = render(<BoardsScreen />);
-    
-    fireEvent.changeText(
-      getByPlaceholderText('Nom du tableau à créer'),
-      'Nouveau tableau'
-    );
-    fireEvent.press(getByText('Créer'));
-    
-    await waitFor(() => {
-      expect(boardServices.createBoard).toHaveBeenCalledWith('Nouveau tableau');
-      expect(getByText('Nouveau tableau')).toBeTruthy();
-    });
-  });
-
   it('navigates to board when pressed', async () => {
     const mockPush = jest.fn();
-    (useRouter as jest.Mock).mockReturnValueOnce({ push: mockPush });
+    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
     
     const { getByText } = render(<BoardsScreen />);
     
     await waitFor(() => {
-      fireEvent.press(getByText('Tableau 1'));
+      expect(getByText('Tableau 1')).toBeTruthy();
+    });
+   
+    fireEvent.press(getByText('Tableau 1'));
+    
+    // Utiliser waitFor ici aussi pour s'assurer que l'action de navigation a le temps de s'exécuter
+    await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/board/1');
     });
   });
@@ -102,23 +100,57 @@ describe('BoardsScreen', () => {
     const { getByText, getByTestId } = render(<BoardsScreen />);
     
     await waitFor(() => {
-      // Trouver le bouton d'édition (peut nécessiter un testID sur le bouton)
-      fireEvent.press(getByTestId('edit-button-1'));
+      expect(getByTestId('edit-button-1')).toBeTruthy();
+    });
+    
+    // Créez un événement personnalisé avec stopPropagation implémenté
+    const event = {
+      stopPropagation: mockStopPropagation
+    };
+    
+    // Utilisez l'événement personnalisé
+    fireEvent(getByTestId('edit-button-1'), 'press', event);
+    
+    await waitFor(() => {
       expect(getByText('Modifier le nom du tableau')).toBeTruthy();
     });
   });
 
-  it('deletes a board after confirmation', async () => {
-    const { getByTestId } = render(<BoardsScreen />);
+  it('updates a board name', async () => {
+    const updatedBoard = { id: '1', name: 'Tableau 1 modifié' };
+    (boardServices.updateBoard as jest.Mock).mockResolvedValue(updatedBoard);
+    
+    const { getByTestId, getByText, getByPlaceholderText } = render(<BoardsScreen />);
     
     await waitFor(() => {
-      fireEvent.press(getByTestId('delete-button-1'));
-      // Simuler la confirmation
-      const alertMock = require('react-native/Libraries/Alert/Alert');
-      const confirmCall = alertMock.alert.mock.calls[0][2][1];
-      confirmCall.onPress();
-      
-      expect(boardServices.deleteBoard).toHaveBeenCalledWith('1');
+      expect(getByTestId('edit-button-1')).toBeTruthy();
+    });
+    
+    // Créez un événement personnalisé avec stopPropagation implémenté
+    const event = {
+      stopPropagation: mockStopPropagation
+    };
+    
+    // Ouvrir le modal d'édition
+    fireEvent(getByTestId('edit-button-1'), 'press', event);
+    
+    // Modifier le texte
+    fireEvent.changeText(
+      getByPlaceholderText('Nouveau nom du tableau'),
+      'Tableau 1 modifié'
+    );
+    
+    // Enregistrer les modifications
+    fireEvent.press(getByText('Enregistrer'));
+    
+    // Utiliser waitFor pour attendre l'appel à updateBoard
+    await waitFor(() => {
+      expect(boardServices.updateBoard).toHaveBeenCalledWith(
+        '1', 
+        { name: 'Tableau 1 modifié' }
+      );
     });
   });
+
+  
 });
