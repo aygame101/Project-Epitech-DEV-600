@@ -31,6 +31,8 @@ export const cardServices = {
     }
   },
 
+  
+
   /**
    * Récupère toutes les cartes d'un tableau
    */
@@ -69,6 +71,21 @@ export const cardServices = {
       console.error('Error fetching cards for list:', error);
       throw new Error('Failed to fetch cards for list');
     }
+  },
+
+  archiveCard: async (cardId: string): Promise<void> => {
+    const response = await fetch(
+      `https://api.trello.com/1/cards/${cardId}/closed?key=${API_KEY}&token=${TOKEN}&value=true`,
+      {
+        method: 'PUT',
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to archive card');
+    }
+
+    return response.json();
   },
 
   /**
