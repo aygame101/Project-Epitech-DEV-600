@@ -2,6 +2,23 @@ import { StyleSheet } from 'react-native';
 
 // Styles
 export const styles = StyleSheet.create({
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20, // Ajoutez un peu plus d'espace en bas
+  },
+  closeButton: {
+    padding: 10,
+  },
+  modalTitle: {
+    flex: 1, // Permet au titre de prendre l'espace restant
+    color: '#FFA500',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'left', // Centrer le texte
+  },
+
   listCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -147,13 +164,6 @@ export const styles = StyleSheet.create({
     width: '85%',
     padding: 20,
     borderRadius: 12,
-  },
-  modalTitle: {
-    color: '#FFA500',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
   },
   modalInput: {
     borderWidth: 1,

@@ -59,11 +59,11 @@ function ListCard({ list, cards, onUpdate, onArchive, onAddCard, onEdit, onEditC
       {/* Cards container */}
       <ScrollView style={styles.cardsContainer}>
         {listCards.map(card => (
-          <CardItem 
-            key={card.id} 
-            card={card} 
-            onEditCard={onEditCard} 
-            onViewCard={onViewCard} 
+          <CardItem
+            key={card.id}
+            card={card}
+            onEditCard={onEditCard}
+            onViewCard={onViewCard}
           />
         ))}
       </ScrollView>
@@ -244,27 +244,27 @@ export default function BoardDetailScreen() {
       Alert.alert('Erreur', 'Le nom de la carte est requis');
       return;
     }
-  
+
     try {
       // Correction: passing an object instead of individual parameters
       await cardServices.updateCard(editingCardId, {
         name: editingCardName,
         desc: editingCardDesc
       });
-  
+
       // Reset form and close modal
       setEditingCardId(null);
       setEditingCardName('');
       setEditingCardDesc('');
       setShowEditCardModal(false);
-  
+
       // Refresh cards to show the updated one
       fetchCards();
     } catch (error: any) {
       Alert.alert('Erreur', error.message || 'Impossible de mettre à jour la carte');
     }
   };
-  
+
 
   if (isLoading || !board) {
     return (
@@ -522,8 +522,16 @@ export default function BoardDetailScreen() {
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
               <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>{viewingCard?.name}</Text>
-                
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>{viewingCard?.name}</Text>
+                  <Pressable
+                    onPress={() => setShowCardViewModal(false)}
+                    style={styles.closeButton}
+                  >
+                    <AntDesign name="close" size={24} color="#000" />
+                  </Pressable>
+                </View>
+
                 {viewingCard?.desc ? (
                   <ScrollView style={styles.cardViewDescription}>
                     <Text>{viewingCard.desc}</Text>
@@ -531,15 +539,8 @@ export default function BoardDetailScreen() {
                 ) : (
                   <Text style={styles.noDescriptionText}>Pas de description</Text>
                 )}
-                
-                <View style={styles.modalButtonsContainer}>
-                  <Pressable
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={() => setShowCardViewModal(false)}
-                  >
-                    <Text style={styles.cancelButtonText}>Fermer</Text>
-                  </Pressable>
 
+                <View style={styles.modalButtonsContainer}>
                   <Pressable
                     style={[styles.modalButton, styles.confirmButton]}
                     onPress={() => {
@@ -555,6 +556,7 @@ export default function BoardDetailScreen() {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
     </View>
   );
 }
