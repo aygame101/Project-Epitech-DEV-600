@@ -17,9 +17,9 @@ Date de rendu : 6 avril 2025 à 23h42
 | 🟠 In progress | Le rendu offre une UX et une UI de haute qualité et soignées : les interfaces sont bien conçues pour offrir une bonne expérience à ses utilisateurs |
 | 🟠 In progress | Les étudiants peuvent justifier leurs choix d'UI/UX (style, couleurs, icônes, éléments, ...) |
 | 🟠 In progress | Le rendu est fonctionnel |
-| 🔴 To do | Le code est facilement maintenable (noms lisibles, atomicité des fonctions, structure de code claire, syntaxe propre) |
-| 🔴 To do | Au moins 3 tests unitaires sont livrés dans le dépôt |
-| 🔴 To do | Une séquence de tests unitaires est fournie et facilement exécutable |
+| 🟠 In progress | Le code est facilement maintenable (noms lisibles, atomicité des fonctions, structure de code claire, syntaxe propre) |
+| 🟠 In progress | Au moins 3 tests unitaires sont livrés dans le dépôt |
+| 🟠 In progress | Une séquence de tests unitaires est fournie et facilement exécutable |
 | 🔴 To do | Les étudiants intègrent un framework de test dans leur projet pour rendre leur stratégie de test plus complète |
 | 🟠 In progress | Les étudiants utilisent un outil de versioning avec un workflow approprié, incluant une stratégie de branchement, des commits réguliers, des messages descriptifs et un fichier gitignore |
 | 🟢 Done | Les étudiants fournissent un fichier README résumant le projet et son utilisation (prérequis, installation, déploiement, frameworks, ...) |
