@@ -15,12 +15,14 @@ export default function useLists(boardId: string) {
     setError(null);
     try {
       const data = await listServices.getListsByBoardId(boardId);
-      // Trier les listes par position
-      const sortedLists = data.sort((a, b) => a.pos - b.pos);
+      const sortedLists = data
+        .filter(list => !list.closed)
+        .sort((a, b) => a.pos - b.pos);
       setLists(sortedLists);
-    } catch (error) {
-      setError(error.message);
-      Alert.alert('Erreur', error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+      setError(message);
+      Alert.alert('Erreur', message);
     } finally {
       setIsLoading(false);
     }
@@ -36,8 +38,9 @@ export default function useLists(boardId: string) {
       const newList = await listServices.createList(boardId, name);
       setLists([...lists, newList]);
       return newList;
-    } catch (error) {
-      Alert.alert('Erreur', error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+      Alert.alert('Erreur', message);
       return null;
     }
   };
@@ -49,8 +52,9 @@ export default function useLists(boardId: string) {
         list.id === listId ? updatedList : list
       ));
       return updatedList;
-    } catch (error) {
-      Alert.alert('Error', error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An unknown error occurred';
+      Alert.alert('Error', message);
       return null;
     }
   };
@@ -62,8 +66,9 @@ export default function useLists(boardId: string) {
         list.id === listId ? { ...list, closed: true } : list
       ));
       return true;
-    } catch (error) {
-      Alert.alert('Error', error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An unknown error occurred';
+      Alert.alert('Error', message);
       return false;
     }
   };
@@ -71,11 +76,11 @@ export default function useLists(boardId: string) {
   const moveList = async (listId: string, position: number) => {
     try {
       await listServices.moveList(listId, position);
-      // Après un déplacement, il est préférable de rafraîchir toutes les listes
       await fetchLists();
       return true;
-    } catch (error) {
-      Alert.alert('Error', error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An unknown error occurred';
+      Alert.alert('Error', message);
       return false;
     }
   };
