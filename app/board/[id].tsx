@@ -265,6 +265,14 @@ export default function BoardDetailScreen() {
 
 // Styles
 const styles = StyleSheet.create({
+  listCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  editButton: {
+    padding: 5,
+  },
   /* PAGE CONTAINER */
   container: {
     flex: 1,
