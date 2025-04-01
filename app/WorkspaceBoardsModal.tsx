@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native';
 import { useRoute } from '@react-navigation/native';
+import { useRouter } from 'expo-router'; // Import useRouter from expo-router instead
 import Constants from 'expo-constants';
 
 // Configuration Trello
@@ -9,14 +10,12 @@ const API_TOKEN = Constants.expoConfig?.extra?.token;
 
 const WorkspaceBoardsModal = () => {
   const route = useRoute();
+  const router = useRouter(); // Use Expo Router instead of navigation
   const { workspaceId, workspaceName } = route.params;
   const [boards, setBoards] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newBoardName, setNewBoardName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  
-
-
   
   useEffect(() => {
     const fetchBoards = async () => {
@@ -67,6 +66,15 @@ const WorkspaceBoardsModal = () => {
     }
   };
 
+  // Handle board selection - using Expo Router
+  const handleBoardPress = (boardId, boardName) => {
+    // Navigate to the board detail screen using the appropriate path
+    router.push({
+      pathname: '/board/[id]',
+      params: { id: boardId }
+    });
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Workspace : {workspaceName}</Text>
@@ -100,9 +108,12 @@ const WorkspaceBoardsModal = () => {
           data={boards}
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
-            <View style={styles.boardItemContainer}>
+            <TouchableOpacity 
+              style={styles.boardItemContainer}
+              onPress={() => handleBoardPress(item.id, item.name)}
+            >
               <Text style={styles.boardItem}>{item.name}</Text>
-            </View>
+            </TouchableOpacity>
           )}
         />
       )}
