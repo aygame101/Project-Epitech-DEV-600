@@ -21,24 +21,34 @@ import useLists from '@/hooks/useLists';
 import { styles } from '../styles/idStyle';
 
 // Card component to display within a list
-function CardItem({ card, onEditCard }) {
+function CardItem({ card, onEditCard, onViewCard }) {
+  // Fonction pour tronquer la description
+  const truncateDescription = (text, maxLength = 30) => {
+    if (!text || text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + '...';
+  };
+
   return (
-    <View style={styles.cardItem}>
+    <Pressable style={styles.cardItem} onPress={() => onViewCard(card.id)}>
       <Text style={styles.cardTitle}>{card.name}</Text>
-      {card.desc && <Text style={styles.cardDescription}>{card.desc}</Text>}
-      <Pressable onPress={() => onEditCard(card.id)} style={styles.editButton}>
-        <AntDesign name="edit" size={18} color="#000" />
+      {card.desc && (
+        <Text style={styles.cardDescription} numberOfLines={1} ellipsizeMode="tail">
+          {card.desc}
+        </Text>
+      )}
+      <Pressable onPress={() => onViewCard(card.id)} style={styles.viewMoreButton}>
+        <Text style={styles.viewMoreText}>View more</Text>
       </Pressable>
-    </View>
+    </Pressable>
   );
 }
 
-function ListCard({ list, cards, onUpdate, onArchive, onAddCard, onEdit, onEditCard }) {
+function ListCard({ list, cards, onUpdate, onArchive, onAddCard, onEdit, onEditCard, onViewCard }) {
   // Filter cards that belong to this list
   const listCards = cards.filter(card => card.idList === list.id);
 
   return (
-    <View style={styles.listCardContainer}>
+    <View style={[styles.listCardContainer, { height: Math.min(600, 120 + listCards.length * 80) }]}>
       <View style={styles.listCardHeader}>
         <Text style={styles.listCardTitle}>{list.name}</Text>
         <Pressable onPress={() => onEdit(list.id)} style={styles.editButton}>
@@ -49,7 +59,12 @@ function ListCard({ list, cards, onUpdate, onArchive, onAddCard, onEdit, onEditC
       {/* Cards container */}
       <ScrollView style={styles.cardsContainer}>
         {listCards.map(card => (
-          <CardItem key={card.id} card={card} onEditCard={onEditCard} />
+          <CardItem 
+            key={card.id} 
+            card={card} 
+            onEditCard={onEditCard} 
+            onViewCard={onViewCard} 
+          />
         ))}
       </ScrollView>
 
@@ -93,6 +108,10 @@ export default function BoardDetailScreen() {
   const [editingCardId, setEditingCardId] = useState(null);
   const [editingCardName, setEditingCardName] = useState('');
   const [editingCardDesc, setEditingCardDesc] = useState('');
+
+  // Card view modal
+  const [showCardViewModal, setShowCardViewModal] = useState(false);
+  const [viewingCard, setViewingCard] = useState(null);
 
   const {
     lists,
@@ -212,6 +231,14 @@ export default function BoardDetailScreen() {
     }
   };
 
+  const handleViewCard = (cardId: string) => {
+    const cardToView = cards.find(card => card.id === cardId);
+    if (cardToView) {
+      setViewingCard(cardToView);
+      setShowCardViewModal(true);
+    }
+  };
+
   const handleSaveEditCard = async () => {
     if (!editingCardName.trim()) {
       Alert.alert('Erreur', 'Le nom de la carte est requis');
@@ -219,8 +246,11 @@ export default function BoardDetailScreen() {
     }
   
     try {
-      // Assuming updateCard is a method in cardServices that takes card ID, name, and description
-      await cardServices.updateCard(editingCardId, editingCardName, editingCardDesc);
+      // Correction: passing an object instead of individual parameters
+      await cardServices.updateCard(editingCardId, {
+        name: editingCardName,
+        desc: editingCardDesc
+      });
   
       // Reset form and close modal
       setEditingCardId(null);
@@ -275,6 +305,7 @@ export default function BoardDetailScreen() {
               onAddCard={handleAddCard}
               onEdit={handleEditList}
               onEditCard={handleEditCard}
+              onViewCard={handleViewCard}
             />
           ))}
 
@@ -472,6 +503,51 @@ export default function BoardDetailScreen() {
                     onPress={handleSaveEditCard}
                   >
                     <Text style={styles.confirmButtonText}>Enregistrer</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* Card view modal */}
+      <Modal
+        transparent
+        visible={showCardViewModal}
+        animationType="fade"
+        onRequestClose={() => setShowCardViewModal(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowCardViewModal(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>{viewingCard?.name}</Text>
+                
+                {viewingCard?.desc ? (
+                  <ScrollView style={styles.cardViewDescription}>
+                    <Text>{viewingCard.desc}</Text>
+                  </ScrollView>
+                ) : (
+                  <Text style={styles.noDescriptionText}>Pas de description</Text>
+                )}
+                
+                <View style={styles.modalButtonsContainer}>
+                  <Pressable
+                    style={[styles.modalButton, styles.cancelButton]}
+                    onPress={() => setShowCardViewModal(false)}
+                  >
+                    <Text style={styles.cancelButtonText}>Fermer</Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={[styles.modalButton, styles.confirmButton]}
+                    onPress={() => {
+                      setShowCardViewModal(false);
+                      handleEditCard(viewingCard.id);
+                    }}
+                  >
+                    <Text style={styles.confirmButtonText}>Modifier</Text>
                   </Pressable>
                 </View>
               </View>

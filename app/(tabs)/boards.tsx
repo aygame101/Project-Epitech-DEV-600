@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, Alert, FlatList, SafeAreaView, Touch
 import { useRouter } from 'expo-router';
 import { boardServices } from '@/services/boardService';
 import { Board } from '@/types/Board';
-import { styles } from '../styles/boardsStyle';
+import { styles } from '../../styles/boardsStyle';
 
 export default function BoardsScreen() {
   const router = useRouter();

@@ -3,7 +3,7 @@ import { View, Text, FlatList, StyleSheet, ActivityIndicator, TextInput, Touchab
 import { useRoute } from '@react-navigation/native';
 import { useRouter } from 'expo-router'; // Import useRouter from expo-router instead
 import Constants from 'expo-constants';
-import { styles } from './styles/WorkspaceBoardsModalStyle';
+import { styles } from '../styles/WorkspaceBoardsModalStyle';
 
 // Configuration Trello
 const API_KEY = Constants.expoConfig?.extra?.apiKey;
