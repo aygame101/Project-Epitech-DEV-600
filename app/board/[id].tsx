@@ -31,7 +31,7 @@ function CardItem({ card }) {
 
 function ListCard({ list, cards, onUpdate, onArchive, onAddCard, onEdit }) {
   // Filter cards that belong to this list
-  const listCards = cards.filter(card => card.listId === list.id);
+  const listCards = cards.filter(card => card.idList === list.id);
 
   return (
     <View style={styles.listCardContainer}>
