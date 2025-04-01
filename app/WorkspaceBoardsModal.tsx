@@ -3,6 +3,7 @@ import { View, Text, FlatList, StyleSheet, ActivityIndicator, TextInput, Touchab
 import { useRoute } from '@react-navigation/native';
 import { useRouter } from 'expo-router'; // Import useRouter from expo-router instead
 import Constants from 'expo-constants';
+import { styles } from './styles/WorkspaceBoardsModalStyle';
 
 // Configuration Trello
 const API_KEY = Constants.expoConfig?.extra?.apiKey;
@@ -121,54 +122,6 @@ const WorkspaceBoardsModal = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#121212',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFA500',
-    marginBottom: 16,
-    alignSelf: 'flex-start',
-  },
-  addBoardContainer: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  input: {
-    flex: 1,
-    backgroundColor: '#1f1f1f',
-    color: '#FFFFFF',
-    padding: 12,
-    borderRadius: 5,
-    marginRight: 8,
-  },
-  addButton: {
-    backgroundColor: '#FFA500',
-    padding: 12,
-    borderRadius: 5,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  addButtonText: {
-    color: '#121212',
-    fontWeight: 'bold',
-  },
-  boardItemContainer: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#555',
-    marginVertical: 4,
-    backgroundColor: '#1f1f1f',
-    borderRadius: 5,
-  },
-  boardItem: {
-    color: '#FFFFFF',
-  },
-});
+
 
 export default WorkspaceBoardsModal;
