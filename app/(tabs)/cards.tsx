@@ -3,13 +3,13 @@ import { View, Text, StyleSheet, Button, TextInput, Alert } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { cardServices } from '@/services/cardService';
-import { listServices } from '@/services/listService'; 
+import { listServices } from '@/services/listService';
 
 type CardProps = {
   id: string;
   name: string;
   desc?: string;
-  boardId: string; 
+  boardId: string;
 };
 
 const Card: React.FC<CardProps> = ({ id, name, desc, boardId }) => {
@@ -24,7 +24,7 @@ const Card: React.FC<CardProps> = ({ id, name, desc, boardId }) => {
         const lists = await listServices.getLists(boardId);
         setLists(lists);
         if (lists.length > 0) {
-          setSelectedListId(lists[0].id); 
+          setSelectedListId(lists[0].id);
         }
       } catch (error) {
         console.error('Error fetching lists:', error);
@@ -44,6 +44,9 @@ const Card: React.FC<CardProps> = ({ id, name, desc, boardId }) => {
     try {
       const card = await cardServices.addCard(selectedListId, newCardName, newCardDesc);
       Alert.alert('Success', `Card added successfully! ${JSON.stringify(card)}`);
+      
+      setNewCardName('');
+      setNewCardDesc('');
     } catch (error) {
       console.error('Error adding card:', error);
       Alert.alert('Error', 'Failed to add card.');

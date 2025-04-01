@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
-import { StyleSheet, ScrollView, TextInput, Pressable, ActivityIndicator, View, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, ScrollView, Pressable, ActivityIndicator, View, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+import { AntDesign } from '@expo/vector-icons';
 import { boardServices } from '@/services/boardService';
+import { cardServices } from '@/services/cardService';
 import { Board } from '@/types/Board';
 import useLists from '@/hooks/useLists';
 import ListCard from '@/components/lists/ListCard';
+import AddCardModal from '@/app/AddCardModal'; 
 
 export default function BoardDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -16,13 +18,15 @@ export default function BoardDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newListName, setNewListName] = useState('');
-  
-  const { 
-    lists, 
-    isLoading: listsLoading, 
-    createList, 
-    updateList, 
-    archiveList 
+  const [showAddCardModal, setShowAddCardModal] = useState(false);
+  const [selectedListId, setSelectedListId] = useState<string | null>(null);
+
+  const {
+    lists,
+    isLoading: listsLoading,
+    createList,
+    updateList,
+    archiveList
   } = useLists(id as string);
 
   useEffect(() => {
@@ -38,7 +42,7 @@ export default function BoardDetailScreen() {
         setIsLoading(false);
       }
     };
-    
+
     fetchBoardDetails();
   }, [id]);
 
@@ -47,7 +51,7 @@ export default function BoardDetailScreen() {
       Alert.alert('Erreur', 'Le nom de la liste est requis');
       return;
     }
-    
+
     await createList(newListName);
     setShowCreateModal(false);
     setNewListName('');
@@ -61,11 +65,34 @@ export default function BoardDetailScreen() {
     await archiveList(listId);
   };
 
-  const handleAddCard = (listId: string) => {
-    // Cette fonctionnalité sera implémentée lors de la création des cartes
-    router.push(`/list/${listId}/card/new`);
+  const openAddCardModal = (listId: string) => {
+    setSelectedListId(listId);
+    setShowAddCardModal(true);
   };
 
+  const handleAddCard = async (listId: string, cardName: string, cardDesc?: string) => {
+    if (!cardName.trim()) {
+      Alert.alert('Erreur', 'Le nom de la carte est requis');
+      return;
+    }
+  
+    try {
+      if (board?.closed) {
+        
+        await boardServices.openBoard(board.id);
+      }
+  
+      const newCard = await cardServices.addCard(listId, cardName, cardDesc);
+      Alert.alert('Succès', `Carte ajoutée: ${newCard.name}`);
+  
+      if (board?.closed) {
+       
+        await boardServices.closeBoard(board.id);
+      }
+    } catch (error) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
   if (isLoading || !board) {
     return (
       <ThemedView style={styles.loadingContainer}>
@@ -83,26 +110,26 @@ export default function BoardDetailScreen() {
         </Pressable>
         <ThemedText type="title">{board.name}</ThemedText>
       </View>
-      
+
       {listsLoading ? (
         <ActivityIndicator size="large" color="#0079bf" />
       ) : (
-        <ScrollView 
-          horizontal 
+        <ScrollView
+          horizontal
           style={styles.listsContainer}
           contentContainerStyle={styles.listsContentContainer}
         >
           {lists.map(list => (
-            <ListCard 
-              key={list.id} 
-              list={list} 
+            <ListCard
+              key={list.id}
+              list={list}
               onUpdate={handleUpdateList}
               onArchive={handleArchiveList}
-              onAddCard={handleAddCard}
+              onAddCard={() => openAddCardModal(list.id)}
             />
           ))}
-          
-          <Pressable 
+
+          <Pressable
             style={styles.addListButton}
             onPress={() => setShowCreateModal(true)}
           >
@@ -111,7 +138,7 @@ export default function BoardDetailScreen() {
           </Pressable>
         </ScrollView>
       )}
-      
+
       {showCreateModal && (
         <View style={styles.modalOverlay}>
           <ThemedView style={styles.modalContent}>
@@ -136,6 +163,16 @@ export default function BoardDetailScreen() {
               </Pressable>
             </View>
           </ThemedView>
+        </View>
+      )}
+
+      {showAddCardModal && selectedListId && (
+        <View style={styles.modalOverlay}>
+          <AddCardModal
+            listId={selectedListId}
+            onClose={() => setShowAddCardModal(false)}
+            onAddCard={handleAddCard}
+          />
         </View>
       )}
     </ThemedView>
