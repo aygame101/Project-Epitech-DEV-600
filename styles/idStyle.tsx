@@ -2,6 +2,15 @@ import { StyleSheet } from 'react-native';
 
 // Styles
 export const styles = StyleSheet.create({
+  archiveButton: {
+    backgroundColor: '#FF4A4A', // Couleur rouge pour le bouton d'archivage
+    marginLeft: 8, // Espacement entre les boutons
+  },
+  archiveButtonText: {
+    color: '#FFF', // Texte blanc pour le bouton d'archivage
+    fontWeight: 'bold',
+  },
+  
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',

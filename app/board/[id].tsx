@@ -174,6 +174,17 @@ export default function BoardDetailScreen() {
     await fetchBoardDetails();
   };
 
+  const handleArchiveCard = async (cardId: string) => {
+    try {
+      await cardServices.archiveCard(cardId);
+      setShowCardViewModal(false); // Fermez la modale après l'archivage
+      fetchCards(); // Rechargez les cartes pour mettre à jour l'affichage
+    } catch (error: any) {
+      Alert.alert('Erreur', error.message || 'Impossible d\'archiver la carte');
+    }
+  };
+  
+
   const handleAddCard = (listId: string) => {
     setSelectedListId(listId);
     setShowCardModal(true);
@@ -550,12 +561,20 @@ export default function BoardDetailScreen() {
                   >
                     <Text style={styles.confirmButtonText}>Modifier</Text>
                   </Pressable>
+
+                  <Pressable
+                    style={[styles.modalButton, styles.archiveButton]}
+                    onPress={() => handleArchiveCard(viewingCard.id)}
+                  >
+                    <Text style={styles.archiveButtonText}>Archiver</Text>
+                  </Pressable>
                 </View>
               </View>
             </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
 
     </View>
   );
