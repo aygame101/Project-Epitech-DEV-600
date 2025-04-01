@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, FlatList, SafeAreaView, TouchableOpacity, TouchableWithoutFeedback, Modal } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { fetchWorkspaces, createWorkspace, deleteWorkspace, updateWorkspace } from '@/services/indexService';
-import { styles } from '../styles/indexStyle';
+import { styles } from '../../styles/indexStyle';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
