@@ -11,7 +11,7 @@ export const boardServices = {
    */
   getBoards: async (): Promise<Board[]> => {
     const response = await fetch(
-      `https://api.trello.com/1/members/me/boards?key=${API_KEY}&token=${API_TOKEN}&fields=name,desc,url,prefs,closed`
+      `https://api.trello.com/1/members/me/boards?key=${API_KEY}&token=${API_TOKEN}&fields=name,desc,url,prefs,closed,idOrganization`
     );
 
     if (!response.ok) throw new Error('Échec du chargement des tableaux');
@@ -24,7 +24,7 @@ export const boardServices = {
   /**
    * Crée un nouveau tableau
    */
-  createBoard: async (name: string): Promise<Board> => {
+  createBoard: async (name: string, defaultLists: boolean): Promise<Board> => {
     const response = await fetch(
       `https://api.trello.com/1/boards/?key=${API_KEY}&token=${API_TOKEN}`,
       {
@@ -32,7 +32,7 @@ export const boardServices = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name,
-          defaultLists: false
+          defaultLists: defaultLists
         })
       }
     );
@@ -41,6 +41,7 @@ export const boardServices = {
 
     return await response.json();
   },
+
 
   /**
    * Récupère un tableau spécifique par son ID
@@ -67,10 +68,9 @@ export const boardServices = {
     if (!response.ok) throw new Error('Failed to delete board');
   },
 
-
   /**
- * Met à jour un tableau
- */
+   * Met à jour un tableau
+   */
   updateBoard: async (boardId: string, updates: Partial<Board>): Promise<Board> => {
     const response = await fetch(
       `https://api.trello.com/1/boards/${boardId}?key=${API_KEY}&token=${API_TOKEN}`,
@@ -87,5 +87,4 @@ export const boardServices = {
 
     return await response.json();
   }
-
 };
