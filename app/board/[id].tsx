@@ -17,10 +17,15 @@ import { boardServices } from '@/services/boardService';
 import { Board } from '@/types/Board';
 import useLists from '@/hooks/useLists';
 
-function ListCard({ list, onUpdate, onArchive, onAddCard }) {
+function ListCard({ list, onUpdate, onArchive, onAddCard, onEdit }) {
   return (
     <View style={styles.listCardContainer}>
-      <Text style={styles.listCardTitle}>{list.name}</Text>
+      <View style={styles.listCardHeader}>
+        <Text style={styles.listCardTitle}>{list.name}</Text>
+        <Pressable onPress={() => onEdit(list.id)} style={styles.editButton}>
+          <AntDesign name="edit" size={18} color="#000" />
+        </Pressable>
+      </View>
 
       <View style={styles.listCardActions}>
         <Pressable onPress={() => onAddCard(list.id)} style={styles.listCardActionBtn}>
@@ -44,17 +49,19 @@ export default function BoardDetailScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newListName, setNewListName] = useState('');
 
-  // On importe nos fonctions depuis le hook
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingListId, setEditingListId] = useState(null);
+  const [editingListName, setEditingListName] = useState('');
+
   const {
     lists,
     isLoading: listsLoading,
     createList,
     updateList,
     archiveList,
-    fetchLists  // Utiliser fetchLists pour rafraîchir les listes
+    fetchLists
   } = useLists(id as string);
 
-  // **Définition hors useEffect pour pouvoir le rappeler après l'archivage**
   const fetchBoardDetails = async () => {
     setIsLoading(true);
     try {
@@ -68,7 +75,6 @@ export default function BoardDetailScreen() {
     }
   };
 
-  // Chargement initial du board
   useEffect(() => {
     fetchBoardDetails();
   }, [id]);
@@ -88,15 +94,35 @@ export default function BoardDetailScreen() {
     await updateList(listId, { name: newName });
   };
 
-  // ICI on force la réactualisation (fetchBoardDetails) après l'archivage
   const handleArchiveList = async (listId: string) => {
     await archiveList(listId);
-    await fetchLists();  // Rafraîchit les listes après l'archivage
+    await fetchLists();
     await fetchBoardDetails();
   };
 
   const handleAddCard = (listId: string) => {
     router.push(`/list/${listId}/card/new`);
+  };
+
+  const handleEditList = (listId: string) => {
+    const listToEdit = lists.find(list => list.id === listId);
+    if (listToEdit) {
+      setEditingListId(listId);
+      setEditingListName(listToEdit.name);
+      setShowEditModal(true);
+    }
+  };
+
+  const handleSaveEditList = async () => {
+    if (!editingListName.trim()) {
+      Alert.alert('Erreur', 'Le nom de la liste est requis');
+      return;
+    }
+
+    await handleUpdateList(editingListId, editingListName);
+    setShowEditModal(false);
+    setEditingListId(null);
+    setEditingListName('');
   };
 
   if (isLoading || !board) {
@@ -110,7 +136,6 @@ export default function BoardDetailScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <AntDesign name="arrowleft" size={28} color="#FFA500" />
@@ -118,7 +143,6 @@ export default function BoardDetailScreen() {
         <Text style={styles.boardTitle}>{board.name}</Text>
       </View>
 
-      {/* Lists */}
       {listsLoading ? (
         <View style={styles.loadingLists}>
           <ActivityIndicator size="large" color="#FFA500" />
@@ -137,10 +161,10 @@ export default function BoardDetailScreen() {
               onUpdate={handleUpdateList}
               onArchive={handleArchiveList}
               onAddCard={handleAddCard}
+              onEdit={handleEditList}
             />
           ))}
 
-          {/* Bouton d'ajout de nouvelle liste */}
           <Pressable
             style={styles.addListButton}
             onPress={() => setShowCreateModal(true)}
@@ -151,7 +175,6 @@ export default function BoardDetailScreen() {
         </ScrollView>
       )}
 
-      {/* Modal pour créer une nouvelle liste */}
       <Modal
         transparent
         visible={showCreateModal}
@@ -193,9 +216,52 @@ export default function BoardDetailScreen() {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
+      <Modal
+        transparent
+        visible={showEditModal}
+        animationType="fade"
+        onRequestClose={() => setShowEditModal(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowEditModal(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Éditer la liste</Text>
+
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Nom de la liste"
+                  placeholderTextColor="#888"
+                  value={editingListName}
+                  onChangeText={setEditingListName}
+                  autoFocus
+                />
+
+                <View style={styles.modalButtonsContainer}>
+                  <Pressable
+                    style={[styles.modalButton, styles.cancelButton]}
+                    onPress={() => setShowEditModal(false)}
+                  >
+                    <Text style={styles.cancelButtonText}>Annuler</Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={[styles.modalButton, styles.confirmButton]}
+                    onPress={handleSaveEditList}
+                  >
+                    <Text style={styles.confirmButtonText}>Enregistrer</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 }
+
 
 // Styles
 const styles = StyleSheet.create({
