@@ -219,8 +219,11 @@ export default function BoardDetailScreen() {
     }
   
     try {
-      // Assuming updateCard is a method in cardServices that takes card ID, name, and description
-      await cardServices.updateCard(editingCardId, editingCardName, editingCardDesc);
+      // Correction ici - passer un objet conforme à Partial<Card>
+      await cardServices.updateCard(editingCardId, {
+        name: editingCardName,
+        desc: editingCardDesc
+      });
   
       // Reset form and close modal
       setEditingCardId(null);
