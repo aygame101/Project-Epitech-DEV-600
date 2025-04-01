@@ -18,7 +18,7 @@ import { boardServices } from '@/services/boardService';
 import { cardServices } from '@/services/cardService';
 import { Board } from '@/types/Board';
 import useLists from '@/hooks/useLists';
-import { styles } from '../styles/idStyle';
+import { styles } from '../../styles/idStyle';
 
 // Card component to display within a list
 function CardItem({ card, onEditCard }) {
