@@ -9,7 +9,8 @@ import {
   Text,
   Alert,
   Modal,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
+  FlatList
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
@@ -18,7 +19,20 @@ import { cardServices } from '@/services/cardService';
 import { Board } from '@/types/Board';
 import useLists from '@/hooks/useLists';
 
-function ListCard({ list, onUpdate, onArchive, onAddCard, onEdit }) {
+// Card component to display within a list
+function CardItem({ card }) {
+  return (
+    <View style={styles.cardItem}>
+      <Text style={styles.cardTitle}>{card.name}</Text>
+      {card.desc && <Text style={styles.cardDescription}>{card.desc}</Text>}
+    </View>
+  );
+}
+
+function ListCard({ list, cards, onUpdate, onArchive, onAddCard, onEdit }) {
+  // Filter cards that belong to this list
+  const listCards = cards.filter(card => card.listId === list.id);
+
   return (
     <View style={styles.listCardContainer}>
       <View style={styles.listCardHeader}>
@@ -27,6 +41,13 @@ function ListCard({ list, onUpdate, onArchive, onAddCard, onEdit }) {
           <AntDesign name="edit" size={18} color="#000" />
         </Pressable>
       </View>
+
+      {/* Cards container */}
+      <ScrollView style={styles.cardsContainer}>
+        {listCards.map(card => (
+          <CardItem key={card.id} card={card} />
+        ))}
+      </ScrollView>
 
       <View style={styles.listCardActions}>
         <Pressable onPress={() => onAddCard(list.id)} style={styles.listCardActionBtn}>
@@ -46,13 +67,22 @@ export default function BoardDetailScreen() {
 
   const [board, setBoard] = useState<Board | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [cards, setCards] = useState([]);
+  const [isLoadingCards, setIsLoadingCards] = useState(false);
 
+  // List modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newListName, setNewListName] = useState('');
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingListId, setEditingListId] = useState(null);
   const [editingListName, setEditingListName] = useState('');
+
+  // Card creation modal
+  const [showCardModal, setShowCardModal] = useState(false);
+  const [newCardName, setNewCardName] = useState('');
+  const [newCardDesc, setNewCardDesc] = useState('');
+  const [selectedListId, setSelectedListId] = useState(null);
 
   const {
     lists,
@@ -76,8 +106,22 @@ export default function BoardDetailScreen() {
     }
   };
 
+  const fetchCards = async () => {
+    setIsLoadingCards(true);
+    try {
+      // Assuming you have a method to fetch all cards for a board
+      const boardCards = await cardServices.getCardsByBoard(id as string);
+      setCards(boardCards);
+    } catch (error: any) {
+      console.error('Erreur lors du chargement des cartes:', error);
+    } finally {
+      setIsLoadingCards(false);
+    }
+  };
+
   useEffect(() => {
     fetchBoardDetails();
+    fetchCards();
   }, [id]);
 
   const handleCreateList = async () => {
@@ -102,7 +146,29 @@ export default function BoardDetailScreen() {
   };
 
   const handleAddCard = (listId: string) => {
-    router.push(`/list/${listId}/card/new`);
+    setSelectedListId(listId);
+    setShowCardModal(true);
+  };
+
+  const handleCreateCard = async () => {
+    if (!newCardName.trim()) {
+      Alert.alert('Erreur', 'Le nom de la carte est requis');
+      return;
+    }
+
+    try {
+      await cardServices.addCard(selectedListId, newCardName, newCardDesc);
+      
+      // Reset form and close modal
+      setNewCardName('');
+      setNewCardDesc('');
+      setShowCardModal(false);
+      
+      // Refresh cards to show the new one
+      fetchCards();
+    } catch (error: any) {
+      Alert.alert('Erreur', error.message || 'Impossible de créer la carte');
+    }
   };
 
   const handleEditList = (listId: string) => {
@@ -144,7 +210,7 @@ export default function BoardDetailScreen() {
         <Text style={styles.boardTitle}>{board.name}</Text>
       </View>
 
-      {listsLoading ? (
+      {listsLoading || isLoadingCards ? (
         <View style={styles.loadingLists}>
           <ActivityIndicator size="large" color="#FFA500" />
         </View>
@@ -159,6 +225,7 @@ export default function BoardDetailScreen() {
             <ListCard
               key={list.id}
               list={list}
+              cards={cards}
               onUpdate={handleUpdateList}
               onArchive={handleArchiveList}
               onAddCard={handleAddCard}
@@ -176,6 +243,7 @@ export default function BoardDetailScreen() {
         </ScrollView>
       )}
 
+      {/* List creation modal */}
       <Modal
         transparent
         visible={showCreateModal}
@@ -218,6 +286,7 @@ export default function BoardDetailScreen() {
         </TouchableWithoutFeedback>
       </Modal>
 
+      {/* List edit modal */}
       <Modal
         transparent
         visible={showEditModal}
@@ -259,10 +328,62 @@ export default function BoardDetailScreen() {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
+      {/* Card creation modal */}
+      <Modal
+        transparent
+        visible={showCardModal}
+        animationType="fade"
+        onRequestClose={() => setShowCardModal(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowCardModal(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Créer une carte</Text>
+
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Titre de la carte"
+                  placeholderTextColor="#888"
+                  value={newCardName}
+                  onChangeText={setNewCardName}
+                  autoFocus
+                />
+
+                <TextInput
+                  style={[styles.modalInput, styles.textareaInput]}
+                  placeholder="Description (optionnelle)"
+                  placeholderTextColor="#888"
+                  value={newCardDesc}
+                  onChangeText={setNewCardDesc}
+                  multiline
+                  numberOfLines={3}
+                />
+
+                <View style={styles.modalButtonsContainer}>
+                  <Pressable
+                    style={[styles.modalButton, styles.cancelButton]}
+                    onPress={() => setShowCardModal(false)}
+                  >
+                    <Text style={styles.cancelButtonText}>Annuler</Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={[styles.modalButton, styles.confirmButton]}
+                    onPress={handleCreateCard}
+                  >
+                    <Text style={styles.confirmButtonText}>Créer</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 }
-
 
 // Styles
 const styles = StyleSheet.create({
@@ -327,6 +448,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF', // Listes en blanc
     borderRadius: 8,
     width: 260,
+    height: 400, // Fixed height for scrollable lists
     padding: 12,
     marginHorizontal: 8,
     marginVertical: 4,
@@ -353,6 +475,28 @@ const styles = StyleSheet.create({
   },
   listCardArchiveText: {
     color: '#FF4A4A', // Couleur d'archive
+  },
+
+  /* CARDS */
+  cardsContainer: {
+    flex: 1,
+    marginVertical: 8,
+  },
+  cardItem: {
+    backgroundColor: '#F8F8F8',
+    borderRadius: 4,
+    padding: 8,
+    marginBottom: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#FFA500',
+  },
+  cardTitle: {
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  cardDescription: {
+    fontSize: 12,
+    color: '#666',
   },
 
   /* AJOUTER UNE LISTE BUTTON */
@@ -405,6 +549,10 @@ const styles = StyleSheet.create({
     color: '#000',
     backgroundColor: '#FFF',
     marginBottom: 20,
+  },
+  textareaInput: {
+    height: 80,
+    textAlignVertical: 'top',
   },
   modalButtonsContainer: {
     flexDirection: 'row',

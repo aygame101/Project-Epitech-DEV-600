@@ -32,6 +32,46 @@ export const cardServices = {
   },
 
   /**
+   * Récupère toutes les cartes d'un tableau
+   */
+  getCardsByBoard: async (boardId: string): Promise<Card[]> => {
+    try {
+      const response = await axios.get(`${API_URL}boards/${boardId}/cards`, {
+        params: {
+          key: API_KEY,
+          token: TOKEN,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching cards for board:', error);
+      throw new Error('Failed to fetch cards for board');
+    }
+  },
+
+  /**
+   * Récupère toutes les cartes d'une liste (méthode alternative)
+   * Utilise getCardsByBoard et filtre les résultats
+   */
+  getCardsByList: async (listId: string): Promise<Card[]> => {
+    try {
+      // Vous pouvez implémenter cette méthode de deux façons:
+      
+      // Option 1: Utiliser votre méthode getCards existante
+      return await cardServices.getCards(listId);
+      
+      // Option 2: Récupérer toutes les cartes du tableau et filtrer
+      // Note: Cette option nécessiterait de connaître le boardId
+      // const boardId = '...'; // Il faudrait stocker ou récupérer l'ID du tableau
+      // const allCards = await cardServices.getCardsByBoard(boardId);
+      // return allCards.filter(card => card.idList === listId);
+    } catch (error) {
+      console.error('Error fetching cards for list:', error);
+      throw new Error('Failed to fetch cards for list');
+    }
+  },
+
+  /**
    * Ajoute une nouvelle carte à une liste
    */
   addCard: async (listId: string, name: string, desc?: string): Promise<Card> => {
