@@ -1,16 +1,10 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
+import { Card, Checklist } from '../types/Card';
 
 const API_URL = 'https://api.trello.com/1/';
 const API_KEY = Constants.expoConfig?.extra?.apiKey;
 const TOKEN = Constants.expoConfig?.extra?.token;
-
-interface Card {
-  id: string;
-  name: string;
-  desc?: string;
-  idList: string;
-}
 
 export const cardServices = {
   /**
@@ -219,6 +213,118 @@ export const cardServices = {
         console.error('Unknown error removing member from card');
       }
       throw new Error('Failed to remove member from card');
+    }
+  },
+
+  /**
+   * Ajoute une checklist à une carte
+   */
+  addChecklistToCard: async (cardId: string, title: string): Promise<Checklist> => {
+    try {
+      const response = await axios.post(`${API_URL}cards/${cardId}/checklists`, null, {
+        params: {
+          name: title,
+          key: API_KEY,
+          token: TOKEN,
+        },
+      });
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error adding checklist to card:', error.message);
+      } else {
+        console.error('Unknown error adding checklist to card');
+      }
+      throw new Error('Failed to add checklist to card');
+    }
+  },
+
+  /**
+   * Met à jour une checklist
+   */
+  updateChecklist: async (checklistId: string, updates: Partial<Checklist>): Promise<Checklist> => {
+    try {
+      const response = await axios.put(`${API_URL}checklists/${checklistId}`, null, {
+        params: {
+          ...updates,
+          key: API_KEY,
+          token: TOKEN,
+        },
+      });
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error updating checklist:', error.message);
+      } else {
+        console.error('Unknown error updating checklist');
+      }
+      throw new Error('Failed to update checklist');
+    }
+  },
+
+  /**
+   * Supprime une checklist
+   */
+  deleteChecklist: async (checklistId: string): Promise<void> => {
+    try {
+      await axios.delete(`${API_URL}checklists/${checklistId}`, {
+        params: {
+          key: API_KEY,
+          token: TOKEN,
+        },
+      });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error deleting checklist:', error.message);
+      } else {
+        console.error('Unknown error deleting checklist');
+      }
+      throw new Error('Failed to delete checklist');
+    }
+  },
+
+  /**
+   * Définit la date d'échéance d'une carte
+   */
+  setCardDueDate: async (cardId: string, dueDate: string): Promise<Card> => {
+    try {
+      const response = await axios.put(`${API_URL}cards/${cardId}`, null, {
+        params: {
+          due: dueDate,
+          key: API_KEY,
+          token: TOKEN,
+        },
+      });
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error setting card due date:', error.message);
+      } else {
+        console.error('Unknown error setting card due date');
+      }
+      throw new Error('Failed to set card due date');
+    }
+  },
+
+  /**
+   * Ajoute un rappel pour une carte
+   */
+  addReminder: async (cardId: string, reminderDate: string): Promise<void> => {
+    try {
+      await axios.post(`${API_URL}cards/${cardId}/reminders`, null, {
+        params: {
+          date: reminderDate,
+          key: API_KEY,
+          token: TOKEN,
+        },
+      });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error adding reminder:', error.message);
+      } else {
+        console.error('Unknown error adding reminder');
+      }
+      throw new Error('Failed to add reminder');
     }
   },
 };
