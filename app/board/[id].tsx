@@ -637,7 +637,7 @@ export default function BoardDetailScreen() {
                     onPress={() => setShowCardViewModal(false)}
                     style={styles.closeButton}
                   >
-                    <AntDesign name="close" size={24} color="#000" />
+                    <AntDesign name="close" size={24} color="#fff" />
                   </Pressable>
                 </View>
 
