@@ -331,15 +331,46 @@ export default function BoardDetailScreen() {
     }
   };
 
+  const [assignedMembers, setAssignedMembers] = useState<string[]>([]);
+  const [currentCardId, setCurrentCardId] = useState<string | null>(null);
+
+  const fetchAssignedMembers = async (cardId: string) => {
+    try {
+      const response = await fetch(`https://api.trello.com/1/cards/${cardId}/members?key=625a06c8525ea14e94d75b7f03cf6051&token=ATTA75822e9f3501426780c7190ff61203b040e0e98bf64106f13f27ad4950990137C0A0BA60`);
+      const data = await response.json();
+      setAssignedMembers(data.map((member: User) => member.id));
+    } catch (error) {
+      console.error('Erreur lors du chargement des membres assignés:', error);
+    }
+  };
+
   const handleAssignCard = (cardId: string) => {
+    setCurrentCardId(cardId);
     setShowCardViewModal(false);
     fetchWorkspaceUsers(cardId);
+    fetchAssignedMembers(cardId);
   };
 
   const handleAssignUserToCard = async (userId: string) => {
-    // Logic to assign the user to the card
-    // You can make an API call here to update the card with the assigned user
-    setShowAssignModal(false);
+    try {
+      if (!currentCardId) return;
+      
+      const isAssigned = assignedMembers.includes(userId);
+      const url = `https://api.trello.com/1/cards/${currentCardId}/idMembers?value=${userId}&key=625a06c8525ea14e94d75b7f03cf6051&token=ATTA75822e9f3501426780c7190ff61203b040e0e98bf64106f13f27ad4950990137C0A0BA60`;
+      
+      if (isAssigned) {
+        // Désassigner l'utilisateur
+        await fetch(url, { method: 'DELETE' });
+        setAssignedMembers(assignedMembers.filter(id => id !== userId));
+      } else {
+        // Assigner l'utilisateur
+        await fetch(url, { method: 'POST' });
+        setAssignedMembers([...assignedMembers, userId]);
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'assignation:', error);
+      Alert.alert('Erreur', 'Impossible de modifier l\'assignation');
+    }
   };
 
   if (isLoading || !board) {
@@ -677,7 +708,17 @@ export default function BoardDetailScreen() {
                         style={styles.userItem}
                         onPress={() => handleAssignUserToCard(item.id)}
                       >
-                        <Text style={styles.userName}>{item.fullName}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Text style={styles.userName}>{item.fullName}</Text>
+                          {assignedMembers.includes(item.id) && (
+                            <AntDesign 
+                              name="check" 
+                              size={20} 
+                              color="green" 
+                              style={{ marginLeft: 10 }}
+                            />
+                          )}
+                        </View>
                         <Text style={styles.userEmail}>{item.username}</Text>
                       </Pressable>
                     )}
