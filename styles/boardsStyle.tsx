@@ -176,9 +176,23 @@ export const styles = StyleSheet.create({
     saveButton: {
       backgroundColor: '#FFA500',
     },
-    modalButtonText: {
-      color: '#FFFFFF',
-      fontWeight: 'bold',
-    },
+  modalButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+  },
+  templateItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  templateTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  templateDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 5,
+  },
   });
-  

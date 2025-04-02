@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, FlatList, SafeAreaView, TouchableOpacity, TouchableWithoutFeedback, ActivityIndicator, Modal } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, FlatList, SafeAreaView, TouchableOpacity, TouchableWithoutFeedback, ActivityIndicator, Modal, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { boardServices } from '@/services/boardService';
 import { Board } from '@/types/Board';
@@ -13,6 +13,7 @@ export default function BoardsScreen() {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const [updatedBoardName, setUpdatedBoardName] = useState('');
+  const [templateModalVisible, setTemplateModalVisible] = useState(false);
 
   useEffect(() => {
     fetchBoards();
@@ -31,7 +32,15 @@ export default function BoardsScreen() {
     }
   };
 
-  const handleCreateBoard = async () => {
+  const openTemplateModal = () => {
+    if (!newBoardName.trim()) {
+      Alert.alert('Info', 'Veuillez saisir un nom de tableau');
+      return;
+    }
+    setTemplateModalVisible(true);
+  };
+
+  const handleCreateBoard = async (isKanban: boolean) => {
     if (!newBoardName.trim()) {
       Alert.alert('Erreur', 'Le nom du tableau ne peut pas être vide');
       return;
@@ -39,9 +48,10 @@ export default function BoardsScreen() {
     
     setIsLoading(true);
     try {
-      const newBoard = await boardServices.createBoard(newBoardName);
+      const newBoard = await boardServices.createBoard(newBoardName, isKanban);
       setBoards([...boards, newBoard]);
       setNewBoardName('');
+      setTemplateModalVisible(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Une erreur est survenue';
       Alert.alert('Erreur', message);
@@ -208,7 +218,7 @@ export default function BoardsScreen() {
           <TouchableOpacity 
             testID="create-board-button"
             style={styles.createButton} 
-            onPress={handleCreateBoard} 
+            onPress={openTemplateModal} 
             disabled={isLoading || !newBoardName.trim()}
           >
             <Text style={styles.createButtonText}>Créer</Text>
@@ -243,6 +253,51 @@ export default function BoardsScreen() {
         )}
         
         {renderEditModal()}
+        
+        {/* Simple Creation Modal */}
+        <Modal
+          transparent={true}
+          visible={templateModalVisible}
+          animationType="fade"
+          onRequestClose={() => setTemplateModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { maxHeight: '50%', width: '80%' }]}>
+              <Text style={styles.modalTitle}>Type de tableau</Text>
+              
+              <View style={{ gap: 16, marginTop: 20 }}>
+                <TouchableOpacity
+                  style={styles.templateItem}
+                  onPress={() => {
+                    handleCreateBoard(false);
+                    setTemplateModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.templateTitle}>Tableau vide</Text>
+                  <Text style={styles.templateDescription}>Pas de listes prédéfinies</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={styles.templateItem}
+                  onPress={() => {
+                    handleCreateBoard(true);
+                    setTemplateModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.templateTitle}>Kanban</Text>
+                  <Text style={styles.templateDescription}>Listes "To Do", "Doing", "Done"</Text>
+                </TouchableOpacity>
+              </View>
+              
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton, { marginTop: 16 }]}
+                onPress={() => setTemplateModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Annuler</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     </SafeAreaView>
   );

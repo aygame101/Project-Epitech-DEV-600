@@ -3,7 +3,9 @@ export type Board = {
     name: string;
     desc?: string;
     url: string;
+    idOrganization?: string;
     prefs?: {
       backgroundImage?: string;
     };
+    closed?: boolean;
   };
