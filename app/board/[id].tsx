@@ -353,23 +353,41 @@ export default function BoardDetailScreen() {
 
   const handleAssignUserToCard = async (userId: string) => {
     try {
-      if (!currentCardId) return;
+      if (!currentCardId) {
+        Alert.alert('Erreur', 'Aucune carte sélectionnée');
+        return;
+      }
       
       const isAssigned = assignedMembers.includes(userId);
-      const url = `https://api.trello.com/1/cards/${currentCardId}/idMembers?value=${userId}&key=625a06c8525ea14e94d75b7f03cf6051&token=ATTA75822e9f3501426780c7190ff61203b040e0e98bf64106f13f27ad4950990137C0A0BA60`;
       
       if (isAssigned) {
         // Désassigner l'utilisateur
-        await fetch(url, { method: 'DELETE' });
-        setAssignedMembers(assignedMembers.filter(id => id !== userId));
+        const response = await fetch(
+          `https://api.trello.com/1/cards/${currentCardId}/idMembers/${userId}?key=625a06c8525ea14e94d75b7f03cf6051&token=ATTA75822e9f3501426780c7190ff61203b040e0e98bf64106f13f27ad4950990137C0A0BA60`,
+          { method: 'DELETE' }
+        );
+        
+        if (response.ok) {
+          setAssignedMembers(assignedMembers.filter(id => id !== userId));
+        } else {
+          throw new Error('Échec de la désassignation');
+        }
       } else {
         // Assigner l'utilisateur
-        await fetch(url, { method: 'POST' });
-        setAssignedMembers([...assignedMembers, userId]);
+        const response = await fetch(
+          `https://api.trello.com/1/cards/${currentCardId}/idMembers?value=${userId}&key=625a06c8525ea14e94d75b7f03cf6051&token=ATTA75822e9f3501426780c7190ff61203b040e0e98bf64106f13f27ad4950990137C0A0BA60`,
+          { method: 'POST' }
+        );
+        
+        if (response.ok) {
+          setAssignedMembers([...assignedMembers, userId]);
+        } else {
+          throw new Error('Échec de l\'assignation');
+        }
       }
     } catch (error) {
       console.error('Erreur lors de l\'assignation:', error);
-      Alert.alert('Erreur', 'Impossible de modifier l\'assignation');
+      Alert.alert('Erreur', error.message || 'Impossible de modifier l\'assignation');
     }
   };
 
