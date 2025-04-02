@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, FlatList, SafeAreaView, TouchableOpacity, TouchableWithoutFeedback, ActivityIndicator, Modal, ScrollView } from 'react-native';
+import { View, FlatList, SafeAreaView, ActivityIndicator, Alert, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { boardServices } from '@/services/boardService';
 import { Board } from '@/types/Board';
 import { styles } from '../../styles/boardsStyle';
-import DeleteConfirmationModal from '@/components/DeleteConfirmationModal'; // Importez le modal de suppression
+
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
+import BoardCard from '@/components/boards/BoardCard';
+import CreateBoardSection from '@/components/boards/CreateBoardSection';
+import TemplateSelectionModal from '@/components/modals/TemplateSelectionModal';
+import EditBoardModal from '@/components/modals/EditBoardModal';
 
 export default function BoardsScreen() {
   const router = useRouter();
@@ -15,8 +20,6 @@ export default function BoardsScreen() {
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const [updatedBoardName, setUpdatedBoardName] = useState('');
   const [templateModalVisible, setTemplateModalVisible] = useState(false);
-  
-  // États pour le modal de confirmation de suppression
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [boardToDelete, setBoardToDelete] = useState<string | null>(null);
@@ -82,14 +85,12 @@ export default function BoardsScreen() {
     try {
       if (editingBoard) {
         await boardServices.updateBoard(editingBoard.id, { name: updatedBoardName });
-        
         setBoards(boards.map(board => 
           board.id === editingBoard.id 
             ? { ...board, name: updatedBoardName }
             : board
         ));
       }
-      
       setEditModalVisible(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Une erreur est survenue';
@@ -99,13 +100,11 @@ export default function BoardsScreen() {
     }
   };
 
-  // Nouvelle fonction pour montrer le modal de suppression
   const showDeleteConfirmation = (boardId: string) => {
     setBoardToDelete(boardId);
     setDeleteModalVisible(true);
   };
 
-  // Fonction pour confirmer la suppression
   const confirmDeleteBoard = async () => {
     if (!boardToDelete) return;
     
@@ -127,109 +126,17 @@ export default function BoardsScreen() {
     router.push(`/board/${board.id}`);
   };
 
-  const renderBoardItem = ({ item }: { item: Board }) => (
-    <TouchableWithoutFeedback onPress={() => handleBoardPress(item)}>
-      <View style={styles.boardCard}>
-        <Text style={styles.boardName}>{item.name}</Text>
-        {item.desc && <Text style={styles.boardDesc}>{item.desc}</Text>}
-        
-        <View style={styles.boardActions}>
-          <TouchableOpacity 
-            testID={`edit-button-${item.id}`}
-            style={styles.editButton}
-            onPress={(e) => {
-              e.stopPropagation();
-              handleEditButtonPress(item);
-            }}
-          >
-            <Text>✏️</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            testID={`delete-button-${item.id}`}
-            style={styles.deleteButton}
-            onPress={(e) => {
-              e.stopPropagation();
-              showDeleteConfirmation(item.id); // Utiliser la nouvelle fonction
-            }}
-          >
-            <Text>🗑️</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </TouchableWithoutFeedback>
-  );
-  
-  const renderEditModal = () => (
-    <Modal
-      transparent={true}
-      visible={editModalVisible}
-      animationType="fade"
-      onRequestClose={() => setEditModalVisible(false)}
-    >
-      <TouchableWithoutFeedback onPress={() => setEditModalVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Modifier le nom du tableau</Text>
-              
-              <TextInput
-                style={styles.modalInput}
-                value={updatedBoardName}
-                onChangeText={setUpdatedBoardName}
-                placeholder="Nouveau nom du tableau"
-                placeholderTextColor="#ccc"
-                autoFocus={true}
-              />
-              
-              <View style={styles.modalButtons}>
-                <TouchableOpacity 
-                  style={[styles.modalButton, styles.cancelButton]} 
-                  onPress={() => setEditModalVisible(false)}
-                >
-                  <Text style={styles.modalButtonText}>Annuler</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={[styles.modalButton, styles.saveButton]} 
-                  onPress={handleUpdateBoard}
-                  disabled={!updatedBoardName.trim()}
-                >
-                  <Text style={styles.modalButtonText}>Enregistrer</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </TouchableWithoutFeedback>
-        </View>
-      </TouchableWithoutFeedback>
-    </Modal>
-  );
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.title}>TrellUwU</Text>
+        <CreateBoardSection
+          value={newBoardName}
+          onChangeText={setNewBoardName}
+          onCreatePress={openTemplateModal}
+          isLoading={isLoading}
+        />
         
-        <View style={styles.createContainer}>
-          <TextInput
-            testID="board-name-input"
-            style={styles.input}
-            placeholder="Nom du tableau à créer"
-            placeholderTextColor="#ccc"
-            value={newBoardName}
-            onChangeText={setNewBoardName}
-          />
-          <TouchableOpacity 
-            testID="create-board-button"
-            style={styles.createButton} 
-            onPress={openTemplateModal} 
-            disabled={isLoading || !newBoardName.trim()}
-          >
-            <Text style={styles.createButtonText}>Créer</Text>
-          </TouchableOpacity>
-        </View>
-        
-        <Text style={styles.sectionTitle}>Mes tableaux récents</Text>
+        <Text style={styles.sectionTitle as any}>Mes tableaux récents</Text>
         
         {isLoading && boards.length === 0 ? (
           <View style={styles.loadingContainer}>
@@ -239,14 +146,21 @@ export default function BoardsScreen() {
           <>
             {boards.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>Aucun tableau pour le moment</Text>
+                <Text style={styles.emptyText as any}>Aucun tableau pour le moment</Text>
               </View>
             ) : (
               <FlatList
                 testID="boards-list"
                 data={boards}
                 keyExtractor={(item) => item.id}
-                renderItem={renderBoardItem}
+                renderItem={({ item }) => (
+                  <BoardCard
+                    board={item}
+                    onPress={() => handleBoardPress(item)}
+                    onEdit={() => handleEditButtonPress(item)}
+                    onDelete={() => showDeleteConfirmation(item.id)}
+                  />
+                )}
                 numColumns={2}
                 columnWrapperStyle={styles.boardRow}
                 refreshing={isLoading}
@@ -256,7 +170,6 @@ export default function BoardsScreen() {
           </>
         )}
         
-        {/* Modal de confirmation de suppression */}
         <DeleteConfirmationModal
           visible={deleteModalVisible}
           title="Supprimer le tableau"
@@ -266,52 +179,27 @@ export default function BoardsScreen() {
           onConfirm={confirmDeleteBoard}
         />
         
-        {renderEditModal()}
+        <EditBoardModal
+          visible={editModalVisible}
+          currentName={updatedBoardName}
+          onClose={() => setEditModalVisible(false)}
+          onSave={handleUpdateBoard}
+          onChangeText={setUpdatedBoardName}
+          isValid={!!updatedBoardName.trim()}
+        />
         
-        {/* Simple Creation Modal */}
-        <Modal
-          transparent={true}
+        <TemplateSelectionModal
           visible={templateModalVisible}
-          animationType="fade"
-          onRequestClose={() => setTemplateModalVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={[styles.modalContent, { maxHeight: '50%', width: '80%' }]}>
-              <Text style={styles.modalTitle}>Type de tableau</Text>
-              
-              <View style={{ gap: 16, marginTop: 20 }}>
-                <TouchableOpacity
-                  style={styles.templateItem}
-                  onPress={() => {
-                    handleCreateBoard(false);
-                    setTemplateModalVisible(false);
-                  }}
-                >
-                  <Text style={styles.templateTitle}>Tableau vide</Text>
-                  <Text style={styles.templateDescription}>Pas de listes prédéfinies</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={styles.templateItem}
-                  onPress={() => {
-                    handleCreateBoard(true);
-                    setTemplateModalVisible(false);
-                  }}
-                >
-                  <Text style={styles.templateTitle}>Kanban</Text>
-                  <Text style={styles.templateDescription}>Listes "To Do", "Doing", "Done"</Text>
-                </TouchableOpacity>
-              </View>
-              
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton, { marginTop: 16 }]}
-                onPress={() => setTemplateModalVisible(false)}
-              >
-                <Text style={styles.modalButtonText}>Annuler</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
+          onClose={() => setTemplateModalVisible(false)}
+          onCreateEmpty={() => {
+            handleCreateBoard(false);
+            setTemplateModalVisible(false);
+          }}
+          onCreateKanban={() => {
+            handleCreateBoard(true);
+            setTemplateModalVisible(false);
+          }}
+        />
       </View>
     </SafeAreaView>
   );

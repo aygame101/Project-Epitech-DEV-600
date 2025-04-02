@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, TextInput, TouchableOpacity, Alert, Modal, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, Alert } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
 import { styles } from '../styles/WorkspaceBoardsModalStyle';
 import { boardServices } from '@/services/boardService';
 import { Board } from '@/types/Board';
-import DeleteConfirmationModal from '../components/DeleteConfirmationModal'; // Importez le nouveau composant
+
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
+import BoardItem from '@/components/boards/BoardItem';
+import CreateBoardInput from '@/components/boards/CreateBoardInput';
+import EditBoardModal from '@/components/modals/EditBoardModal';
+import BoardTemplateModal from '@/components/modals/BoardTemplateModal';
 
 interface WorkspaceParams {
   workspaceId: string;
@@ -164,133 +169,24 @@ const WorkspaceBoardsModal = () => {
     }
   };
 
-  const renderEditModal = () => (
-    <Modal
-      transparent={true}
-      visible={editModalVisible}
-      animationType="fade"
-      onRequestClose={() => setEditModalVisible(false)}
-    >
-      <TouchableWithoutFeedback onPress={() => setEditModalVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Modifier le nom du tableau</Text>
-
-              <TextInput
-                style={styles.modalInput}
-                value={updatedBoardName}
-                onChangeText={setUpdatedBoardName}
-                placeholder="Nouveau nom du tableau"
-                placeholderTextColor="#ccc"
-                autoFocus={true}
-              />
-
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton]}
-                  onPress={() => setEditModalVisible(false)}
-                >
-                  <Text style={styles.modalButtonText}>Annuler</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.saveButton]}
-                  onPress={handleUpdateBoard}
-                  disabled={!updatedBoardName.trim()}
-                >
-                  <Text style={styles.modalButtonText}>Enregistrer</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </TouchableWithoutFeedback>
-        </View>
-      </TouchableWithoutFeedback>
-    </Modal>
-  );
-
-  const renderTemplateModal = () => (
-    <Modal
-      transparent
-      visible={showTemplateModal}
-      animationType="fade"
-      onRequestClose={() => setShowTemplateModal(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <TouchableWithoutFeedback onPress={() => setShowTemplateModal(false)}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-              <View style={[styles.modalContent, { maxHeight: '50%', width: '80%' }]}>
-                <Text style={styles.modalTitle}>Type de tableau</Text>
-
-                <View style={{ gap: 16, marginTop: 20 }}>
-                  <TouchableOpacity
-                    style={styles.templateItem}
-                    onPress={() => {
-                      handleCreateBoard(false);
-                      setShowTemplateModal(false);
-                    }}
-                  >
-                    <Text style={styles.templateTitle}>Tableau vide</Text>
-                    <Text style={styles.templateDescription}>Pas de listes prédéfinies</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.templateItem}
-                    onPress={() => {
-                      handleCreateBoard(true);
-                      setShowTemplateModal(false);
-                    }}
-                  >
-                    <Text style={styles.templateTitle}>Kanban</Text>
-                    <Text style={styles.templateDescription}>Listes "To Do", "Doing", "Done"</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton, { marginTop: 16 }]}
-                  onPress={() => setShowTemplateModal(false)}
-                >
-                  <Text style={styles.modalButtonText}>Annuler</Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </View>
-    </Modal>
-  );
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Workspace : {workspaceName}</Text>
 
-      <View style={styles.addBoardContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Nom du tableau à créer"
-          placeholderTextColor="#999"
-          value={newBoardName}
-          onChangeText={setNewBoardName}
-        />
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => {
-            if (newBoardName.trim()) {
-              setShowTemplateModal(true);
-            } else {
-              Alert.alert('Info', 'Veuillez entrer un nom de tableau');
-            }
-          }}
-          disabled={isCreating || !newBoardName.trim()}
-        >
-          {isCreating ? (
-            <ActivityIndicator size="small" color="#FFF" />
-          ) : (
-            <Text style={styles.addButtonText}>Créer</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+      <CreateBoardInput
+        value={newBoardName}
+        onChangeText={setNewBoardName}
+        onPress={() => {
+          if (newBoardName.trim()) {
+            setShowTemplateModal(true);
+          } else {
+            Alert.alert('Info', 'Veuillez entrer un nom de tableau');
+          }
+        }}
+        isLoading={isCreating}
+        placeholder="Nom du tableau à créer"
+      />
 
       {isLoading && boards.length === 0 ? (
         <ActivityIndicator size="large" color="#FFA500" />
@@ -299,43 +195,13 @@ const WorkspaceBoardsModal = () => {
           data={boards}
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.boardItemContainer}
+            <BoardItem
+              board={item}
+              isDeleting={deletingBoardId === item.id}
               onPress={() => handleBoardPress(item.id, item.name)}
-              disabled={deletingBoardId === item.id}
-            >
-              <Text style={styles.boardItem}>{item.name}</Text>
-
-              <View style={styles.boardActions}>
-                {deletingBoardId === item.id ? (
-                  <ActivityIndicator size="small" color="#FFA500" />
-                ) : (
-                  <>
-                    <TouchableOpacity
-                      style={styles.editButton}
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        handleEditButtonPress(item);
-                      }}
-                      disabled={deletingBoardId !== null}
-                    >
-                      <Text>✏️</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        showDeleteConfirmation(item.id);
-                      }}
-                      disabled={deletingBoardId !== null}
-                    >
-                      <Text>🗑️</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </View>
-            </TouchableOpacity>
+              onEdit={() => handleEditButtonPress(item)}
+              onDelete={() => showDeleteConfirmation(item.id)}
+            />
           )}
         />
       )}
@@ -348,8 +214,27 @@ const WorkspaceBoardsModal = () => {
         onConfirm={confirmDeleteBoard}
       />
 
-      {renderEditModal()}
-      {renderTemplateModal()}
+      <EditBoardModal
+        visible={editModalVisible}
+        currentName={updatedBoardName}
+        onClose={() => setEditModalVisible(false)}
+        onSave={handleUpdateBoard}
+        onChangeText={setUpdatedBoardName}
+        isValid={!!updatedBoardName.trim()}
+      />
+
+      <BoardTemplateModal
+        visible={showTemplateModal}
+        onClose={() => setShowTemplateModal(false)}
+        onCreateEmpty={() => {
+          handleCreateBoard(false);
+          setShowTemplateModal(false);
+        }}
+        onCreateKanban={() => {
+          handleCreateBoard(true);
+          setShowTemplateModal(false);
+        }}
+      />
     </View>
   );
 };
