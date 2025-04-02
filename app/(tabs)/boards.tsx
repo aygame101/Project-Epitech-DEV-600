@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { View, FlatList, SafeAreaView, ActivityIndicator, Alert, Text } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import { boardServices } from '@/services/boardService';
 import { Board } from '@/types/Board';
 import { styles } from '../../styles/boardsStyle';
@@ -30,9 +31,20 @@ export default function BoardsScreen() {
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
   const [selectedWorkspaceName, setSelectedWorkspaceName] = useState<string | null>(null);
 
+  // Effet classique qui charge les tableaux au montage initial
   useEffect(() => {
     fetchBoards();
   }, []);
+
+  // Nouvel effet qui recharge les tableaux chaque fois que l'écran est focalisé
+  useFocusEffect(
+    useCallback(() => {
+      fetchBoards();
+      return () => {
+        // Cleanup si nécessaire
+      };
+    }, [])
+  );
 
   const fetchBoards = async () => {
     setIsLoading(true);
