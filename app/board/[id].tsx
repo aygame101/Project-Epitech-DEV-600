@@ -444,7 +444,7 @@ export default function BoardDetailScreen() {
                 <TextInput
                   style={styles.modalInput}
                   placeholder="Nom de la liste"
-                  placeholderTextColor="#888"
+                  placeholderTextColor="#fff"
                   value={newListName}
                   onChangeText={setNewListName}
                   autoFocus
@@ -637,7 +637,7 @@ export default function BoardDetailScreen() {
                     onPress={() => setShowCardViewModal(false)}
                     style={styles.closeButton}
                   >
-                    <AntDesign name="close" size={24} color="#000" />
+                    <AntDesign name="close" size={24} color="#fff" />
                   </Pressable>
                 </View>
 
@@ -699,7 +699,7 @@ export default function BoardDetailScreen() {
                     onPress={() => setShowAssignModal(false)}
                     style={styles.closeButton}
                   >
-                    <AntDesign name="close" size={24} color="#000" />
+                    <AntDesign name="close" size={24} color="#fff" />
                   </Pressable>
                 </View>
 
