@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react';
+import { User } from '@/types/User';
+import { Card } from '@/types/Card';
+import { List } from '@/types/List';
 import {
   StyleSheet,
   ScrollView,
@@ -20,9 +23,14 @@ import { Board } from '@/types/Board';
 import useLists from '@/hooks/useLists';
 import { styles } from '../../styles/idStyle';
 
-// Card component to display within a list
-function CardItem({ card, onEditCard, onViewCard }) {
-  const truncateDescription = (text, maxLength = 30) => {
+interface CardItemProps {
+  card: Card;
+  onEditCard: (cardId: string) => void;
+  onViewCard: (cardId: string) => void;
+}
+
+function CardItem({ card, onEditCard, onViewCard }: CardItemProps) {
+  const truncateDescription = (text: string, maxLength = 30) => {
     if (!text || text.length <= maxLength) return text;
     return text.slice(0, maxLength) + '...';
   };
@@ -42,7 +50,27 @@ function CardItem({ card, onEditCard, onViewCard }) {
   );
 }
 
-function ListCard({ list, cards, onUpdate, onArchive, onAddCard, onEdit, onEditCard, onViewCard }) {
+interface ListCardProps {
+  list: List;
+  cards: Card[];
+  onUpdate: (listId: string, newName: string) => void;
+  onArchive: (listId: string) => void;
+  onAddCard: (listId: string) => void;
+  onEdit: (listId: string) => void;
+  onEditCard: (cardId: string) => void;
+  onViewCard: (cardId: string) => void;
+}
+
+function ListCard({ 
+  list, 
+  cards, 
+  onUpdate, 
+  onArchive, 
+  onAddCard, 
+  onEdit, 
+  onEditCard, 
+  onViewCard 
+}: ListCardProps) {
   const listCards = cards.filter(card => card.idList === list.id);
 
   return (
@@ -83,31 +111,31 @@ export default function BoardDetailScreen() {
 
   const [board, setBoard] = useState<Board | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [cards, setCards] = useState([]);
+  const [cards, setCards] = useState<Card[]>([]);
   const [isLoadingCards, setIsLoadingCards] = useState(false);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newListName, setNewListName] = useState('');
 
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editingListId, setEditingListId] = useState(null);
+  const [editingListId, setEditingListId] = useState<string | null>(null);
   const [editingListName, setEditingListName] = useState('');
 
   const [showCardModal, setShowCardModal] = useState(false);
   const [newCardName, setNewCardName] = useState('');
   const [newCardDesc, setNewCardDesc] = useState('');
-  const [selectedListId, setSelectedListId] = useState(null);
+  const [selectedListId, setSelectedListId] = useState<string | null>(null);
 
   const [showEditCardModal, setShowEditCardModal] = useState(false);
-  const [editingCardId, setEditingCardId] = useState(null);
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [editingCardName, setEditingCardName] = useState('');
   const [editingCardDesc, setEditingCardDesc] = useState('');
 
   const [showCardViewModal, setShowCardViewModal] = useState(false);
-  const [viewingCard, setViewingCard] = useState(null);
+  const [viewingCard, setViewingCard] = useState<Card | null>(null);
 
   const [showAssignModal, setShowAssignModal] = useState(false);
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
 
   const {
     lists,
@@ -191,6 +219,7 @@ export default function BoardDetailScreen() {
     }
 
     try {
+      if (!selectedListId) return;
       await cardServices.addCard(selectedListId, newCardName, newCardDesc);
       setNewCardName('');
       setNewCardDesc('');
@@ -216,6 +245,7 @@ export default function BoardDetailScreen() {
       return;
     }
 
+    if (!editingListId) return;
     await handleUpdateList(editingListId, editingListName);
     setShowEditModal(false);
     setEditingListId(null);
@@ -247,6 +277,7 @@ export default function BoardDetailScreen() {
     }
 
     try {
+      if (!editingCardId) return;
       await cardServices.updateCard(editingCardId, {
         name: editingCardName,
         desc: editingCardDesc
@@ -262,7 +293,7 @@ export default function BoardDetailScreen() {
     }
   };
 
-  const fetchBoardIdByCard = async (cardId) => {
+  const fetchBoardIdByCard = async (cardId: string) => {
     try {
       const response = await fetch(`https://api.trello.com/1/cards/${cardId}?fields=idBoard&key=625a06c8525ea14e94d75b7f03cf6051&token=ATTA75822e9f3501426780c7190ff61203b040e0e98bf64106f13f27ad4950990137C0A0BA60`);
       const data = await response.json();
@@ -273,7 +304,7 @@ export default function BoardDetailScreen() {
     }
   };
 
-  const fetchWorkspaceIdByBoard = async (boardId) => {
+  const fetchWorkspaceIdByBoard = async (boardId: string) => {
     try {
       const response = await fetch(`https://api.trello.com/1/boards/${boardId}?fields=idOrganization&key=625a06c8525ea14e94d75b7f03cf6051&token=ATTA75822e9f3501426780c7190ff61203b040e0e98bf64106f13f27ad4950990137C0A0BA60`);
       const data = await response.json();
@@ -284,7 +315,7 @@ export default function BoardDetailScreen() {
     }
   };
 
-  const fetchWorkspaceUsers = async (cardId) => {
+  const fetchWorkspaceUsers = async (cardId: string) => {
     try {
       const boardId = await fetchBoardIdByCard(cardId);
       const workspaceId = await fetchWorkspaceIdByBoard(boardId);
@@ -300,11 +331,12 @@ export default function BoardDetailScreen() {
     }
   };
 
-  const handleAssignCard = (cardId) => {
+  const handleAssignCard = (cardId: string) => {
+    setShowCardViewModal(false);
     fetchWorkspaceUsers(cardId);
   };
 
-  const handleAssignUserToCard = async (userId) => {
+  const handleAssignUserToCard = async (userId: string) => {
     // Logic to assign the user to the card
     // You can make an API call here to update the card with the assigned user
     setShowAssignModal(false);
@@ -589,7 +621,7 @@ export default function BoardDetailScreen() {
                     style={[styles.modalButton, styles.confirmButton]}
                     onPress={() => {
                       setShowCardViewModal(false);
-                      handleEditCard(viewingCard.id);
+                      viewingCard && handleEditCard(viewingCard.id);
                     }}
                   >
                     <Text style={styles.confirmButtonText}>Modifier</Text>
@@ -597,14 +629,14 @@ export default function BoardDetailScreen() {
 
                   <Pressable
                     style={[styles.modalButton, styles.archiveButton]}
-                    onPress={() => handleArchiveCard(viewingCard.id)}
+                    onPress={() => viewingCard && handleArchiveCard(viewingCard.id)}
                   >
                     <Text style={styles.archiveButtonText}>Archiver</Text>
                   </Pressable>
 
                   <Pressable
                     style={[styles.modalButton, styles.assignButton]}
-                    onPress={() => handleAssignCard(viewingCard.id)}
+                    onPress={() => viewingCard && handleAssignCard(viewingCard.id)}
                   >
                     <Text style={styles.confirmButtonText}>Assigner</Text>
                   </Pressable>
@@ -626,7 +658,15 @@ export default function BoardDetailScreen() {
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
               <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Assigner un utilisateur</Text>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Assigner un utilisateur</Text>
+                  <Pressable
+                    onPress={() => setShowAssignModal(false)}
+                    style={styles.closeButton}
+                  >
+                    <AntDesign name="close" size={24} color="#000" />
+                  </Pressable>
+                </View>
 
                 {users.length > 0 ? (
                   <FlatList
@@ -637,22 +677,15 @@ export default function BoardDetailScreen() {
                         style={styles.userItem}
                         onPress={() => handleAssignUserToCard(item.id)}
                       >
-                        <Text>{item.fullName}</Text>
+                        <Text style={styles.userName}>{item.fullName}</Text>
+                        <Text style={styles.userEmail}>{item.username}</Text>
                       </Pressable>
                     )}
+                    style={styles.userList}
                   />
                 ) : (
-                  <Text>Aucun utilisateur trouvé</Text>
+                  <Text style={styles.noUsersText}>Aucun utilisateur trouvé dans ce workspace</Text>
                 )}
-
-                <View style={styles.modalButtonsContainer}>
-                  <Pressable
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={() => setShowAssignModal(false)}
-                  >
-                    <Text style={styles.cancelButtonText}>Annuler</Text>
-                  </Pressable>
-                </View>
               </View>
             </TouchableWithoutFeedback>
           </View>

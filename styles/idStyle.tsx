@@ -232,4 +232,30 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     color: '#0078d7',
   },
+  assignButton: {
+    backgroundColor: '#4CAF50',
+    marginLeft: 8,
+  },
+  userItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEE',
+  },
+  userName: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  userEmail: {
+    color: '#666',
+    fontSize: 14,
+  },
+  userList: {
+    maxHeight: 300,
+    marginBottom: 20,
+  },
+  noUsersText: {
+    textAlign: 'center',
+    color: '#888',
+    marginVertical: 20,
+  },
 });
