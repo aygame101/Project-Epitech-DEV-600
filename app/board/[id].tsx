@@ -650,6 +650,13 @@ export default function BoardDetailScreen() {
                 )}
 
                 <View style={styles.modalButtonsContainer}>
+                <Pressable
+                    style={[styles.modalButton, styles.assignButton]}
+                    onPress={() => viewingCard && handleAssignCard(viewingCard.id)}
+                  >
+                    <Text style={styles.confirmButtonText}>👥</Text>
+                  </Pressable>
+                  
                   <Pressable
                     style={[styles.modalButton, styles.confirmButton]}
                     onPress={() => {
@@ -657,22 +664,17 @@ export default function BoardDetailScreen() {
                       viewingCard && handleEditCard(viewingCard.id);
                     }}
                   >
-                    <Text style={styles.confirmButtonText}>Modifier</Text>
+                    <Text style={styles.confirmButtonText}>✏️</Text>
                   </Pressable>
 
                   <Pressable
                     style={[styles.modalButton, styles.archiveButton]}
                     onPress={() => viewingCard && handleArchiveCard(viewingCard.id)}
                   >
-                    <Text style={styles.archiveButtonText}>Archiver</Text>
+                    <Text style={styles.archiveButtonText}>🗑️</Text>
                   </Pressable>
 
-                  <Pressable
-                    style={[styles.modalButton, styles.assignButton]}
-                    onPress={() => viewingCard && handleAssignCard(viewingCard.id)}
-                  >
-                    <Text style={styles.confirmButtonText}>Assigner</Text>
-                  </Pressable>
+                  
                 </View>
               </View>
             </TouchableWithoutFeedback>
