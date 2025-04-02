@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, FlatList, SafeAreaView, TouchableOpacity, TouchableWithoutFeedback, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, Alert, FlatList, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { fetchWorkspaces, createWorkspace, deleteWorkspace, updateWorkspace } from '@/services/indexService';
 import { fetchWeatherByCoordinates, WeatherData } from '@/services/weatherService';
 import { styles } from '../../styles/indexStyle';
 
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
+import WeatherWidget from '@/components/ui/WeatherWidget';
+import WorkspaceItem from '@/components/boards/WorkspaceItem';
+import EditWorkspaceModal from '@/components/modals/EditWorkspaceModal';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -146,66 +149,18 @@ export default function HomeScreen() {
     }
   };
 
-  // Rendu du widget météo
-  const renderWeatherWidget = () => {
-    if (weatherLoading) {
-      return (
-        <View style={weatherStyles.widget}>
-          <ActivityIndicator size="small" color="#0000ff" />
-        </View>
-      );
-    }
-
-    if (weatherError) {
-      return (
-        <View style={weatherStyles.widget}>
-          <Text style={weatherStyles.errorText}>⚠️</Text>
-        </View>
-      );
-    }
-
-    if (weather) {
-      // Déterminer l'icône météo en fonction du code weather
-      let weatherIcon = '☀️'; // Par défaut: soleil
-      
-      if (weather.weather && weather.weather.length > 0) {
-        const weatherId = weather.weather[0].id;
-        
-        if (weatherId >= 200 && weatherId < 300) {
-          weatherIcon = '⚡'; // Orage
-        } else if (weatherId >= 300 && weatherId < 500) {
-          weatherIcon = '🌦️'; // Bruine
-        } else if (weatherId >= 500 && weatherId < 600) {
-          weatherIcon = '🌧️'; // Pluie
-        } else if (weatherId >= 600 && weatherId < 700) {
-          weatherIcon = '❄️'; // Neige
-        } else if (weatherId >= 700 && weatherId < 800) {
-          weatherIcon = '🌫️'; // Brouillard
-        } else if (weatherId === 800) {
-          weatherIcon = '☀️'; // Ciel dégagé
-        } else if (weatherId > 800) {
-          weatherIcon = '☁️'; // Nuageux
-        }
-      }
-
-      return (
-        <View style={weatherStyles.widget}>
-          <Text style={weatherStyles.temp}>{weatherIcon} {Math.round(weather.main?.temp)}°C</Text>
-          <Text style={weatherStyles.city}>{weather.name}</Text>
-        </View>
-      );
-    }
-
-    return null;
-  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         {/* Header avec titre et widget météo */}
-        <View style={weatherStyles.headerContainer}>
+        <View style={styles.headerContainer}>
           <Text style={styles.title}>TrellUwU</Text>
-          {renderWeatherWidget()}
+          <WeatherWidget 
+            weather={weather} 
+            loading={weatherLoading} 
+            error={weatherError} 
+          />
         </View>
         
         <View style={styles.createContainer}>
@@ -236,23 +191,13 @@ export default function HomeScreen() {
             data={workspaces}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <TouchableWithoutFeedback onPress={() => handleWorkspacePress(item)}>
-                <View style={styles.workspaceItemContainer}>
-                  <Text style={styles.workspaceItem}>{item.displayName}</Text>
-                  <View style={styles.actionsContainer}>
-                    <TouchableOpacity onPress={() => handleEditWorkspace(item)} style={styles.editButton}>
-                      <Text style={styles.editButtonText}>✏️</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      onPress={() => confirmDeleteWorkspace(item.id, item.displayName)} 
-                      style={styles.deleteButton}
-                      disabled={isDeleting}
-                    >
-                      <Text style={styles.deleteButtonText}>🗑️</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </TouchableWithoutFeedback>
+              <WorkspaceItem
+                workspace={item}
+                isDeleting={isDeleting && workspaceToDelete?.id === item.id}
+                onPress={() => handleWorkspacePress(item)}
+                onEdit={() => handleEditWorkspace(item)}
+                onDelete={() => confirmDeleteWorkspace(item.id, item.displayName)}
+              />
             )}
             refreshing={isLoading}
             onRefresh={loadWorkspaces}
@@ -260,41 +205,14 @@ export default function HomeScreen() {
         )}
       </View>
 
-      <Modal
-        animationType="slide"
-        transparent={true}
+      <EditWorkspaceModal
         visible={editingWorkspace !== null}
-        onRequestClose={() => setEditingWorkspace(null)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Modifier le workspace</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={newWorkspaceName}
-              onChangeText={setNewWorkspaceName}
-              onBlur={() => setNewWorkspaceName(newWorkspaceName.trimEnd())}
-              placeholder="Nouveau nom du workspace"
-              placeholderTextColor="#aaa"
-            />
-            <View style={styles.modalButtonsContainer}>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]} 
-                onPress={() => setEditingWorkspace(null)}
-              >
-                <Text style={styles.modalButtonText}>Annuler</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.updateButton]} 
-                onPress={handleUpdateWorkspace}
-                disabled={!newWorkspaceName.trim()}
-              >
-                <Text style={styles.modalButtonText}>Mettre à jour</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        currentName={newWorkspaceName}
+        onClose={() => setEditingWorkspace(null)}
+        onSave={handleUpdateWorkspace}
+        onChangeText={setNewWorkspaceName}
+        isValid={!!newWorkspaceName.trim()}
+      />
     <DeleteConfirmationModal
       visible={!!workspaceToDelete}
       title="Confirmer la suppression"
@@ -306,35 +224,3 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
-
-// Styles pour le widget météo
-const weatherStyles = StyleSheet.create({
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 20,
-  },
-  widget: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 10,
-    padding: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 100,
-  },
-  temp: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  city: {
-    fontSize: 12,
-    color: '#eee',
-  },
-  errorText: {
-    fontSize: 18,
-    color: '#ffcc00',
-  }
-});
