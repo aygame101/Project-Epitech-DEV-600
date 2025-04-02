@@ -1,81 +1,43 @@
-import { Image, Pressable, StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+import React from 'react';
+import { View, Text, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import { styles } from '@/styles/componentStyle/BoardCardStyle';
 import { Board } from '@/types/Board';
 
-type BoardCardProps = {
+interface BoardCardProps {
   board: Board;
-  onPress: (boardId: string) => void;
-  onDelete: (boardId: string) => void;
-};
-
-export default function BoardCard({ board, onPress, onDelete }: BoardCardProps) {
-  return (
-    <ThemedView style={styles.boardCard}>
-      {board.prefs?.backgroundImage && (
-        <Image
-          source={{ uri: board.prefs.backgroundImage }}
-          style={styles.boardBackground}
-        />
-      )}
-      <Pressable
-        onPress={() => onPress(board.id)}
-        style={styles.cardContent}>
-        <MaterialIcons name="dashboard" size={24} color="white" />
-        <ThemedText style={styles.boardName}>{board.name}</ThemedText>
-        {board.desc && (
-          <ThemedText style={styles.boardDesc}>{board.desc}</ThemedText>
-        )}
-      </Pressable>
-      <Pressable
-        onPress={() => onDelete(board.id)}
-        style={styles.deleteButton}>
-        <AntDesign name="close" size={16} color="white" />
-      </Pressable>
-    </ThemedView>
-  );
+  onPress: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
-const styles = StyleSheet.create({
-  boardCard: {
-    width: '48%',
-    height: 150,
-    borderRadius: 8,
-    marginVertical: 8,
-    overflow: 'hidden',
-    position: 'relative',
-    backgroundColor: '#0079bf',
-  },
-  boardBackground: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.4,
-  },
-  cardContent: {
-    flex: 1,
-    padding: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  boardName: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  boardDesc: {
-    color: 'white',
-    fontSize: 12,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  deleteButton: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    padding: 5,
-    borderRadius: 15,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-  },
-});
+const BoardCard: React.FC<BoardCardProps> = ({
+  board,
+  onPress,
+  onEdit,
+  onDelete
+}) => (
+  <TouchableWithoutFeedback onPress={onPress}>
+    <View style={styles.card}>
+      <Text style={styles.name}>{board.name}</Text>
+      {board.desc && <Text style={styles.desc}>{board.desc}</Text>}
+        
+      <View style={styles.actions}>
+        <TouchableOpacity 
+          style={styles.editButton}
+          onPress={onEdit}
+        >
+          <Text>✏️</Text>
+        </TouchableOpacity>
+          
+        <TouchableOpacity 
+          style={styles.deleteButton}
+          onPress={onDelete}
+        >
+          <Text>🗑️</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </TouchableWithoutFeedback>
+);
+
+export default BoardCard;

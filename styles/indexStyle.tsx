@@ -57,10 +57,17 @@ export const styles = StyleSheet.create({
       shadowRadius: 2,
       elevation: 2,
     },
-    createButtonText: {
-      color: '#121212',
-      fontWeight: 'bold',
-    },
+  createButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 20,
+  },
     workspaceItemContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
