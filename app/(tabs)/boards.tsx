@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { boardServices } from '@/services/boardService';
 import { Board } from '@/types/Board';
 import { styles } from '../../styles/boardsStyle';
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal'; // Importez le modal de suppression
 
 export default function BoardsScreen() {
   const router = useRouter();
@@ -14,6 +15,11 @@ export default function BoardsScreen() {
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const [updatedBoardName, setUpdatedBoardName] = useState('');
   const [templateModalVisible, setTemplateModalVisible] = useState(false);
+  
+  // États pour le modal de confirmation de suppression
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [boardToDelete, setBoardToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     fetchBoards();
@@ -93,30 +99,28 @@ export default function BoardsScreen() {
     }
   };
 
-  const handleDeleteBoard = async (boardId: string) => {
-    Alert.alert(
-      'Confirmation',
-      'Êtes-vous sûr de vouloir supprimer ce tableau ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { 
-          text: 'Supprimer', 
-          onPress: async () => {
-            setIsLoading(true);
-            try {
-              await boardServices.deleteBoard(boardId);
-              setBoards(boards.filter(board => board.id !== boardId));
+  // Nouvelle fonction pour montrer le modal de suppression
+  const showDeleteConfirmation = (boardId: string) => {
+    setBoardToDelete(boardId);
+    setDeleteModalVisible(true);
+  };
+
+  // Fonction pour confirmer la suppression
+  const confirmDeleteBoard = async () => {
+    if (!boardToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await boardServices.deleteBoard(boardToDelete);
+      setBoards(boards.filter(board => board.id !== boardToDelete));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Une erreur est survenue';
       Alert.alert('Erreur', message);
-            } finally {
-              setIsLoading(false);
-            }
-          }, 
-          style: 'destructive' 
-        }
-      ]
-    );
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalVisible(false);
+      setBoardToDelete(null);
+    }
   };
 
   const handleBoardPress = (board: Board) => {
@@ -146,7 +150,7 @@ export default function BoardsScreen() {
             style={styles.deleteButton}
             onPress={(e) => {
               e.stopPropagation();
-              handleDeleteBoard(item.id);
+              showDeleteConfirmation(item.id); // Utiliser la nouvelle fonction
             }}
           >
             <Text>🗑️</Text>
@@ -251,6 +255,16 @@ export default function BoardsScreen() {
             )}
           </>
         )}
+        
+        {/* Modal de confirmation de suppression */}
+        <DeleteConfirmationModal
+          visible={deleteModalVisible}
+          title="Supprimer le tableau"
+          message="Êtes-vous sûr de vouloir supprimer ce tableau ?"
+          isDeleting={isDeleting}
+          onCancel={() => setDeleteModalVisible(false)}
+          onConfirm={confirmDeleteBoard}
+        />
         
         {renderEditModal()}
         

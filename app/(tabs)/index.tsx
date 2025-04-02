@@ -5,6 +5,8 @@ import { fetchWorkspaces, createWorkspace, deleteWorkspace, updateWorkspace } fr
 import { fetchWeatherByCoordinates, WeatherData } from '@/services/weatherService';
 import { styles } from '../../styles/indexStyle';
 
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
+
 export default function HomeScreen() {
   const navigation = useNavigation();
   const [workspaceName, setWorkspaceName] = useState('');
@@ -16,6 +18,10 @@ export default function HomeScreen() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [weatherError, setWeatherError] = useState<string | null>(null);
+
+  // États pour la suppression
+  const [workspaceToDelete, setWorkspaceToDelete] = useState<{id: string, name: string} | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadWorkspaces();
@@ -123,14 +129,21 @@ export default function HomeScreen() {
   };
 
   const confirmDeleteWorkspace = (id: string, name: string) => {
-    Alert.alert(
-      'Confirmation',
-      `Êtes-vous sûr de vouloir supprimer "${name}" ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Supprimer', onPress: () => handleDeleteWorkspace(id), style: 'destructive' }
-      ]
-    );
+    setWorkspaceToDelete({id, name});
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!workspaceToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await handleDeleteWorkspace(workspaceToDelete.id);
+    } catch (error) {
+      Alert.alert('Erreur', error instanceof Error ? error.message : 'Erreur inconnue');
+    } finally {
+      setIsDeleting(false);
+      setWorkspaceToDelete(null);
+    }
   };
 
   // Rendu du widget météo
@@ -230,7 +243,11 @@ export default function HomeScreen() {
                     <TouchableOpacity onPress={() => handleEditWorkspace(item)} style={styles.editButton}>
                       <Text style={styles.editButtonText}>✏️</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => confirmDeleteWorkspace(item.id, item.displayName)} style={styles.deleteButton}>
+                    <TouchableOpacity 
+                      onPress={() => confirmDeleteWorkspace(item.id, item.displayName)} 
+                      style={styles.deleteButton}
+                      disabled={isDeleting}
+                    >
                       <Text style={styles.deleteButtonText}>🗑️</Text>
                     </TouchableOpacity>
                   </View>
@@ -278,6 +295,14 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
+    <DeleteConfirmationModal
+      visible={!!workspaceToDelete}
+      title="Confirmer la suppression"
+      message={`Êtes-vous sûr de vouloir supprimer "${workspaceToDelete?.name}" ?`}
+      isDeleting={isDeleting}
+      onCancel={() => setWorkspaceToDelete(null)}
+      onConfirm={handleConfirmDelete}
+    />
     </SafeAreaView>
   );
 }
