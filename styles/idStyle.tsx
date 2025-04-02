@@ -3,7 +3,6 @@ import { StyleSheet } from 'react-native';
 // Styles
 export const styles = StyleSheet.create({
   archiveButton: {
-    backgroundColor: '#FF4A4A', // Couleur rouge pour le bouton d'archivage
     marginLeft: 8, // Espacement entre les boutons
   },
   archiveButtonText: {
@@ -168,7 +167,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#1F1F1F',
     width: '85%',
     padding: 20,
     borderRadius: 12,
@@ -201,12 +200,15 @@ export const styles = StyleSheet.create({
   cancelButton: {
     backgroundColor: '#CCC',
   },
-  confirmButton: {
-    backgroundColor: '#FFA500',
-  },
   cancelButtonText: {
     color: '#000',
     fontWeight: 'bold',
+  },
+  confirmButton: {
+    backgroundColor: '#FFA500'
+  },
+  styloButton: {
+    backgroundColor: ''
   },
   confirmButtonText: {
     color: '#000',
@@ -233,7 +235,6 @@ export const styles = StyleSheet.create({
     color: '#0078d7',
   },
   assignButton: {
-    backgroundColor: '#4CAF50',
     marginLeft: 8,
   },
   userItem: {
@@ -244,6 +245,7 @@ export const styles = StyleSheet.create({
   userName: {
     fontWeight: 'bold',
     fontSize: 16,
+    color: '#FFF'
   },
   userEmail: {
     color: '#666',

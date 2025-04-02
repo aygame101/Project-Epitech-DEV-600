@@ -5,14 +5,15 @@ import {
   StyleSheet, 
   GestureResponderEvent,
   Animated,
-  Platform 
+  Platform
 } from 'react-native';
-import { Card } from '../types/Card';
-import ThemedText from '../ui/ThemedText';
-import ThemedView from '../ui/ThemedView';
-import { useThemeColor } from '../../hooks/useThemeColor';
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import { Card, Checklist, ChecklistItem } from '../../types/Card';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { useColorScheme } from '../../hooks/useColorScheme';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import { Colors } from '@/constants/Colors';
 
 interface CardItemProps {
   card: Card;
@@ -30,7 +31,8 @@ const CardItem: React.FC<CardItemProps> = ({
   onSwipeRight 
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { colors } = useThemeColor();
+  const theme = useColorScheme() ?? 'light';
+  const colors = Colors[theme];
   const translateX = new Animated.Value(0);
 
   const toggleExpand = () => {
@@ -66,7 +68,7 @@ const CardItem: React.FC<CardItemProps> = ({
         style={[
           styles.container,
           { 
-            backgroundColor: colors.cardBackground,
+            backgroundColor: colors.background,
             transform: [{ translateX }],
             shadowColor: Platform.OS === 'ios' ? '#000' : undefined,
             shadowOffset: Platform.OS === 'ios' ? { width: 0, height: 1 } : undefined,
@@ -84,9 +86,9 @@ const CardItem: React.FC<CardItemProps> = ({
         >
           <View style={styles.content}>
             <View style={styles.header}>
-              <ThemedText style={styles.title}>{card.title}</ThemedText>
+              <ThemedText style={styles.title}>{card.name}</ThemedText>
               {card.dueDate && (
-                <View style={[styles.dueDate, { backgroundColor: colors.primaryLight }]}>
+                <View style={[styles.dueDate, { backgroundColor: colors.tint }]}>
                   <ThemedText style={styles.dueDateText}>
                     {new Date(card.dueDate).toLocaleDateString()}
                   </ThemedText>
@@ -94,40 +96,42 @@ const CardItem: React.FC<CardItemProps> = ({
               )}
             </View>
             
-            {card.description && isExpanded && (
+            {card.desc && isExpanded && (
               <ThemedText style={styles.description}>
-                {card.description}
+                {card.desc}
               </ThemedText>
             )}
 
-            {(card.labels?.length > 0 || card.checklists?.length > 0) && (
+            {((card.labels && card.labels.length > 0) || (card.checklists && card.checklists.length > 0)) && (
               <View style={styles.footer}>
-                {card.labels?.length > 0 && (
+                {card.labels && card.labels.length > 0 && (
                   <View style={styles.labelsContainer}>
-                    {card.labels.map((label, index) => (
+                    {card.labels.map((label, index) => label && (
                       <View
                         key={`label-${index}`}
                         style={[
                           styles.label,
-                          { backgroundColor: label.color || colors.primary },
+                          { backgroundColor: label?.color || colors.tint },
                         ]}
                       />
                     ))}
                   </View>
                 )}
 
-                {card.checklists?.length > 0 && (
+                {card.checklists && card.checklists.length > 0 && (
                   <View style={styles.checklistInfo}>
                     <Icon 
                       name="check-box" 
                       size={16} 
-                      color={colors.textSecondary} 
+                      color={colors.icon} 
                     />
                     <ThemedText style={styles.checklistText}>
                       {card.checklists.reduce((acc, checklist) => 
-                        acc + checklist.items.filter(item => item.completed).length, 0
+                        checklist?.items ? 
+                          acc + (checklist.items.filter(item => item?.completed).length) 
+                          : acc, 0
                       )}/{card.checklists.reduce((acc, checklist) => 
-                        acc + checklist.items.length, 0
+                        checklist?.items ? acc + checklist.items.length : acc, 0
                       )}
                     </ThemedText>
                   </View>

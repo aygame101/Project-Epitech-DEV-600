@@ -331,15 +331,48 @@ export default function BoardDetailScreen() {
     }
   };
 
+  const [assignedMembers, setAssignedMembers] = useState<string[]>([]);
+  const [currentCardId, setCurrentCardId] = useState<string | null>(null);
+
+  const fetchAssignedMembers = async (cardId: string) => {
+    try {
+      const response = await fetch(`https://api.trello.com/1/cards/${cardId}/members?key=625a06c8525ea14e94d75b7f03cf6051&token=ATTA75822e9f3501426780c7190ff61203b040e0e98bf64106f13f27ad4950990137C0A0BA60`);
+      const data = await response.json();
+      setAssignedMembers(data.map((member: User) => member.id));
+    } catch (error) {
+      console.error('Erreur lors du chargement des membres assignés:', error);
+    }
+  };
+
   const handleAssignCard = (cardId: string) => {
+    setCurrentCardId(cardId);
     setShowCardViewModal(false);
     fetchWorkspaceUsers(cardId);
+    fetchAssignedMembers(cardId);
   };
 
   const handleAssignUserToCard = async (userId: string) => {
-    // Logic to assign the user to the card
-    // You can make an API call here to update the card with the assigned user
-    setShowAssignModal(false);
+    try {
+      if (!currentCardId) {
+        Alert.alert('Erreur', 'Aucune carte sélectionnée');
+        return;
+      }
+      
+      const isAssigned = assignedMembers.includes(userId);
+      
+      if (isAssigned) {
+        // Désassigner l'utilisateur
+        await cardServices.removeMemberFromCard(currentCardId, userId);
+        setAssignedMembers(assignedMembers.filter(id => id !== userId));
+      } else {
+        // Assigner l'utilisateur
+        await cardServices.addMemberToCard(currentCardId, userId);
+        setAssignedMembers([...assignedMembers, userId]);
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'assignation:', error);
+      Alert.alert('Erreur', 'Impossible de modifier l\'assignation');
+    }
   };
 
   if (isLoading || !board) {
@@ -411,7 +444,7 @@ export default function BoardDetailScreen() {
                 <TextInput
                   style={styles.modalInput}
                   placeholder="Nom de la liste"
-                  placeholderTextColor="#888"
+                  placeholderTextColor="#fff"
                   value={newListName}
                   onChangeText={setNewListName}
                   autoFocus
@@ -604,7 +637,7 @@ export default function BoardDetailScreen() {
                     onPress={() => setShowCardViewModal(false)}
                     style={styles.closeButton}
                   >
-                    <AntDesign name="close" size={24} color="#000" />
+                    <AntDesign name="close" size={24} color="#fff" />
                   </Pressable>
                 </View>
 
@@ -617,29 +650,31 @@ export default function BoardDetailScreen() {
                 )}
 
                 <View style={styles.modalButtonsContainer}>
+                <Pressable
+                    style={[styles.modalButton, styles.assignButton]}
+                    onPress={() => viewingCard && handleAssignCard(viewingCard.id)}
+                  >
+                    <Text style={styles.confirmButtonText}>👥</Text>
+                  </Pressable>
+                  
                   <Pressable
-                    style={[styles.modalButton, styles.confirmButton]}
+                    style={[styles.modalButton, styles.styloButton]}
                     onPress={() => {
                       setShowCardViewModal(false);
                       viewingCard && handleEditCard(viewingCard.id);
                     }}
                   >
-                    <Text style={styles.confirmButtonText}>Modifier</Text>
+                    <Text style={styles.confirmButtonText}>✏️</Text>
                   </Pressable>
 
                   <Pressable
                     style={[styles.modalButton, styles.archiveButton]}
                     onPress={() => viewingCard && handleArchiveCard(viewingCard.id)}
                   >
-                    <Text style={styles.archiveButtonText}>Archiver</Text>
+                    <Text style={styles.archiveButtonText}>🗑️</Text>
                   </Pressable>
 
-                  <Pressable
-                    style={[styles.modalButton, styles.assignButton]}
-                    onPress={() => viewingCard && handleAssignCard(viewingCard.id)}
-                  >
-                    <Text style={styles.confirmButtonText}>Assigner</Text>
-                  </Pressable>
+                  
                 </View>
               </View>
             </TouchableWithoutFeedback>
@@ -664,7 +699,7 @@ export default function BoardDetailScreen() {
                     onPress={() => setShowAssignModal(false)}
                     style={styles.closeButton}
                   >
-                    <AntDesign name="close" size={24} color="#000" />
+                    <AntDesign name="close" size={24} color="#fff" />
                   </Pressable>
                 </View>
 
@@ -677,7 +712,17 @@ export default function BoardDetailScreen() {
                         style={styles.userItem}
                         onPress={() => handleAssignUserToCard(item.id)}
                       >
-                        <Text style={styles.userName}>{item.fullName}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Text style={styles.userName}>{item.fullName}</Text>
+                          {assignedMembers.includes(item.id) && (
+                            <AntDesign 
+                              name="check" 
+                              size={20} 
+                              color="green" 
+                              style={{ marginLeft: 10 }}
+                            />
+                          )}
+                        </View>
                         <Text style={styles.userEmail}>{item.username}</Text>
                       </Pressable>
                     )}
