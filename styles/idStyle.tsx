@@ -204,6 +204,12 @@ export const styles = StyleSheet.create({
     color: '#000',
     fontWeight: 'bold',
   },
+  confirmButton: {
+    backgroundColor: '#FFA500'
+  },
+  styloButton: {
+    backgroundColor: ''
+  },
   confirmButtonText: {
     color: '#000',
     fontWeight: 'bold',
