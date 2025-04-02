@@ -658,7 +658,7 @@ export default function BoardDetailScreen() {
                   </Pressable>
                   
                   <Pressable
-                    style={[styles.modalButton, styles.confirmButton]}
+                    style={[styles.modalButton, styles.styloButton]}
                     onPress={() => {
                       setShowCardViewModal(false);
                       viewingCard && handleEditCard(viewingCard.id);
