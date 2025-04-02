@@ -239,6 +239,7 @@ export const styles = StyleSheet.create({
   userName: {
     fontWeight: 'bold',
     fontSize: 16,
+    color: '#FFF'
   },
   userEmail: {
     color: '#666',
