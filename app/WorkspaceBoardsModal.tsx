@@ -6,6 +6,7 @@ import Constants from 'expo-constants';
 import { styles } from '../styles/WorkspaceBoardsModalStyle';
 import { boardServices } from '@/services/boardService';
 import { Board } from '@/types/Board';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal'; // Importez le nouveau composant
 
 interface WorkspaceParams {
   workspaceId: string;
@@ -33,6 +34,10 @@ const WorkspaceBoardsModal = () => {
   const [updatedBoardName, setUpdatedBoardName] = useState('');
   const [deletingBoardId, setDeletingBoardId] = useState<string | null>(null);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
+  
+  // État pour le modal de suppression
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [boardToDelete, setBoardToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -135,31 +140,28 @@ const WorkspaceBoardsModal = () => {
     }
   };
 
-  const handleDeleteBoard = async (boardId: string) => {
-    Alert.alert(
-      'Confirmation',
-      'Êtes-vous sûr de vouloir supprimer ce tableau ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer',
-          onPress: async () => {
-            setDeletingBoardId(boardId);
-            try {
-              await boardServices.deleteBoard(boardId);
+  // Cette fonction affiche simplement le modal de confirmation
+  const showDeleteConfirmation = (boardId: string) => {
+    setBoardToDelete(boardId);
+    setDeleteModalVisible(true);
+  };
 
-              setBoards(boards.filter(board => board.id !== boardId));
-            } catch (error) {
-              console.error(error);
-              Alert.alert('Erreur', 'Échec de la suppression du tableau');
-            } finally {
-              setDeletingBoardId(null);
-            }
-          },
-          style: 'destructive'
-        }
-      ]
-    );
+  // Cette fonction sera exécutée après confirmation
+  const confirmDeleteBoard = async () => {
+    if (!boardToDelete) return;
+    
+    setDeletingBoardId(boardToDelete);
+    try {
+      await boardServices.deleteBoard(boardToDelete);
+      setBoards(boards.filter(board => board.id !== boardToDelete));
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erreur', 'Échec de la suppression du tableau');
+    } finally {
+      setDeletingBoardId(null);
+      setBoardToDelete(null);
+      setDeleteModalVisible(false);
+    }
   };
 
   const renderEditModal = () => (
@@ -324,7 +326,7 @@ const WorkspaceBoardsModal = () => {
                       style={styles.deleteButton}
                       onPress={(e) => {
                         e.stopPropagation();
-                        handleDeleteBoard(item.id);
+                        showDeleteConfirmation(item.id);
                       }}
                       disabled={deletingBoardId !== null}
                     >
@@ -337,6 +339,14 @@ const WorkspaceBoardsModal = () => {
           )}
         />
       )}
+
+      <DeleteConfirmationModal
+        visible={deleteModalVisible}
+        message="Êtes-vous sûr de vouloir supprimer ce tableau ?"
+        isDeleting={deletingBoardId !== null}
+        onCancel={() => setDeleteModalVisible(false)}
+        onConfirm={confirmDeleteBoard}
+      />
 
       {renderEditModal()}
       {renderTemplateModal()}
