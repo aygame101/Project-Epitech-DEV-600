@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { View, FlatList, SafeAreaView, ActivityIndicator, Alert, Text } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import { boardServices } from '@/services/boardService';
 import { Board } from '@/types/Board';
 import { styles } from '../../styles/boardsStyle';
@@ -10,6 +11,7 @@ import BoardCard from '@/components/boards/BoardCard';
 import CreateBoardSection from '@/components/boards/CreateBoardSection';
 import TemplateSelectionModal from '@/components/modals/TemplateSelectionModal';
 import EditBoardModal from '@/components/modals/EditBoardModal';
+import WorkspaceSelectionModal from '@/components/modals/WorkspaceSelectionModal';
 
 export default function BoardsScreen() {
   const router = useRouter();
@@ -23,10 +25,26 @@ export default function BoardsScreen() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [boardToDelete, setBoardToDelete] = useState<string | null>(null);
+  
+  // New states for workspace selection
+  const [workspaceModalVisible, setWorkspaceModalVisible] = useState(false);
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
+  const [selectedWorkspaceName, setSelectedWorkspaceName] = useState<string | null>(null);
 
+  // Effet classique qui charge les tableaux au montage initial
   useEffect(() => {
     fetchBoards();
   }, []);
+
+  // Nouvel effet qui recharge les tableaux chaque fois que l'écran est focalisé
+  useFocusEffect(
+    useCallback(() => {
+      fetchBoards();
+      return () => {
+        // Cleanup si nécessaire
+      };
+    }, [])
+  );
 
   const fetchBoards = async () => {
     setIsLoading(true);
@@ -41,11 +59,18 @@ export default function BoardsScreen() {
     }
   };
 
-  const openTemplateModal = () => {
+  const openWorkspaceModal = () => {
     if (!newBoardName.trim()) {
       Alert.alert('Info', 'Veuillez saisir un nom de tableau');
       return;
     }
+    setWorkspaceModalVisible(true);
+  };
+
+  const handleSelectWorkspace = (workspaceId: string, workspaceName: string) => {
+    setSelectedWorkspaceId(workspaceId);
+    setSelectedWorkspaceName(workspaceName);
+    setWorkspaceModalVisible(false);
     setTemplateModalVisible(true);
   };
 
@@ -57,10 +82,12 @@ export default function BoardsScreen() {
     
     setIsLoading(true);
     try {
-      const newBoard = await boardServices.createBoard(newBoardName, isKanban);
+      const newBoard = await boardServices.createBoard(newBoardName, isKanban, selectedWorkspaceId || undefined);
       setBoards([...boards, newBoard]);
       setNewBoardName('');
       setTemplateModalVisible(false);
+      setSelectedWorkspaceId(null);
+      setSelectedWorkspaceName(null);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Une erreur est survenue';
       Alert.alert('Erreur', message);
@@ -132,7 +159,7 @@ export default function BoardsScreen() {
         <CreateBoardSection
           value={newBoardName}
           onChangeText={setNewBoardName}
-          onCreatePress={openTemplateModal}
+          onCreatePress={openWorkspaceModal}
           isLoading={isLoading}
         />
         
@@ -188,17 +215,21 @@ export default function BoardsScreen() {
           isValid={!!updatedBoardName.trim()}
         />
         
+        <WorkspaceSelectionModal
+          visible={workspaceModalVisible}
+          onClose={() => setWorkspaceModalVisible(false)}
+          onSelectWorkspace={handleSelectWorkspace}
+        />
+        
         <TemplateSelectionModal
           visible={templateModalVisible}
-          onClose={() => setTemplateModalVisible(false)}
-          onCreateEmpty={() => {
-            handleCreateBoard(false);
+          onClose={() => {
             setTemplateModalVisible(false);
+            setSelectedWorkspaceId(null);
+            setSelectedWorkspaceName(null);
           }}
-          onCreateKanban={() => {
-            handleCreateBoard(true);
-            setTemplateModalVisible(false);
-          }}
+          onCreateEmpty={() => handleCreateBoard(false)}
+          onCreateKanban={() => handleCreateBoard(true)}
         />
       </View>
     </SafeAreaView>

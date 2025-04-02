@@ -24,16 +24,23 @@ export const boardServices = {
   /**
    * Crée un nouveau tableau
    */
-  createBoard: async (name: string, defaultLists: boolean): Promise<Board> => {
+  createBoard: async (name: string, defaultLists: boolean, idOrganization?: string): Promise<Board> => {
+    const body: any = {
+      name: name,
+      defaultLists: defaultLists
+    };
+    
+    // Add organization ID if provided
+    if (idOrganization) {
+      body.idOrganization = idOrganization;
+    }
+    
     const response = await fetch(
       `https://api.trello.com/1/boards/?key=${API_KEY}&token=${API_TOKEN}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name,
-          defaultLists: defaultLists
-        })
+        body: JSON.stringify(body)
       }
     );
 
@@ -41,7 +48,6 @@ export const boardServices = {
 
     return await response.json();
   },
-
 
   /**
    * Récupère un tableau spécifique par son ID
@@ -84,6 +90,19 @@ export const boardServices = {
     if (!response.ok) {
       throw new Error('Failed to update board');
     }
+
+    return await response.json();
+  },
+  
+  /**
+   * Récupère tous les workspaces de l'utilisateur
+   */
+  getWorkspaces: async () => {
+    const response = await fetch(
+      `https://api.trello.com/1/members/me/organizations?key=${API_KEY}&token=${API_TOKEN}`
+    );
+
+    if (!response.ok) throw new Error('Échec du chargement des workspaces');
 
     return await response.json();
   }

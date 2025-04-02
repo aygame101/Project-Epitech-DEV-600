@@ -93,7 +93,8 @@ const WorkspaceBoardsModal = () => {
 
     setIsCreating(true);
     try {
-      const newBoard = await boardServices.createBoard(newBoardName, isKanban);
+      // Pass the workspaceId to createBoard
+      const newBoard = await boardServices.createBoard(newBoardName, isKanban, workspaceId);
       setBoards([...boards, newBoard]);
       setNewBoardName('');
     } catch (error) {
