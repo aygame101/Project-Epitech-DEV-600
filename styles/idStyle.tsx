@@ -10,7 +10,6 @@ export const styles = StyleSheet.create({
     color: '#FFF', // Texte blanc pour le bouton d'archivage
     fontWeight: 'bold',
   },
-  
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
