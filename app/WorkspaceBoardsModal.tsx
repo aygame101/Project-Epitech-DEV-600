@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, TextInput, TouchableOpacity, Alert, Modal, TouchableWithoutFeedback, ScrollView } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, TextInput, TouchableOpacity, Alert, Modal, TouchableWithoutFeedback } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
 import { styles } from '../styles/WorkspaceBoardsModalStyle';
 import { boardServices } from '@/services/boardService';
-
 import { Board } from '@/types/Board';
 
 interface WorkspaceParams {
@@ -13,7 +12,6 @@ interface WorkspaceParams {
   workspaceName: string;
 }
 
-// Configuration Trello
 const API_KEY = Constants.expoConfig?.extra?.apiKey;
 const API_TOKEN = Constants.expoConfig?.extra?.token;
 
@@ -77,18 +75,23 @@ const WorkspaceBoardsModal = () => {
     }
   };
 
-  const handleCreateBoard = async (useTemplate: boolean = false) => {
-    if (!newBoardName.trim()) return;
+  const handleCreateBoard = async (isKanban: boolean) => {
+    if (!newBoardName.trim()) {
+      Alert.alert('Erreur', 'Le nom du tableau ne peut pas être vide');
+      return;
+    }
 
     setIsCreating(true);
     try {
-      const newBoard = await boardServices.createBoard(newBoardName, useTemplate);
+      const newBoard = await boardServices.createBoard(newBoardName, isKanban);
       setBoards([...boards, newBoard]);
       setNewBoardName('');
     } catch (error) {
-      Alert.alert('Erreur', error instanceof Error ? error.message : 'Échec de la création du tableau');
+      const message = error instanceof Error ? error.message : 'Une erreur est survenue';
+      Alert.alert('Erreur', message);
     } finally {
       setIsCreating(false);
+      setShowTemplateModal(false);
     }
   };
 
@@ -159,12 +162,6 @@ const WorkspaceBoardsModal = () => {
     );
   };
 
-  const handleTemplateChoice = (useTemplate: boolean) => {
-    setShowTemplateModal(false);
-    handleCreateBoard(useTemplate);
-  };
-
-
   const renderEditModal = () => (
     <Modal
       transparent={true}
@@ -221,31 +218,35 @@ const WorkspaceBoardsModal = () => {
         <TouchableWithoutFeedback onPress={() => setShowTemplateModal(false)}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Choisir le type de tableau</Text>
-                
+              <View style={[styles.modalContent, { maxHeight: '50%', width: '80%' }]}>
+                <Text style={styles.modalTitle}>Type de tableau</Text>
+
+                <View style={{ gap: 16, marginTop: 20 }}>
+                  <TouchableOpacity
+                    style={styles.templateItem}
+                    onPress={() => {
+                      handleCreateBoard(false);
+                      setShowTemplateModal(false);
+                    }}
+                  >
+                    <Text style={styles.templateTitle}>Tableau vide</Text>
+                    <Text style={styles.templateDescription}>Pas de listes prédéfinies</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.templateItem}
+                    onPress={() => {
+                      handleCreateBoard(true);
+                      setShowTemplateModal(false);
+                    }}
+                  >
+                    <Text style={styles.templateTitle}>Kanban</Text>
+                    <Text style={styles.templateDescription}>Listes "To Do", "Doing", "Done"</Text>
+                  </TouchableOpacity>
+                </View>
+
                 <TouchableOpacity
-                  style={styles.modalButton}
-                  onPress={() => {
-                    handleCreateBoard(false);
-                    setShowTemplateModal(false);
-                  }}
-                >
-                  <Text style={styles.modalButtonText}>Tableau vide</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={styles.modalButton}
-                  onPress={() => {
-                    handleCreateBoard(true);
-                    setShowTemplateModal(false);
-                  }}
-                >
-                  <Text style={styles.modalButtonText}>Template Kanban (To Do, Doing, Done)</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton]}
+                  style={[styles.modalButton, styles.cancelButton, { marginTop: 16 }]}
                   onPress={() => setShowTemplateModal(false)}
                 >
                   <Text style={styles.modalButtonText}>Annuler</Text>
@@ -262,7 +263,6 @@ const WorkspaceBoardsModal = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Workspace : {workspaceName}</Text>
 
-      {/* Champ d'ajout de tableau */}
       <View style={styles.addBoardContainer}>
         <TextInput
           style={styles.input}
