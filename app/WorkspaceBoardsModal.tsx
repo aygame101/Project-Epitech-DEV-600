@@ -285,7 +285,7 @@ const WorkspaceBoardsModal = () => {
           {isCreating ? (
             <ActivityIndicator size="small" color="#FFF" />
           ) : (
-            <Text style={styles.addButtonText}>Ajouter</Text>
+            <Text style={styles.addButtonText}>Créer</Text>
           )}
         </TouchableOpacity>
       </View>
