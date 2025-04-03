@@ -84,16 +84,15 @@ export const styles = StyleSheet.create({
 
   /* LIST CARD */
   listCardContainer: {
-    backgroundColor: '#FFF', // Listes en blanc
+    backgroundColor: '#1F1F1F',
     borderRadius: 8,
     width: 260,
-    height: 400, // Fixed height for scrollable lists
+    height: 400,
     padding: 12,
     marginHorizontal: 8,
     marginVertical: 4,
-    // Optionnel: bordure ou ombre
     borderWidth: 1,
-    borderColor: '#CCC',
+    borderColor: '#888',
   },
   listCardTitle: {
     color: '#FFA500', // Titre de la liste en orange
@@ -110,7 +109,7 @@ export const styles = StyleSheet.create({
     padding: 6,
   },
   listCardActionText: {
-    color: '#000', // Bouton "ajouter carte" en noir
+    color: '#FFA500',
   },
   listCardArchiveText: {
     color: '#FF4A4A', // Couleur d'archive
@@ -122,12 +121,12 @@ export const styles = StyleSheet.create({
     marginVertical: 8,
   },
   cardItem: {
-    backgroundColor: '#F8F8F8',
+    backgroundColor: '#2A2A2A',
     borderRadius: 4,
     padding: 8,
     marginBottom: 8,
     borderLeftWidth: 3,
-    borderLeftColor: '#FFA500',
+    borderLeftColor: '#888',
   },
   cardTitle: {
     fontWeight: '600',
@@ -135,14 +134,14 @@ export const styles = StyleSheet.create({
   },
   cardDescription: {
     fontSize: 12,
-    color: '#666',
+    color: '#FFF',
   },
 
   /* AJOUTER UNE LISTE BUTTON */
   addListButton: {
     width: 260,
     height: 50,
-    backgroundColor: '#FFF', // Même couleur que les listes
+    backgroundColor: '#1F1F1F',
     borderRadius: 8,
     marginHorizontal: 8,
     paddingHorizontal: 14,
@@ -150,10 +149,10 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#FFA500',
+    borderColor: '#888',
   },
   addListButtonText: {
-    color: '#000',
+    color: '#FFA500',
     fontSize: 16,
     marginLeft: 6,
     fontWeight: '600',
@@ -174,12 +173,12 @@ export const styles = StyleSheet.create({
   },
   modalInput: {
     borderWidth: 1,
-    borderColor: '#CCC',
+    borderColor: '#888',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    color: '#000',
-    backgroundColor: '#FFF',
+    color: '#FFF',
+    backgroundColor: '#2A2A2A',
     marginBottom: 20,
   },
   textareaInput: {
@@ -198,10 +197,12 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#CCC',
+    backgroundColor: '#2A2A2A',
+    borderWidth: 1,
+    borderColor: '#888',
   },
   cancelButtonText: {
-    color: '#000',
+    color: '#FFA500',
     fontWeight: 'bold',
   },
   confirmButton: {
@@ -232,7 +233,7 @@ export const styles = StyleSheet.create({
   },
   viewMoreText: {
     fontSize: 12,
-    color: '#0078d7',
+    color: '#FFA500',
   },
   assignButton: {
     marginLeft: 8,
@@ -248,7 +249,7 @@ export const styles = StyleSheet.create({
     color: '#FFF'
   },
   userEmail: {
-    color: '#666',
+    color: '#CCC',
     fontSize: 14,
   },
   userList: {
