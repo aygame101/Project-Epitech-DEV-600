@@ -578,8 +578,7 @@ export default function BoardDetailScreen() {
 
       console.log("Workspace ID:", workspaceId);
 
-      const response = await cardServices.getWorkspaceMembers(workspaceId);
-      const data = await response.json();
+      const data = await cardServices.getWorkspaceMembers(workspaceId);
       setUsers(data);
       setShowAssignModal(true);
     } catch (error) {
@@ -592,8 +591,7 @@ export default function BoardDetailScreen() {
 
   const fetchAssignedMembers = async (cardId: string) => {
     try {
-      const response = await cardServices.getCardMembers(cardId);
-      const data = await response.json();
+      const data = await cardServices.getCardMembers(cardId);
       setAssignedMembers(data.map((member: User) => member.id));
     } catch (error) {
       console.error('Erreur lors du chargement des membres assignés:', error);
