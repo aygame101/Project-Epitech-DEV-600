@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import { styles } from '@/styles/componentStyle/WorkspaceItemStyle';
 
+import { AntDesign } from '@expo/vector-icons';
+
 interface WorkspaceItemProps {
   workspace: {id: string, displayName: string};
   isDeleting: boolean;
@@ -22,14 +24,14 @@ const WorkspaceItem: React.FC<WorkspaceItemProps> = ({
       <Text style={styles.workspaceItem}>{workspace.displayName}</Text>
       <View style={styles.actionsContainer}>
         <TouchableOpacity onPress={onEdit} style={styles.editButton}>
-          <Text style={styles.editButtonText}>✏️</Text>
+          <AntDesign name="edit" size={18} color="#FFFFFF" />
         </TouchableOpacity>
         <TouchableOpacity 
           onPress={onDelete} 
           style={styles.deleteButton}
           disabled={isDeleting}
         >
-          <Text style={styles.deleteButtonText}>🗑️</Text>
+          <AntDesign name="delete" size={18} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
     </View>

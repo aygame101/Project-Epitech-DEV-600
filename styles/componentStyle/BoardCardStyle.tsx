@@ -10,7 +10,7 @@ export const styles = StyleSheet.create({
     minHeight: 100
   },
   name: {
-    color: '#FFF',
+    color: '#FFA500',
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 5

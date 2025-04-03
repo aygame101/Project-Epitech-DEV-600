@@ -4,19 +4,7 @@ import Constants from 'expo-constants';
 import { User } from '@/types/User';
 import { Card } from '@/types/Card';
 import { List } from '@/types/List';
-import {
-  StyleSheet,
-  ScrollView,
-  TextInput,
-  Pressable,
-  ActivityIndicator,
-  View,
-  Text,
-  Alert,
-  Modal,
-  TouchableWithoutFeedback,
-  FlatList
-} from 'react-native';
+import { StyleSheet, ScrollView, TextInput, Pressable, ActivityIndicator, View, Text, Alert, Modal, TouchableWithoutFeedback, FlatList } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
@@ -144,7 +132,7 @@ function ListCard({
       <View style={styles.listCardHeader}>
         <Text style={styles.listCardTitle}>{list.name}</Text>
         <Pressable onPress={() => onEdit(list.id)} style={styles.editButton}>
-          <Text style={styles.confirmButtonText}>✏️</Text>
+          <AntDesign name="edit" size={18} color="#FFFFFF" />
         </Pressable>
       </View>
 
@@ -1163,14 +1151,14 @@ export default function BoardDetailScreen() {
                     style={[styles.modalButton, styles.checklistButton]}
                     onPress={() => viewingCard && handleOpenChecklistModal(viewingCard.id)}
                   >
-                    <Text style={styles.confirmButtonText}>📋</Text>
+                    <AntDesign name="bars" size={18} color="#FFFFFF" />
                   </Pressable>
 
                   <Pressable
                     style={[styles.modalButton, styles.assignButton]}
                     onPress={() => viewingCard && handleAssignCard(viewingCard.id)}
                   >
-                    <Text style={styles.confirmButtonText}>👥</Text>
+                    <AntDesign name="user" size={18} color="#FFFFFF" />
                   </Pressable>
 
                   <Pressable
@@ -1180,14 +1168,14 @@ export default function BoardDetailScreen() {
                       viewingCard && handleEditCard(viewingCard.id);
                     }}
                   >
-                    <Text style={styles.confirmButtonText}>✏️</Text>
+                    <AntDesign name="edit" size={18} color="#FFFFFF" />
                   </Pressable>
 
                   <Pressable
                     style={[styles.modalButton, styles.archiveButton]}
                     onPress={() => viewingCard && handleArchiveCard(viewingCard.id)}
                   >
-                    <Text style={styles.archiveButtonText}>🗑️</Text>
+                    <AntDesign name="delete" size={18} color="#FFFFFF" />
                   </Pressable>
                 </View>
               </View>
