@@ -1,6 +1,3 @@
-// services/weatherService.ts
-
-// Remplacez YOUR_API_KEY par votre clé API OpenWeatherMap
 const API_KEY = '2dbc21e5b45a0bc43b4a10b33e4a7d77';
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 

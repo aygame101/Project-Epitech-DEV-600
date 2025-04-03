@@ -280,6 +280,11 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
+  cardHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   dueDateBadge: {
     backgroundColor: '#FFA50022',
     paddingHorizontal: 6,
@@ -431,6 +436,30 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   checklistItemCompleted: {
+  },
+  
+  // New styles for avatars and due date
+  avatarsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginVertical: 4,
+  },
+  dueDateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  dueDateLabel: {
+    color: '#888',
+    fontSize: 12,
+    marginRight: 4,
+  },
+  dueDateValue: {
+    color: '#FFA500',
+    fontSize: 12,
+  },
+  checklistButton: {
+    backgroundColor: '#4CAF50',
   },
 
 });

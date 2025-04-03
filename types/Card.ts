@@ -2,6 +2,7 @@ export type ChecklistItem = {
   id: string;
   title: string;
   completed: boolean;
+  cardId?: string;
 };
 
 export type Checklist = {

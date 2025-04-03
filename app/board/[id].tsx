@@ -3,6 +3,7 @@ import axios from 'axios';
 import Constants from 'expo-constants';
 import { User } from '@/types/User';
 import { Card } from '@/types/Card';
+import { UserAvatar } from '@/components/cards/UserAvatar';
 import { List } from '@/types/List';
 import { StyleSheet, ScrollView, TextInput, Pressable, ActivityIndicator, View, Text, Alert, Modal, TouchableWithoutFeedback, FlatList } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
@@ -18,6 +19,7 @@ interface CardItemProps {
   card: Card;
   onEditCard: (cardId: string) => void;
   onViewCard: (cardId: string) => void;
+  assignedMembers: User[];
 }
 
 interface ChecklistsData {
@@ -34,7 +36,7 @@ interface ChecklistsData {
 }
 
 // Mise à jour du composant CardItem pour afficher la date d'échéance et la progression de checklist
-function CardItem({ card, onEditCard, onViewCard }: CardItemProps) {
+function CardItem({ card, onEditCard, onViewCard, assignedMembers }: CardItemProps) {
   const checklistsData: ChecklistsData = {};
   const truncateDescription = (text: string, maxLength = 30) => {
     if (!text || text.length <= maxLength) return text;
@@ -57,7 +59,7 @@ function CardItem({ card, onEditCard, onViewCard }: CardItemProps) {
   const progressPercentage = totalItems > 0 ? Math.round((totalChecked / totalItems) * 100) : 0;
 
   // Formater la date d'échéance
-  const formattedDueDate = card.dueDate && typeof card.dueDate === 'string' && card.dueDate.length > 0 ?
+  const formattedDueDate = card.dueDate && typeof card.dueDate === 'string' && card.dueDate.length > 0 && !isNaN(new Date(card.dueDate).getTime()) ?
     new Date(card.dueDate).toLocaleDateString('fr-FR') :
     null;
 
@@ -65,15 +67,25 @@ function CardItem({ card, onEditCard, onViewCard }: CardItemProps) {
     <Pressable style={styles.cardItem} onPress={() => onViewCard(card.id)}>
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{card.name}</Text>
-        {formattedDueDate && (
-          <Text style={[
-            styles.dueDateBadge,
-            new Date(card.dueDate) < new Date() ? styles.dueDateOverdue : null
-          ]}>
-            {formattedDueDate}
-          </Text>
-        )}
+        <View style={styles.cardHeaderRight}>
+          {assignedMembers.length > 0 && (
+            <View style={styles.avatarsContainer}>
+              {assignedMembers.map(member => (
+                <UserAvatar key={member.id} user={member} size={20} />
+              ))}
+            </View>
+          )}
+          {formattedDueDate && (
+            <Text style={[
+              styles.dueDateBadge,
+              new Date(card.dueDate) < new Date() ? styles.dueDateOverdue : null
+            ]}>
+              {formattedDueDate}
+            </Text>
+          )}
+        </View>
       </View>
+
 
       {card.desc && (
         <Text style={styles.cardDescription} numberOfLines={1} ellipsizeMode="tail">
@@ -97,9 +109,7 @@ function CardItem({ card, onEditCard, onViewCard }: CardItemProps) {
         </View>
       )}
 
-      <Pressable onPress={() => onViewCard(card.id)} style={styles.viewMoreButton}>
-        <Text style={styles.viewMoreText}>View more</Text>
-      </Pressable>
+
     </Pressable>
   );
 }
@@ -123,8 +133,10 @@ function ListCard({
   onAddCard,
   onEdit,
   onEditCard,
-  onViewCard
-}: ListCardProps) {
+  onViewCard,
+  users,
+  assignedMembers
+}: ListCardProps & { users: User[]; assignedMembers: string[] }) {
   const listCards = cards.filter(card => card.idList === list.id);
 
   return (
@@ -143,6 +155,7 @@ function ListCard({
             card={card}
             onEditCard={onEditCard}
             onViewCard={onViewCard}
+            assignedMembers={users.filter(user => assignedMembers.includes(user.id))}
           />
         ))}
       </ScrollView>
@@ -663,6 +676,8 @@ export default function BoardDetailScreen() {
               onEdit={handleEditList}
               onEditCard={handleEditCard}
               onViewCard={handleViewCard}
+              users={users}
+              assignedMembers={assignedMembers}
             />
           ))}
 
@@ -1152,9 +1167,8 @@ export default function BoardDetailScreen() {
                 )}
 
                 <View style={styles.modalButtonsContainer}>
-                  {/* Nouveau bouton pour ajouter une checklist */}
                   <Pressable
-                    style={[styles.modalButton, styles.checklistButton]}
+                    style={[styles.modalButton]}
                     onPress={() => viewingCard && handleOpenChecklistModal(viewingCard.id)}
                   >
                     <AntDesign name="bars" size={18} color="#FFFFFF" />
