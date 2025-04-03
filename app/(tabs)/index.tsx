@@ -34,7 +34,7 @@ export default function HomeScreen() {
   const fetchWeatherData = async () => {
     setWeatherLoading(true);
     try {
-      // Utilisez Paris comme exemple
+      // Paris
       const lat = 48.8566;
       const lon = 2.3522;
       

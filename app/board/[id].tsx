@@ -6,7 +6,6 @@ import { Card } from '@/types/Card';
 import { UserAvatar } from '@/components/cards/UserAvatar';
 import { List } from '@/types/List';
 import { StyleSheet, ScrollView, TextInput, Pressable, ActivityIndicator, View, Text, Alert, Modal, TouchableWithoutFeedback, FlatList } from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
 import { boardServices } from '@/services/boardService';
@@ -58,32 +57,17 @@ function CardItem({ card, onEditCard, onViewCard, assignedMembers }: CardItemPro
   // Calculer le pourcentage de progression
   const progressPercentage = totalItems > 0 ? Math.round((totalChecked / totalItems) * 100) : 0;
 
-  // Formater la date d'échéance
-  const formattedDueDate = card.dueDate && typeof card.dueDate === 'string' && card.dueDate.length > 0 && !isNaN(new Date(card.dueDate).getTime()) ?
-    new Date(card.dueDate).toLocaleDateString('fr-FR') :
-    null;
-
   return (
     <Pressable style={styles.cardItem} onPress={() => onViewCard(card.id)}>
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{card.name}</Text>
-        <View style={styles.cardHeaderRight}>
-          {assignedMembers.length > 0 && (
-            <View style={styles.avatarsContainer}>
-              {assignedMembers.map(member => (
-                <UserAvatar key={member.id} user={member} size={20} />
-              ))}
-            </View>
-          )}
-          {formattedDueDate && (
-            <Text style={[
-              styles.dueDateBadge,
-              new Date(card.dueDate) < new Date() ? styles.dueDateOverdue : null
-            ]}>
-              {formattedDueDate}
-            </Text>
-          )}
-        </View>
+        {assignedMembers.length > 0 && (
+          <View style={styles.avatarsContainer}>
+            {assignedMembers.map(member => (
+              <UserAvatar key={member.id} user={member} size={20} />
+            ))}
+          </View>
+        )}
       </View>
 
 
@@ -381,11 +365,6 @@ export default function BoardDetailScreen() {
       // Créer la carte d'abord
       const newCard = await cardServices.addCard(selectedListId, newCardName, newCardDesc);
 
-      // Ajouter la date d'échéance si spécifiée
-      if (dueDate) {
-        await cardServices.updateCard(newCard.id, { dueDate: dueDate.toISOString() });
-      }
-
       // Ajouter la checklist si le nom est spécifié
       if (newChecklistName.trim() && newChecklistItems.some(item => item.trim())) {
         const checklist = await cardServices.addChecklistToCard(newCard.id, newChecklistName);
@@ -580,8 +559,14 @@ export default function BoardDetailScreen() {
 
   const fetchWorkspaceUsers = async (cardId: string) => {
     try {
-      const boardId = await fetchBoardIdByCard(cardId);
-      const workspaceId = await fetchWorkspaceIdByBoard(boardId);
+      const boardId = cardId ? await fetchBoardIdByCard(cardId) : '';
+      if (!boardId) {
+        throw new Error('Impossible de récupérer l\'ID du tableau');
+      }
+      const workspaceId = boardId ? await fetchWorkspaceIdByBoard(boardId) : '';
+      if (!workspaceId) {
+        throw new Error('Impossible de récupérer l\'ID du workspace');
+      }
 
       console.log("Workspace ID:", workspaceId);
 
@@ -799,42 +784,6 @@ export default function BoardDetailScreen() {
                     onChangeText={setNewCardName}
                     autoFocus
                   />
-
-                  <View style={styles.datePickerContainer}>
-                    <Text style={styles.datePickerLabel}>Date d'échéance:</Text>
-                    <Pressable
-                      style={styles.datePicker}
-                      onPress={() => {
-                        setShowDatePicker(true);
-                      }}
-                    >
-                      <Text style={styles.datePickerText}>
-                        {dueDate ? dueDate.toLocaleDateString('fr-FR') : 'Aucune date'}
-                      </Text>
-                    </Pressable>
-                    {dueDate && (
-                      <Pressable
-                        style={styles.clearDateButton}
-                        onPress={() => setDueDate(null)}
-                      >
-                        <AntDesign name="close" size={16} color="#FF4A4A" />
-                      </Pressable>
-                    )}
-                  </View>
-
-                  {showDatePicker && (
-                    <DateTimePicker
-                      value={dueDate || new Date()}
-                      mode="date"
-                      display="default"
-                      onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
-                        setShowDatePicker(false);
-                        if (selectedDate) {
-                          setDueDate(selectedDate);
-                        }
-                      }}
-                    />
-                  )}
 
                   <View style={styles.cardOptionsContainer}>
                     <Pressable
@@ -1142,7 +1091,7 @@ export default function BoardDetailScreen() {
                           <Pressable
                             key={item.id}
                             style={styles.checklistItem}
-                            onPress={() => toggleChecklistItem(item.cardId, item.id, item.state)}
+                            onPress={() => viewingCard && toggleChecklistItem(viewingCard.id, item.id, item.state)}
                           >
                             <View style={styles.checklistItemCheckbox}>
                               {item.state === 'complete' ? (
