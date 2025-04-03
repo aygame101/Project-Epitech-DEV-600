@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { styles } from '@/styles/componentStyle/BoardItemStyle';
 
+import { AntDesign } from '@expo/vector-icons';
+
 interface BoardItemProps {
   board: {
     id: string;
@@ -33,10 +35,10 @@ const BoardItem: React.FC<BoardItemProps> = ({
       ) : (
         <>
           <TouchableOpacity onPress={onEdit} style={styles.actionButton}>
-            <Text>✏️</Text>
+          <AntDesign name="edit" size={18} color="#FFFFFF" />
           </TouchableOpacity>
           <TouchableOpacity onPress={onDelete} style={styles.actionButton}>
-            <Text>🗑️</Text>
+          <AntDesign name="delete" size={18} color="#FFFFFF" />
           </TouchableOpacity>
         </>
       )}

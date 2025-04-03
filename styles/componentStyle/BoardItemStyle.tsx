@@ -11,7 +11,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center'
   },
   name: {
-    color: '#FFF',
+    color: '#FFA500',
     fontSize: 16,
     flex: 1
   },

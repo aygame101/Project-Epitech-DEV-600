@@ -2,6 +2,7 @@ export type ChecklistItem = {
   id: string;
   title: string;
   completed: boolean;
+  cardId?: string;
 };
 
 export type Checklist = {
@@ -15,6 +16,7 @@ export type Card = {
   name: string;
   desc?: string;
   idList: string;
+  idBoard: string;
   dueDate?: string; // ISO date string
   startDate?: string; // ISO date string
   reminders?: string[]; // Array of ISO date strings

@@ -105,5 +105,18 @@ export const boardServices = {
     if (!response.ok) throw new Error('Échec du chargement des workspaces');
 
     return await response.json();
+  },
+
+  /**
+   * Récupère les détails complets d'un tableau incluant l'organisation
+   */
+  getBoardDetails: async (boardId: string): Promise<Board> => {
+    const response = await fetch(
+      `https://api.trello.com/1/boards/${boardId}?key=${API_KEY}&token=${API_TOKEN}&fields=id,name,desc,url,prefs,idOrganization`
+    );
+
+    if (!response.ok) throw new Error('Board details not found');
+
+    return await response.json();
   }
 };

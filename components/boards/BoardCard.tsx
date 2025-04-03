@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, TouchableWithoutFeedback } from 'react-na
 import { styles } from '@/styles/componentStyle/BoardCardStyle';
 import { Board } from '@/types/Board';
 
+import { AntDesign } from '@expo/vector-icons';
+
 interface BoardCardProps {
   board: Board;
   onPress: () => void;
@@ -26,14 +28,14 @@ const BoardCard: React.FC<BoardCardProps> = ({
           style={styles.editButton}
           onPress={onEdit}
         >
-          <Text>✏️</Text>
+          <AntDesign name="edit" size={18} color="#FFFFFF" />
         </TouchableOpacity>
           
         <TouchableOpacity 
           style={styles.deleteButton}
           onPress={onDelete}
         >
-          <Text>🗑️</Text>
+          <AntDesign name="delete" size={18} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
     </View>

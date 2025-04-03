@@ -9,8 +9,8 @@ import {
   Platform,
   ScrollView
 } from 'react-native';
-import ThemedText from '../ui/ThemedText';
-import ThemedView from '../ui/ThemedView';
+import {ThemedText} from '../ThemedText';
+import {ThemedView} from '../ThemedView';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import { Card } from '../../types/Card';
 import Icon from 'react-native-vector-icons/MaterialIcons';

@@ -11,7 +11,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center'
   },
   workspaceItem: {
-    color: '#fff',
+    color: '#FFA500',
     fontSize: 16,
     flex: 1
   },

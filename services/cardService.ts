@@ -217,6 +217,95 @@ export const cardServices = {
   },
 
   /**
+   * Ajoute un élément à une checklist
+   */
+  addChecklistItem: async (checklistId: string, name: string): Promise<any> => {
+    try {
+      const response = await axios.post(`${API_URL}checklists/${checklistId}/checkItems`, null, {
+        params: {
+          name,
+          key: API_KEY,
+          token: TOKEN,
+        },
+      });
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error adding checklist item:', error.message);
+      } else {
+        console.error('Unknown error adding checklist item');
+      }
+      throw new Error('Failed to add checklist item');
+    }
+  },
+
+  /**
+   * Récupère les détails d'une carte
+   */
+  getCardDetails: async (cardId: string): Promise<Card> => {
+    try {
+      const response = await axios.get(`${API_URL}cards/${cardId}`, {
+        params: {
+          key: API_KEY,
+          token: TOKEN,
+        },
+      });
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error fetching card details:', error.message);
+      } else {
+        console.error('Unknown error fetching card details');
+      }
+      throw new Error('Failed to fetch card details');
+    }
+  },
+
+  /**
+   * Récupère les membres d'un workspace
+   */
+  getWorkspaceMembers: async (workspaceId: string): Promise<any> => {
+    try {
+      const response = await axios.get(`${API_URL}organizations/${workspaceId}/members`, {
+        params: {
+          key: API_KEY,
+          token: TOKEN,
+        },
+      });
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error fetching workspace members:', error.message);
+      } else {
+        console.error('Unknown error fetching workspace members');
+      }
+      throw new Error('Failed to fetch workspace members');
+    }
+  },
+
+  /**
+   * Récupère les membres assignés à une carte
+   */
+  getCardMembers: async (cardId: string): Promise<any> => {
+    try {
+      const response = await axios.get(`${API_URL}cards/${cardId}/members`, {
+        params: {
+          key: API_KEY,
+          token: TOKEN,
+        },
+      });
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error fetching card members:', error.message);
+      } else {
+        console.error('Unknown error fetching card members');
+      }
+      throw new Error('Failed to fetch card members');
+    }
+  },
+
+  /**
    * Ajoute une checklist à une carte
    */
   addChecklistToCard: async (cardId: string, title: string): Promise<Checklist> => {
