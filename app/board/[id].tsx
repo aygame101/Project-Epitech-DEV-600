@@ -489,13 +489,19 @@ export default function BoardDetailScreen() {
           }
         });
 
-        // Pour chaque checklist, compter les éléments cochés
+        // Pour chaque checklist, compter les éléments cochés et ajouter cardId à chaque item
         const checklists = response.data.map((checklist: any) => {
-          const checkItemsChecked = checklist.checkItems.filter((item: any) => item.state === 'complete').length;
+          // Ajouter cardId à chaque checkItem
+          const updatedCheckItems = checklist.checkItems.map((item: any) => ({
+            ...item,
+            cardId: card.id // Stocker l'ID de la carte
+          }));
+
+          const checkItemsChecked = updatedCheckItems.filter((item: any) => item.state === 'complete').length;
           return {
             id: checklist.id,
             name: checklist.name,
-            checkItems: checklist.checkItems,
+            checkItems: updatedCheckItems,
             checkItemsChecked
           };
         });
@@ -519,11 +525,11 @@ export default function BoardDetailScreen() {
   }, [cards]);
 
   // Fonction pour mettre à jour l'état d'un élément de checklist
-  const toggleChecklistItem = async (checklistId: string, checkItemId: string, currentState: string) => {
+  const toggleChecklistItem = async (cardId: string, checkItemId: string, currentState: string) => {
     try {
       const newState = currentState === 'complete' ? 'incomplete' : 'complete';
 
-      await axios.put(`https://api.trello.com/1/checklists/${checklistId}/checkItems/${checkItemId}`, null, {
+      await axios.put(`https://api.trello.com/1/cards/${cardId}/checkItem/${checkItemId}`, null, {
         params: {
           state: newState,
           key: Constants.expoConfig?.extra?.apiKey,
@@ -1121,11 +1127,11 @@ export default function BoardDetailScreen() {
                           <Pressable
                             key={item.id}
                             style={styles.checklistItem}
-                            onPress={() => toggleChecklistItem(checklist.id, item.id, item.state)}
+                            onPress={() => toggleChecklistItem(item.cardId, item.id, item.state)}
                           >
                             <View style={styles.checklistItemCheckbox}>
                               {item.state === 'complete' ? (
-                                <AntDesign name="checkcircle" size={18} color="#4CAF50" />
+                                <AntDesign name="checkcircle" size={18} color="#FFA500" />
                               ) : (
                                 <AntDesign name="checkcircleo" size={18} color="#CCC" />
                               )}
