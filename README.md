@@ -32,8 +32,9 @@ Date de rendu : 6 avril 2025 à 23h42
 
 ### Installation du projet
 ```npm i```  
-```npx expo install expo-router react-native-screens react-native-safe-area-context @react-navigation/native @react-navigation/native-stackD``` 
-si probleme windows : ```npx expo install expo-router react-native-screens react-native-safe-area-context @react-navigation/native @react-navigation/native-stack``` 
+```npx expo install expo-router react-native-screens react-native-safe-area-context @react-navigation/native @react-navigation/native-stackD```  
+  
+si probleme windows : ```npx expo install expo-router react-native-screens react-native-safe-area-context @react-navigation/native @react-navigation/native-stack```  
 ```npx expo start```  
 
 
