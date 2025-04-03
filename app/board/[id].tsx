@@ -1089,9 +1089,9 @@ export default function BoardDetailScreen() {
                 {/* Affichage de la description */}
                 <Text style={styles.sectionTitle}>Description</Text>
                 {viewingCard?.desc ? (
-                  <ScrollView style={styles.cardViewDescription}>
+                  <View style={styles.cardViewDescription}>
                     <Text style={styles.descriptionText}>{viewingCard.desc}</Text>
-                  </ScrollView>
+                  </View>
                 ) : (
                   <Text style={styles.noDescriptionText}>Pas de description</Text>
                 )}

@@ -95,7 +95,7 @@ export const styles = StyleSheet.create({
     borderColor: '#888',
   },
   listCardTitle: {
-    color: '#FFA500', // Titre de la liste en orange
+    color: '#FFA500',
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 8,
@@ -109,7 +109,7 @@ export const styles = StyleSheet.create({
     padding: 6,
   },
   listCardActionText: {
-    color: '#FFA500',
+    color: '#faba46',
   },
   listCardArchiveText: {
     color: '#FF4A4A', // Couleur d'archive
@@ -216,10 +216,21 @@ export const styles = StyleSheet.create({
     color: '#000',
     fontWeight: 'bold',
   },
-
   cardViewDescription: {
-    maxHeight: 200,
-    marginVertical: 10,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 4,
+    padding: 6,
+    marginBottom: 10,
+
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#3A3A3A',
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: '#FFF',
+    flex: 1,
   },
   noDescriptionText: {
     fontStyle: 'italic',
@@ -234,7 +245,7 @@ export const styles = StyleSheet.create({
   },
   viewMoreText: {
     fontSize: 12,
-    color: '#FFA500',
+    color: '#faba46',
   },
   assignButton: {
     marginLeft: 8,
@@ -385,7 +396,7 @@ export const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFA500',
+    color: '#faba46',
     marginTop: 16,
     marginBottom: 8,
   },
