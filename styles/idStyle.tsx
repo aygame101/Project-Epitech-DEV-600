@@ -131,6 +131,7 @@ export const styles = StyleSheet.create({
   cardTitle: {
     fontWeight: '600',
     marginBottom: 4,
+    color: '#FFF'
   },
   cardDescription: {
     fontSize: 12,

@@ -69,8 +69,8 @@ function CardItem({ card, onEditCard, onViewCard }: CardItemProps) {
   const progressPercentage = totalItems > 0 ? Math.round((totalChecked / totalItems) * 100) : 0;
 
   // Formater la date d'échéance
-  const formattedDueDate = card.dueDate && typeof card.dueDate === 'string' && card.dueDate.length > 0 ? 
-    new Date(card.dueDate).toLocaleDateString('fr-FR') : 
+  const formattedDueDate = card.dueDate && typeof card.dueDate === 'string' && card.dueDate.length > 0 ?
+    new Date(card.dueDate).toLocaleDateString('fr-FR') :
     null;
 
   return (
@@ -144,7 +144,7 @@ function ListCard({
       <View style={styles.listCardHeader}>
         <Text style={styles.listCardTitle}>{list.name}</Text>
         <Pressable onPress={() => onEdit(list.id)} style={styles.editButton}>
-          <AntDesign name="edit" size={18} color="#000" />
+          <Text style={styles.confirmButtonText}>✏️</Text>
         </Pressable>
       </View>
 
@@ -676,7 +676,7 @@ export default function BoardDetailScreen() {
             style={styles.addListButton}
             onPress={() => setShowCreateModal(true)}
           >
-            <AntDesign name="plus" size={20} color="#000" />
+            <AntDesign name="plus" size={20} color="#fff" />
             <Text style={styles.addListButtonText}>Ajouter une liste</Text>
           </Pressable>
         </ScrollView>
@@ -811,21 +811,21 @@ export default function BoardDetailScreen() {
                         <AntDesign name="close" size={16} color="#FF4A4A" />
                       </Pressable>
                     )}
-    </View>
+                  </View>
 
-    {showDatePicker && (
-      <DateTimePicker
-        value={dueDate || new Date()}
-        mode="date"
-        display="default"
-        onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
-          setShowDatePicker(false);
-          if (selectedDate) {
-            setDueDate(selectedDate);
-          }
-        }}
-      />
-    )}
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={dueDate || new Date()}
+                      mode="date"
+                      display="default"
+                      onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
+                        setShowDatePicker(false);
+                        if (selectedDate) {
+                          setDueDate(selectedDate);
+                        }
+                      }}
+                    />
+                  )}
 
                   <View style={styles.cardOptionsContainer}>
                     <Pressable
@@ -1080,14 +1080,14 @@ export default function BoardDetailScreen() {
                 </View>
 
                 {/* Affichage de la date d'échéance */}
-        {viewingCard?.dueDate && (
-          <View style={styles.dueDateContainer}>
-            <Text style={styles.dueDateLabel}>Date d'échéance:</Text>
-            <Text style={[
-              styles.dueDateValue,
-              new Date(viewingCard.dueDate) < new Date() ? styles.dueDateOverdue : null
-            ]}>
-              {new Date(viewingCard.dueDate).toLocaleDateString('fr-FR')}
+                {viewingCard?.dueDate && (
+                  <View style={styles.dueDateContainer}>
+                    <Text style={styles.dueDateLabel}>Date d'échéance:</Text>
+                    <Text style={[
+                      styles.dueDateValue,
+                      new Date(viewingCard.dueDate) < new Date() ? styles.dueDateOverdue : null
+                    ]}>
+                      {new Date(viewingCard.dueDate).toLocaleDateString('fr-FR')}
                     </Text>
                   </View>
                 )}
