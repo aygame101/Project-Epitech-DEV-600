@@ -260,4 +260,164 @@ export const styles = StyleSheet.create({
     color: '#888',
     marginVertical: 20,
   },
+
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  dueDateBadge: {
+    backgroundColor: '#FFA50022',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    fontSize: 10,
+    color: '#FFA500',
+  },
+  dueDateOverdue: {
+    backgroundColor: '#FF000022',
+    color: '#FF0000',
+  },
+  checklistProgressContainer: {
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  checklistProgressBar: {
+    height: 4,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  checklistProgressFill: {
+    height: '100%',
+    backgroundColor: '#4CAF50',
+  },
+  checklistProgressText: {
+    fontSize: 10,
+    color: '#777',
+    marginTop: 2,
+    textAlign: 'right',
+  },
+  
+  // Styles pour la création de carte
+  cardCreationForm: {
+    width: '100%',
+  },
+  datePickerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  datePickerLabel: {
+    color: '#FFF',
+    marginRight: 10,
+  },
+  datePicker: {
+    flex: 1,
+    backgroundColor: '#FFF',
+    padding: 10,
+    borderRadius: 4,
+  },
+  datePickerText: {
+    color: '#555',
+  },
+  clearDateButton: {
+    padding: 8,
+    marginLeft: 6,
+  },
+  cardOptionsContainer: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  cardOptionButton: {
+    flex: 1,
+    padding: 10,
+    backgroundColor: '#333',
+    alignItems: 'center',
+    marginHorizontal: 4,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#444',
+  },
+  cardOptionActive: {
+    backgroundColor: '#FFA500',
+    borderColor: '#FFA500',
+  },
+  cardOptionText: {
+    color: '#FFF',
+    fontWeight: '500',
+  },
+  
+  // Styles pour les checklists
+  checklistInputContainer: {
+    marginBottom: 16,
+  },
+  checklistItemInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checklistItemInput: {
+    flex: 1,
+    marginBottom: 8,
+  },
+  checklistItemRemoveButton: {
+    padding: 8,
+    marginLeft: 4,
+  },
+  addChecklistItemButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#FFA500',
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  addChecklistItemText: {
+    color: '#FFA500',
+    marginLeft: 6,
+  },
+  
+  // Styles pour l'affichage des checklists dans la vue de carte
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFA500',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  checklistsContainer: {
+    marginTop: 10,
+  },
+  checklistContainer: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 4,
+    padding: 8,
+    marginBottom: 10,
+  },
+  checklistTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FFF',
+    marginBottom: 5,
+  },
+  checklistItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#3A3A3A',
+  },
+  checklistItemCheckbox: {
+    marginRight: 10,
+  },
+  checklistItemText: {
+    fontSize: 14,
+    color: '#FFF',
+    flex: 1,
+  },
+  checklistItemCompleted: {
+  },
+
 });
