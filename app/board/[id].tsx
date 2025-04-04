@@ -1055,7 +1055,12 @@ export default function BoardDetailScreen() {
             <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>{viewingCard?.name}</Text>
+                  <Pressable onPress={() => {
+                      setShowCardViewModal(false);
+                      viewingCard && handleEditCard(viewingCard.id);
+                    }}>
+                    <Text style={styles.modalTitle}>{viewingCard?.name}</Text>
+                  </Pressable>
                   <Pressable
                     onPress={() => setShowCardViewModal(false)}
                     style={styles.closeButton}
@@ -1157,15 +1162,6 @@ export default function BoardDetailScreen() {
                     <AntDesign name="user" size={18} color="#FFFFFF" />
                   </Pressable>
 
-                  <Pressable
-                    style={[styles.modalButton, styles.styloButton]}
-                    onPress={() => {
-                      setShowCardViewModal(false);
-                      viewingCard && handleEditCard(viewingCard.id);
-                    }}
-                  >
-                    <AntDesign name="edit" size={18} color="#FFFFFF" />
-                  </Pressable>
 
                   <Pressable
                     style={[styles.modalButton, styles.archiveButton]}
