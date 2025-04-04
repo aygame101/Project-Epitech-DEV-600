@@ -63,13 +63,12 @@ function CardItem({ card, onEditCard, onViewCard, assignedMembers }: CardItemPro
         <Text style={styles.cardTitle}>{card.name}</Text>
         {assignedMembers.length > 0 && (
           <View style={styles.avatarsContainer}>
-            {assignedMembers.map(member => (
+            {assignedMembers.map((member: User) => (
               <UserAvatar key={member.id} user={member} size={20} />
             ))}
           </View>
         )}
       </View>
-
 
       {card.desc && (
         <Text style={styles.cardDescription} numberOfLines={1} ellipsizeMode="tail">
@@ -166,6 +165,7 @@ export default function BoardDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [cards, setCards] = useState<Card[]>([]);
   const [isLoadingCards, setIsLoadingCards] = useState(false);
+  const [cardAssignments, setCardAssignments] = useState<Record<string, User[]>>({});
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -212,6 +212,13 @@ export default function BoardDetailScreen() {
     try {
       const boardData = await boardServices.getBoardById(id as string);
       setBoard(boardData);
+      
+      // Charger les membres du workspace dès le début
+      const workspaceId = await fetchWorkspaceIdByBoard(boardData.id);
+      if (workspaceId) {
+        const workspaceMembers = await cardServices.getWorkspaceMembers(workspaceId);
+        setUsers(workspaceMembers);
+      }
     } catch (error: any) {
       Alert.alert('Erreur', error.message);
       router.back();
@@ -225,6 +232,14 @@ export default function BoardDetailScreen() {
     try {
       const boardCards = await cardServices.getCardsByBoard(id as string);
       setCards(boardCards);
+      
+      // Charger les membres assignés pour toutes les cartes
+      const assignments: Record<string, string[]> = {};
+      for (const card of boardCards) {
+        const members = await cardServices.getCardMembers(card.id);
+        assignments[card.id] = members.map(member => member.id);
+      }
+      setAssignedMembers(assignments);
     } catch (error: any) {
       console.error('Erreur lors du chargement des cartes:', error);
     } finally {

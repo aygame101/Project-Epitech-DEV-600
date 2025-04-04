@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { 
   TouchableOpacity, 
   View, 
+  Text,
   StyleSheet, 
   GestureResponderEvent,
   Animated,
@@ -15,12 +16,16 @@ import { useColorScheme } from '../../hooks/useColorScheme';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { Colors } from '@/constants/Colors';
 
+import { User } from '@/types/User';
+import { UserAvatar } from '@/components/cards/UserAvatar';
+
 interface CardItemProps {
   card: Card;
   onPress?: () => void;
   onLongPress?: (event: GestureResponderEvent) => void;
   onSwipeLeft?: () => void;
   onSwipeRight?: () => void;
+  assignedMembers?: User[];
 }
 
 const CardItem: React.FC<CardItemProps> = ({ 
@@ -28,7 +33,8 @@ const CardItem: React.FC<CardItemProps> = ({
   onPress, 
   onLongPress,
   onSwipeLeft,
-  onSwipeRight 
+  onSwipeRight,
+  assignedMembers = [] 
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const theme = useColorScheme() ?? 'light';
@@ -100,6 +106,17 @@ const CardItem: React.FC<CardItemProps> = ({
               <ThemedText style={styles.description}>
                 {card.desc}
               </ThemedText>
+            )}
+
+            {assignedMembers && assignedMembers.length > 0 && (
+              <View style={styles.membersContainer}>
+                {assignedMembers.slice(0, 3).map(member => (
+                  <UserAvatar key={member.id} user={member} size={20} />
+                ))}
+                {assignedMembers.length > 3 && (
+                  <Text style={styles.moreMembers}>+{assignedMembers.length - 3}</Text>
+                )}
+              </View>
             )}
 
             {((card.labels && card.labels.length > 0) || (card.checklists && card.checklists.length > 0)) && (
@@ -205,6 +222,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 4,
     opacity: 0.8,
+  },
+  membersContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 4,
+    flexWrap: 'wrap'
+  },
+  moreMembers: {
+    fontSize: 12,
+    opacity: 0.7,
+    marginLeft: 4
   },
 });
 

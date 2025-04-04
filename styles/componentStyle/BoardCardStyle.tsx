@@ -1,6 +1,17 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
+  membersContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 4
+  },
+  moreMembers: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 4
+  },
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     padding: 15,
