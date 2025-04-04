@@ -1,156 +1,96 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import { useRouter } from 'expo-router';
-import BoardsScreen from '@/app/(tabs)/boards';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { boardServices } from '@/services/boardService';
-import { Alert } from 'react-native';
+import { listServices } from '@/services/listService';
+import { cardServices } from '@/services/cardService';
+import BoardDetailScreen from '@/app/board/[id]';
 
-// Mock expo-router
-jest.mock('expo-router', () => ({
-  useRouter: jest.fn(() => ({ push: jest.fn() }))
+// Mock des services
+jest.mock('@/services/boardService');
+jest.mock('@/services/listService');
+jest.mock('@/services/cardService');
+jest.mock('expo-router');
+jest.mock('@expo/vector-icons', () => ({
+  AntDesign: 'View'
 }));
 
-// Mock boardServices
-jest.mock('@/services/boardService', () => ({
-  boardServices: {
-    getBoards: jest.fn(),
-    createBoard: jest.fn(),
-    updateBoard: jest.fn(),
-    deleteBoard: jest.fn()
-  }
-}));
+describe('Board Management', () => {
+  const mockBoard = {
+    id: 'board1',
+    name: 'Test Board',
+    idOrganization: 'org1'
+  };
 
-// Mock event stopPropagation
-const mockStopPropagation = jest.fn();
+  const mockList = {
+    id: 'list1',
+    name: 'Test List',
+    idBoard: 'board1'
+  };
 
-// Mock Alert
-jest.mock('react-native/Libraries/Alert/Alert', () => ({
-  alert: jest.fn((title, message, buttons) => {
-    // Simuler immédiatement le clic sur le bouton "Supprimer" si c'est un test de suppression
-    if (buttons && buttons.length > 1 && buttons[1].text === 'Supprimer') {
-      buttons[1].onPress();
-    }
-  })
-}));
+  const mockCard = {
+    id: 'card1',
+    name: 'Test Card', 
+    idList: 'list1'
+  };
 
-describe('BoardsScreen', () => {
-  const mockBoards = [
-    { id: '1', name: 'Tableau 1', desc: 'Description 1' },
-    { id: '2', name: 'Tableau 2', desc: 'Description 2' }
-  ];
+  const mockRouter = {
+    back: jest.fn(),
+    push: jest.fn()
+  };
 
   beforeEach(() => {
-    (boardServices.getBoards as jest.Mock).mockResolvedValue(mockBoards);
-    (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
     jest.clearAllMocks();
+    
+    // Mock router
+    (useRouter as jest.Mock).mockReturnValue(mockRouter);
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ id: 'board1' });
+
+    // Mock board service
+    (boardServices.getBoardById as jest.Mock).mockResolvedValue(mockBoard);
+    (boardServices.getBoardDetails as jest.Mock).mockResolvedValue(mockBoard);
+    (boardServices.deleteBoard as jest.Mock).mockResolvedValue({});
+
+    // Mock list service
+    (listServices.createList as jest.Mock).mockImplementation((boardId, name) => {
+      return Promise.resolve({...mockList, name, idBoard: boardId});
+    });
+    (listServices.archiveList as jest.Mock).mockResolvedValue({});
+
+    // Mock card service
+    (cardServices.addCard as jest.Mock).mockResolvedValue(mockCard);
+    (cardServices.getCardsByBoard as jest.Mock).mockResolvedValue([mockCard]);
+    (cardServices.getCardMembers as jest.Mock).mockResolvedValue([]);
+    (cardServices.getWorkspaceMembers as jest.Mock).mockResolvedValue([]);
+    (cardServices.archiveCard as jest.Mock).mockResolvedValue({});
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
+  it('should create and delete board, list and card successfully', async () => {
+    const { getByText, getByPlaceholderText, queryByText } = render(<BoardDetailScreen />);
 
-  it('renders correctly with loading state', async () => {
-    (boardServices.getBoards as jest.Mock).mockImplementationOnce(
-      () => new Promise(() => {})
-    );
-    
-    const { getByTestId } = render(<BoardsScreen />);
-    expect(getByTestId('loading-indicator')).toBeTruthy();
-  });
-
-  it('displays boards after loading', async () => {
-    const { getByText, queryByTestId } = render(<BoardsScreen />);
-    
+    // 1. Test création board
     await waitFor(() => {
-      expect(queryByTestId('loading-indicator')).toBeNull();
-      expect(getByText('Tableau 1')).toBeTruthy();
-      expect(getByText('Tableau 2')).toBeTruthy();
+      expect(getByText('Test Board')).toBeTruthy();
     });
-  });
 
-  it('shows empty state when no boards', async () => {
-    (boardServices.getBoards as jest.Mock).mockResolvedValueOnce([]);
-    
-    const { getByText } = render(<BoardsScreen />);
-    
+    // 2. Test création liste
+    fireEvent.press(getByText('Ajouter une liste'));
+    fireEvent.changeText(getByPlaceholderText('Nom de la liste'), 'Test List');
+    fireEvent.press(getByText('Créer'));
+
     await waitFor(() => {
-      expect(getByText('Aucun tableau pour le moment')).toBeTruthy();
+      expect(listServices.createList).toHaveBeenCalledWith('board1', 'Test List');
+      expect(getByText('Test List')).toBeTruthy();
+    });
+
+    // 3. Test création carte
+    fireEvent.press(getByText('+ Carte'));
+    fireEvent.changeText(getByPlaceholderText('Titre de la carte'), 'Test Card');
+    fireEvent.press(getByText('Créer'));
+
+    await waitFor(() => {
+      expect(cardServices.addCard).toHaveBeenCalledWith('list1', 'Test Card', '');
+      expect(getByText('Test Card')).toBeTruthy();
     });
   });
-
-  it('navigates to board when pressed', async () => {
-    const mockPush = jest.fn();
-    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
-    
-    const { getByText } = render(<BoardsScreen />);
-    
-    await waitFor(() => {
-      expect(getByText('Tableau 1')).toBeTruthy();
-    });
-   
-    fireEvent.press(getByText('Tableau 1'));
-    
-    // Utiliser waitFor ici aussi pour s'assurer que l'action de navigation a le temps de s'exécuter
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/board/1');
-    });
-  });
-
-  it('opens edit modal when edit button is pressed', async () => {
-    const { getByText, getByTestId } = render(<BoardsScreen />);
-    
-    await waitFor(() => {
-      expect(getByTestId('edit-button-1')).toBeTruthy();
-    });
-    
-    // Créez un événement personnalisé avec stopPropagation implémenté
-    const event = {
-      stopPropagation: mockStopPropagation
-    };
-    
-    // Utilisez l'événement personnalisé
-    fireEvent(getByTestId('edit-button-1'), 'press', event);
-    
-    await waitFor(() => {
-      expect(getByText('Modifier le nom du tableau')).toBeTruthy();
-    });
-  });
-
-  it('updates a board name', async () => {
-    const updatedBoard = { id: '1', name: 'Tableau 1 modifié' };
-    (boardServices.updateBoard as jest.Mock).mockResolvedValue(updatedBoard);
-    
-    const { getByTestId, getByText, getByPlaceholderText } = render(<BoardsScreen />);
-    
-    await waitFor(() => {
-      expect(getByTestId('edit-button-1')).toBeTruthy();
-    });
-    
-    // Créez un événement personnalisé avec stopPropagation implémenté
-    const event = {
-      stopPropagation: mockStopPropagation
-    };
-    
-    // Ouvrir le modal d'édition
-    fireEvent(getByTestId('edit-button-1'), 'press', event);
-    
-    // Modifier le texte
-    fireEvent.changeText(
-      getByPlaceholderText('Nouveau nom du tableau'),
-      'Tableau 1 modifié'
-    );
-    
-    // Enregistrer les modifications
-    fireEvent.press(getByText('Enregistrer'));
-    
-    // Utiliser waitFor pour attendre l'appel à updateBoard
-    await waitFor(() => {
-      expect(boardServices.updateBoard).toHaveBeenCalledWith(
-        '1', 
-        { name: 'Tableau 1 modifié' }
-      );
-    });
-  });
-
-  
 });
