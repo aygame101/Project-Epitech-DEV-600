@@ -237,7 +237,15 @@ export default function BoardDetailScreen() {
       const assignments: Record<string, string[]> = {};
       for (const card of boardCards) {
         const members = await cardServices.getCardMembers(card.id);
-        assignments[card.id] = members.map(member => member.id);
+        if (Array.isArray(members)) {
+          assignments[card.id] = members
+            .filter((member: any): member is User => 
+              typeof member === 'object' && 
+              member !== null && 
+              typeof member.id === 'string'
+            )
+            .map(member => member.id);
+        }
       }
       setAssignedMembers(assignments);
     } catch (error: any) {
@@ -601,9 +609,10 @@ export default function BoardDetailScreen() {
   const fetchAssignedMembers = async (cardId: string) => {
     try {
       const data = await cardServices.getCardMembers(cardId);
+      const members: User[] = Array.isArray(data) ? data : [];
       setAssignedMembers(prev => ({
         ...prev,
-        [cardId]: data.map((member: User) => member.id)
+        [cardId]: members.map((member: User) => member.id)
       }));
     } catch (error) {
       console.error('Erreur lors du chargement des membres assignés:', error);
@@ -1055,7 +1064,18 @@ export default function BoardDetailScreen() {
             <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>{viewingCard?.name}</Text>
+                    <Text style={styles.modalTitle}>{viewingCard?.name}</Text>
+
+                  <Pressable
+                    style={[styles.modalButton, styles.styloButton]}
+                    onPress={() => {
+                      setShowCardViewModal(false);
+                      viewingCard && handleEditCard(viewingCard.id);
+                    }}
+                  >
+                    <AntDesign name="edit" size={18} color="#FFFFFF" />
+                  </Pressable>
+
                   <Pressable
                     onPress={() => setShowCardViewModal(false)}
                     style={styles.closeButton}
@@ -1157,15 +1177,6 @@ export default function BoardDetailScreen() {
                     <AntDesign name="user" size={18} color="#FFFFFF" />
                   </Pressable>
 
-                  <Pressable
-                    style={[styles.modalButton, styles.styloButton]}
-                    onPress={() => {
-                      setShowCardViewModal(false);
-                      viewingCard && handleEditCard(viewingCard.id);
-                    }}
-                  >
-                    <AntDesign name="edit" size={18} color="#FFFFFF" />
-                  </Pressable>
 
                   <Pressable
                     style={[styles.modalButton, styles.archiveButton]}
