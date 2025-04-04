@@ -63,13 +63,12 @@ function CardItem({ card, onEditCard, onViewCard, assignedMembers }: CardItemPro
         <Text style={styles.cardTitle}>{card.name}</Text>
         {assignedMembers.length > 0 && (
           <View style={styles.avatarsContainer}>
-            {assignedMembers.map(member => (
+            {assignedMembers.map((member: User) => (
               <UserAvatar key={member.id} user={member} size={20} />
             ))}
           </View>
         )}
       </View>
-
 
       {card.desc && (
         <Text style={styles.cardDescription} numberOfLines={1} ellipsizeMode="tail">
@@ -107,6 +106,8 @@ interface ListCardProps {
   onEdit: (listId: string) => void;
   onEditCard: (cardId: string) => void;
   onViewCard: (cardId: string) => void;
+  users: User[];
+  assignedMembers: Record<string, string[]>;
 }
 
 function ListCard({
@@ -120,7 +121,7 @@ function ListCard({
   onViewCard,
   users,
   assignedMembers
-}: ListCardProps & { users: User[]; assignedMembers: string[] }) {
+}: ListCardProps) {
   const listCards = cards.filter(card => card.idList === list.id);
 
   return (
@@ -139,7 +140,7 @@ function ListCard({
             card={card}
             onEditCard={onEditCard}
             onViewCard={onViewCard}
-            assignedMembers={users.filter(user => assignedMembers.includes(user.id))}
+            assignedMembers={users.filter(user => assignedMembers[card.id]?.includes(user.id))}
           />
         ))}
       </ScrollView>
@@ -164,6 +165,7 @@ export default function BoardDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [cards, setCards] = useState<Card[]>([]);
   const [isLoadingCards, setIsLoadingCards] = useState(false);
+  const [cardAssignments, setCardAssignments] = useState<Record<string, User[]>>({});
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -210,6 +212,13 @@ export default function BoardDetailScreen() {
     try {
       const boardData = await boardServices.getBoardById(id as string);
       setBoard(boardData);
+      
+      // Charger les membres du workspace dès le début
+      const workspaceId = await fetchWorkspaceIdByBoard(boardData.id);
+      if (workspaceId) {
+        const workspaceMembers = await cardServices.getWorkspaceMembers(workspaceId);
+        setUsers(workspaceMembers);
+      }
     } catch (error: any) {
       Alert.alert('Erreur', error.message);
       router.back();
@@ -223,6 +232,14 @@ export default function BoardDetailScreen() {
     try {
       const boardCards = await cardServices.getCardsByBoard(id as string);
       setCards(boardCards);
+      
+      // Charger les membres assignés pour toutes les cartes
+      const assignments: Record<string, string[]> = {};
+      for (const card of boardCards) {
+        const members = await cardServices.getCardMembers(card.id);
+        assignments[card.id] = members.map(member => member.id);
+      }
+      setAssignedMembers(assignments);
     } catch (error: any) {
       console.error('Erreur lors du chargement des cartes:', error);
     } finally {
@@ -578,13 +595,16 @@ export default function BoardDetailScreen() {
     }
   };
 
-  const [assignedMembers, setAssignedMembers] = useState<string[]>([]);
+  const [assignedMembers, setAssignedMembers] = useState<Record<string, string[]>>({});
   const [currentCardId, setCurrentCardId] = useState<string | null>(null);
 
   const fetchAssignedMembers = async (cardId: string) => {
     try {
       const data = await cardServices.getCardMembers(cardId);
-      setAssignedMembers(data.map((member: User) => member.id));
+      setAssignedMembers(prev => ({
+        ...prev,
+        [cardId]: data.map((member: User) => member.id)
+      }));
     } catch (error) {
       console.error('Erreur lors du chargement des membres assignés:', error);
     }
@@ -604,16 +624,23 @@ export default function BoardDetailScreen() {
         return;
       }
 
-      const isAssigned = assignedMembers.includes(userId);
+      const currentAssignments = assignedMembers[currentCardId] || [];
+      const isAssigned = currentAssignments.includes(userId);
 
       if (isAssigned) {
         // Désassigner l'utilisateur
         await cardServices.removeMemberFromCard(currentCardId, userId);
-        setAssignedMembers(assignedMembers.filter(id => id !== userId));
+        setAssignedMembers(prev => ({
+          ...prev,
+          [currentCardId]: prev[currentCardId].filter(id => id !== userId)
+        }));
       } else {
         // Assigner l'utilisateur
         await cardServices.addMemberToCard(currentCardId, userId);
-        setAssignedMembers([...assignedMembers, userId]);
+        setAssignedMembers(prev => ({
+          ...prev,
+          [currentCardId]: [...(prev[currentCardId] || []), userId]
+        }));
       }
     } catch (error) {
       console.error('Erreur lors de l\'assignation:', error);
@@ -1185,7 +1212,7 @@ export default function BoardDetailScreen() {
                       >
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                           <Text style={styles.userName}>{item.fullName}</Text>
-                          {assignedMembers.includes(item.id) && (
+                          {currentCardId && assignedMembers[currentCardId]?.includes(item.id) && (
                             <AntDesign
                               name="check"
                               size={20}
