@@ -21,7 +21,7 @@ Date de rendu : 6 avril 2025 à 23h42
 | 🟠 In progress | Le code est facilement maintenable (noms lisibles, atomicité des fonctions, structure de code claire, syntaxe propre) |
 | 🟠 In progress | Au moins 3 tests unitaires sont livrés dans le dépôt | test UI
 | 🟠 In progress | Une séquence de tests unitaires est fournie et facilement exécutable |
-| 🟠 In progress | Les étudiants intègrent un framework de test dans leur projet pour rendre leur stratégie de test plus complète | ??
+| 🟢 Done | Les étudiants intègrent un framework de test dans leur projet pour rendre leur stratégie de test plus complète | Jest
 | 🟢 Done | Les étudiants utilisent un outil de versioning avec un workflow approprié, incluant une stratégie de branchement, des commits réguliers, des messages descriptifs et un fichier gitignore |
 | 🟢 Done | Les étudiants fournissent un fichier README résumant le projet et son utilisation (prérequis, installation, déploiement, frameworks, ...) |
 | 🔴 To do | Au moins un diagramme est fourni pour illustrer et expliquer les parties importantes de la solution (architecture (uml), diag classe, diag séquence, cycle de vie, ...) | peut etre UML : lucidchart
