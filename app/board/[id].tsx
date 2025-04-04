@@ -61,6 +61,9 @@ export default function BoardDetailScreen() {
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [editingCardName, setEditingCardName] = useState('');
   const [editingCardDesc, setEditingCardDesc] = useState('');
+  const [currentChecklistIndex, setCurrentChecklistIndex] = useState(0);
+  const [showDescription, setShowDescription] = useState(false);
+  const [showChecklist, setShowChecklist] = useState(false);
 
   const [showCardViewModal, setShowCardViewModal] = useState(false);
   const [viewingCard, setViewingCard] = useState<Card | null>(null);
@@ -205,13 +208,42 @@ export default function BoardDetailScreen() {
     setEditingListName('');
   };
 
-  const handleEditCard = (cardId: string) => {
+  const handleEditCard = async (cardId: string) => {
     const cardToEdit = cards.find(card => card.id === cardId);
     if (cardToEdit) {
       setEditingCardId(cardId);
       setEditingCardName(cardToEdit.name);
       setEditingCardDesc(cardToEdit.desc || '');
-      setShowEditCardModal(true);
+      
+      try {
+        // Charger explicitement les checklists de la carte
+        const existingChecklists = await cardServices.getCardChecklists(cardId);
+        
+        // Formatage des checklists pour correspondre à la structure attendue par le composant
+        const formattedChecklists = existingChecklists.map(cl => ({
+          id: cl.id,
+          name: cl.name,
+          items: cl.checkItems.map(item => item.name)
+        }));
+        
+        // Mettre à jour l'état des checklists
+        checklist.setAllChecklists(formattedChecklists);
+        
+        // Si des checklists existent, utiliser la première comme checklist active
+        if (formattedChecklists.length > 0) {
+          checklist.setNewChecklistName(formattedChecklists[0].name);
+          checklist.setNewChecklistItems(formattedChecklists[0].items);
+          setCurrentChecklistIndex(0);
+        } else {
+          checklist.reset();
+        }
+        
+        // Ouvrir la modale d'édition
+        setShowEditCardModal(true);
+      } catch (error) {
+        console.error('Erreur lors du chargement des checklists:', error);
+        Alert.alert('Erreur', 'Impossible de charger les checklists');
+      }
     }
   };
 
@@ -550,10 +582,10 @@ export default function BoardDetailScreen() {
         setCardName={setNewCardName}
         cardDesc={newCardDesc}
         setCardDesc={setNewCardDesc}
-        showDescription={false}
-        setShowDescription={() => {}}
-        showChecklist={false}
-        setShowChecklist={() => {}}
+        showDescription={showDescription}
+        setShowDescription={setShowDescription}
+        showChecklist={showChecklist}
+        setShowChecklist={setShowChecklist}
         checklistName={checklist.newChecklistName}
         setChecklistName={checklist.setNewChecklistName}
         checklistItems={checklist.newChecklistItems}
@@ -587,12 +619,31 @@ export default function BoardDetailScreen() {
           setEditingCardId(null);
           setEditingCardName('');
           setEditingCardDesc('');
+          checklist.reset();
+          setShowDescription(false);
+          setShowChecklist(false);
+          setCurrentChecklistIndex(0);
         }}
         onSave={handleSaveEditCard}
         cardName={editingCardName}
         setCardName={setEditingCardName}
         cardDesc={editingCardDesc}
         setCardDesc={setEditingCardDesc}
+        showDescription={showDescription}
+        setShowDescription={setShowDescription}
+        showChecklist={showChecklist}
+        setShowChecklist={setShowChecklist}
+        checklists={checklist.allChecklists}
+        currentChecklistIndex={currentChecklistIndex}
+        setCurrentChecklistIndex={setCurrentChecklistIndex}
+        checklistName={checklist.newChecklistName}
+        setChecklistName={checklist.setNewChecklistName}
+        checklistItems={checklist.newChecklistItems}
+        setChecklistItems={checklist.setNewChecklistItems}
+        addChecklistItem={checklist.addChecklistItem}
+        updateChecklistItem={checklist.updateChecklistItem}
+        removeChecklistItem={checklist.removeChecklistItem}
+        onCreateChecklist={checklist.addNewChecklist}
       />
 
       {/* Card View modal */}

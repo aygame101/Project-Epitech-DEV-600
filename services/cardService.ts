@@ -6,6 +6,10 @@ const API_KEY = Constants.expoConfig?.extra?.apiKey;
 const API_TOKEN = Constants.expoConfig?.extra?.token;
 
 export const cardServices = {
+  // Expose these for other components
+  API_KEY,
+  API_TOKEN,
+  
   getCards: async (listId: string): Promise<Card[]> => {
     const response = await fetch(
       `https://api.trello.com/1/lists/${listId}/cards?key=${API_KEY}&token=${API_TOKEN}`
@@ -150,5 +154,59 @@ export const cardServices = {
       }
     );
     if (!response.ok) throw new Error('Failed to add checklist item');
+  },
+
+  updateChecklistItem: async (checklistId: string, itemId: string, name: string): Promise<void> => {
+    const response = await fetch(
+      `https://api.trello.com/1/checklists/${checklistId}/checkItems/${itemId}?name=${encodeURIComponent(name)}&key=${API_KEY}&token=${API_TOKEN}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+    if (!response.ok) throw new Error('Failed to update checklist item');
+  },
+
+  deleteChecklistItem: async (checklistId: string, itemId: string): Promise<void> => {
+    const response = await fetch(
+      `https://api.trello.com/1/checklists/${checklistId}/checkItems/${itemId}?key=${API_KEY}&token=${API_TOKEN}`,
+      { method: 'DELETE' }
+    );
+    if (!response.ok) throw new Error('Failed to delete checklist item');
+  },
+
+  updateChecklist: async (checklistId: string, name: string): Promise<void> => {
+    const response = await fetch(
+      `https://api.trello.com/1/checklists/${checklistId}?name=${encodeURIComponent(name)}&key=${API_KEY}&token=${API_TOKEN}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+    if (!response.ok) throw new Error('Failed to update checklist');
+  },
+
+  deleteChecklist: async (checklistId: string): Promise<void> => {
+    const response = await fetch(
+      `https://api.trello.com/1/checklists/${checklistId}?key=${API_KEY}&token=${API_TOKEN}`,
+      { method: 'DELETE' }
+    );
+    if (!response.ok) throw new Error('Failed to delete checklist');
+  },
+
+  getCardChecklists: async (cardId: string): Promise<Array<{
+    id: string;
+    name: string;
+    checkItems: Array<{
+      id: string;
+      name: string;
+      state: 'complete' | 'incomplete';
+    }>;
+  }>> => {
+    const response = await fetch(
+      `https://api.trello.com/1/cards/${cardId}/checklists?key=${API_KEY}&token=${API_TOKEN}`
+    );
+    if (!response.ok) throw new Error('Failed to get card checklists');
+    return await response.json();
   }
 };
