@@ -1,21 +1,25 @@
 import { Modal, TouchableWithoutFeedback, View, TextInput, Pressable, Text } from 'react-native';
 import { styles } from '@/styles/idStyle';
 
-interface CreateListModalProps {
+interface EditCardModalProps {
   visible: boolean;
   onClose: () => void;
-  onCreate: () => void;
-  listName: string;
-  setListName: (name: string) => void;
+  onSave: () => void;
+  cardName: string;
+  setCardName: (name: string) => void;
+  cardDesc: string;
+  setCardDesc: (desc: string) => void;
 }
 
-export function CreateListModal({
+export function EditCardModal({
   visible,
   onClose,
-  onCreate,
-  listName,
-  setListName
-}: CreateListModalProps) {
+  onSave,
+  cardName,
+  setCardName,
+  cardDesc,
+  setCardDesc
+}: EditCardModalProps) {
   return (
     <Modal
       transparent
@@ -27,15 +31,25 @@ export function CreateListModal({
         <View style={styles.modalOverlay}>
           <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Créer une liste</Text>
+              <Text style={styles.modalTitle}>Éditer la carte</Text>
 
               <TextInput
                 style={styles.modalInput}
-                placeholder="Nom de la liste"
-                placeholderTextColor="#fff"
-                value={listName}
-                onChangeText={setListName}
+                placeholder="Titre de la carte"
+                placeholderTextColor="#888"
+                value={cardName}
+                onChangeText={setCardName}
                 autoFocus
+              />
+
+              <TextInput
+                style={[styles.modalInput, styles.textareaInput]}
+                placeholder="Description (optionnelle)"
+                placeholderTextColor="#888"
+                value={cardDesc}
+                onChangeText={setCardDesc}
+                multiline
+                numberOfLines={3}
               />
 
               <View style={styles.modalButtonsContainer}>
@@ -48,9 +62,9 @@ export function CreateListModal({
 
                 <Pressable
                   style={[styles.modalButton, styles.confirmButton]}
-                  onPress={onCreate}
+                  onPress={onSave}
                 >
-                  <Text style={styles.confirmButtonText}>Créer</Text>
+                  <Text style={styles.confirmButtonText}>Enregistrer</Text>
                 </Pressable>
               </View>
             </View>

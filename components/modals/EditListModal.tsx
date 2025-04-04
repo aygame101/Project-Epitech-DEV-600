@@ -1,21 +1,21 @@
 import { Modal, TouchableWithoutFeedback, View, TextInput, Pressable, Text } from 'react-native';
 import { styles } from '@/styles/idStyle';
 
-interface CreateListModalProps {
+interface EditListModalProps {
   visible: boolean;
   onClose: () => void;
-  onCreate: () => void;
+  onSave: () => void;
   listName: string;
   setListName: (name: string) => void;
 }
 
-export function CreateListModal({
+export function EditListModal({
   visible,
   onClose,
-  onCreate,
+  onSave,
   listName,
   setListName
-}: CreateListModalProps) {
+}: EditListModalProps) {
   return (
     <Modal
       transparent
@@ -27,12 +27,12 @@ export function CreateListModal({
         <View style={styles.modalOverlay}>
           <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Créer une liste</Text>
+              <Text style={styles.modalTitle}>Éditer la liste</Text>
 
               <TextInput
                 style={styles.modalInput}
                 placeholder="Nom de la liste"
-                placeholderTextColor="#fff"
+                placeholderTextColor="#888"
                 value={listName}
                 onChangeText={setListName}
                 autoFocus
@@ -48,9 +48,9 @@ export function CreateListModal({
 
                 <Pressable
                   style={[styles.modalButton, styles.confirmButton]}
-                  onPress={onCreate}
+                  onPress={onSave}
                 >
-                  <Text style={styles.confirmButtonText}>Créer</Text>
+                  <Text style={styles.confirmButtonText}>Enregistrer</Text>
                 </Pressable>
               </View>
             </View>

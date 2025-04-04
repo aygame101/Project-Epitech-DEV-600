@@ -3,159 +3,34 @@ import axios from 'axios';
 import Constants from 'expo-constants';
 import { User } from '@/types/User';
 import { Card } from '@/types/Card';
-import { UserAvatar } from '@/components/cards/UserAvatar';
 import { List } from '@/types/List';
-import { StyleSheet, ScrollView, TextInput, Pressable, ActivityIndicator, View, Text, Alert, Modal, TouchableWithoutFeedback, FlatList } from 'react-native';
+import { Board } from '@/types/Board';
+import { 
+  ScrollView, 
+  Pressable, 
+  ActivityIndicator, 
+  View, 
+  Text, 
+  Alert,
+  Modal,
+  TouchableWithoutFeedback,
+  TextInput,
+  FlatList 
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
 import { boardServices } from '@/services/boardService';
 import { cardServices } from '@/services/cardService';
-import { Board } from '@/types/Board';
 import useLists from '@/hooks/useLists';
-import { styles } from '../../styles/idStyle';
-
-interface CardItemProps {
-  card: Card;
-  onEditCard: (cardId: string) => void;
-  onViewCard: (cardId: string) => void;
-  assignedMembers: User[];
-}
-
-interface ChecklistsData {
-  [cardId: string]: Array<{
-    id: string;
-    name: string;
-    checkItems: Array<{
-      id: string;
-      name: string;
-      state: 'complete' | 'incomplete';
-    }>;
-    checkItemsChecked: number;
-  }>;
-}
-
-// Mise à jour du composant CardItem pour afficher la date d'échéance et la progression de checklist
-function CardItem({ card, onEditCard, onViewCard, assignedMembers }: CardItemProps) {
-  const checklistsData: ChecklistsData = {};
-  const truncateDescription = (text: string, maxLength = 30) => {
-    if (!text || text.length <= maxLength) return text;
-    return text.slice(0, maxLength) + '...';
-  };
-
-  // Récupérer les données de checklist pour cette carte
-  const cardChecklists = checklistsData[card.id] || [];
-
-  // Calculer la progression totale de toutes les checklists
-  let totalItems = 0;
-  let totalChecked = 0;
-
-  cardChecklists.forEach(checklist => {
-    totalItems += checklist.checkItems.length;
-    totalChecked += checklist.checkItemsChecked;
-  });
-
-  // Calculer le pourcentage de progression
-  const progressPercentage = totalItems > 0 ? Math.round((totalChecked / totalItems) * 100) : 0;
-
-  return (
-    <Pressable style={styles.cardItem} onPress={() => onViewCard(card.id)}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>{card.name}</Text>
-        {assignedMembers.length > 0 && (
-          <View style={styles.avatarsContainer}>
-            {assignedMembers.map((member: User) => (
-              <UserAvatar key={member.id} user={member} size={20} />
-            ))}
-          </View>
-        )}
-      </View>
-
-      {card.desc && (
-        <Text style={styles.cardDescription} numberOfLines={1} ellipsizeMode="tail">
-          {truncateDescription(card.desc)}
-        </Text>
-      )}
-
-      {totalItems > 0 && (
-        <View style={styles.checklistProgressContainer}>
-          <View style={styles.checklistProgressBar}>
-            <View
-              style={[
-                styles.checklistProgressFill,
-                { width: `${progressPercentage}%` }
-              ]}
-            />
-          </View>
-          <Text style={styles.checklistProgressText}>
-            {progressPercentage}% ({totalChecked}/{totalItems})
-          </Text>
-        </View>
-      )}
-
-
-    </Pressable>
-  );
-}
-
-interface ListCardProps {
-  list: List;
-  cards: Card[];
-  onUpdate: (listId: string, newName: string) => void;
-  onArchive: (listId: string) => void;
-  onAddCard: (listId: string) => void;
-  onEdit: (listId: string) => void;
-  onEditCard: (cardId: string) => void;
-  onViewCard: (cardId: string) => void;
-  users: User[];
-  assignedMembers: Record<string, string[]>;
-}
-
-function ListCard({
-  list,
-  cards,
-  onUpdate,
-  onArchive,
-  onAddCard,
-  onEdit,
-  onEditCard,
-  onViewCard,
-  users,
-  assignedMembers
-}: ListCardProps) {
-  const listCards = cards.filter(card => card.idList === list.id);
-
-  return (
-    <View style={[styles.listCardContainer, { height: Math.min(600, 120 + listCards.length * 80) }]}>
-      <View style={styles.listCardHeader}>
-        <Text style={styles.listCardTitle}>{list.name}</Text>
-        <Pressable onPress={() => onEdit(list.id)} style={styles.editButton}>
-          <AntDesign name="edit" size={18} color="#FFFFFF" />
-        </Pressable>
-      </View>
-
-      <ScrollView style={styles.cardsContainer}>
-        {listCards.map(card => (
-          <CardItem
-            key={card.id}
-            card={card}
-            onEditCard={onEditCard}
-            onViewCard={onViewCard}
-            assignedMembers={users.filter(user => assignedMembers[card.id]?.includes(user.id))}
-          />
-        ))}
-      </ScrollView>
-
-      <View style={styles.listCardActions}>
-        <Pressable onPress={() => onAddCard(list.id)} style={styles.listCardActionBtn}>
-          <Text style={styles.listCardActionText}>+ Carte</Text>
-        </Pressable>
-        <Pressable onPress={() => onArchive(list.id)} style={styles.listCardActionBtn}>
-          <Text style={styles.listCardArchiveText}>Archiver</Text>
-        </Pressable>
-      </View>
-    </View>
-  );
-}
+import { styles } from '@/styles/idStyle';
+import { CardItem } from '@/components/cards/CardItem';
+import { ListCard } from '@/components/lists/ListCard';
+import { CreateListModal } from '@/components/modals/CreateListModal';
+import { EditListModal } from '@/components/modals/EditListModal';
+import { CreateCardModal } from '@/components/modals/CreateCardModal';
+import { EditCardModal } from '@/components/modals/EditCardModal';
+import { ViewCardModal } from '@/components/modals/ViewCardModal';
+import { AssignUserModal } from '@/components/modals/AssignUserModal';
 
 export default function BoardDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -213,7 +88,6 @@ export default function BoardDetailScreen() {
       const boardData = await boardServices.getBoardById(id as string);
       setBoard(boardData);
       
-      // Charger les membres du workspace dès le début
       const workspaceId = await fetchWorkspaceIdByBoard(boardData.id);
       if (workspaceId) {
         const workspaceMembers = await cardServices.getWorkspaceMembers(workspaceId);
@@ -233,7 +107,6 @@ export default function BoardDetailScreen() {
       const boardCards = await cardServices.getCardsByBoard(id as string);
       setCards(boardCards);
       
-      // Charger les membres assignés pour toutes les cartes
       const assignments: Record<string, string[]> = {};
       for (const card of boardCards) {
         const members = await cardServices.getCardMembers(card.id);
@@ -377,7 +250,6 @@ export default function BoardDetailScreen() {
     }
   };
 
-  // Fonction pour gérer la soumission d'une nouvelle carte avec checklist
   const handleCreateCardWithChecklist = async () => {
     if (!newCardName.trim()) {
       Alert.alert('Erreur', 'Le nom de la carte est requis');
@@ -386,21 +258,15 @@ export default function BoardDetailScreen() {
 
     try {
       if (!selectedListId) return;
-
-      // Créer la carte d'abord
       const newCard = await cardServices.addCard(selectedListId, newCardName, newCardDesc);
 
-      // Ajouter la checklist si le nom est spécifié
       if (newChecklistName.trim() && newChecklistItems.some(item => item.trim())) {
         const checklist = await cardServices.addChecklistToCard(newCard.id, newChecklistName);
-
-        // Ajouter les éléments de la checklist
         for (const item of newChecklistItems.filter(item => item.trim())) {
           await cardServices.addChecklistItem(checklist.id, item);
         }
       }
 
-      // Réinitialiser les champs et fermer le modal
       setNewCardName('');
       setNewCardDesc('');
       setShowChecklistInput(false);
@@ -409,15 +275,12 @@ export default function BoardDetailScreen() {
       setDueDate(null);
       setShowDescriptionInput(false);
       setShowCardModal(false);
-
-      // Rafraîchir les cartes
       fetchCards();
     } catch (error: any) {
       Alert.alert('Erreur', error.message || 'Impossible de créer la carte');
     }
   };
 
-  // Fonction pour gérer l'ajout d'une checklist à une carte existante
   const handleAddChecklistToExistingCard = async (cardId: string) => {
     if (!newChecklistName.trim()) {
       Alert.alert('Erreur', 'Le nom de la checklist est requis');
@@ -426,8 +289,6 @@ export default function BoardDetailScreen() {
 
     try {
       const checklist = await cardServices.addChecklistToCard(cardId, newChecklistName);
-
-      // Ajouter les éléments de la checklist
       for (const item of newChecklistItems.filter(item => item.trim())) {
         await axios.post(`https://api.trello.com/1/checklists/${checklist.id}/checkItems`, null, {
           params: {
@@ -439,7 +300,6 @@ export default function BoardDetailScreen() {
         });
       }
 
-      // Réinitialiser et fermer
       setNewChecklistName('');
       setNewChecklistItems(['']);
       setShowChecklistModal(false);
@@ -449,19 +309,16 @@ export default function BoardDetailScreen() {
     }
   };
 
-  // Fonction pour ajouter un champ de checklist
   const addChecklistItemField = () => {
     setNewChecklistItems([...newChecklistItems, '']);
   };
 
-  // Fonction pour mettre à jour un élément de checklist
   const updateChecklistItem = (index: number, value: string) => {
     const updatedItems = [...newChecklistItems];
     updatedItems[index] = value;
     setNewChecklistItems(updatedItems);
   };
 
-  // Fonction pour supprimer un élément de checklist
   const removeChecklistItem = (index: number) => {
     if (newChecklistItems.length > 1) {
       const updatedItems = [...newChecklistItems];
@@ -470,7 +327,6 @@ export default function BoardDetailScreen() {
     }
   };
 
-  // États supplémentaires
   const [showChecklistModal, setShowChecklistModal] = useState(false);
   const [selectedCardForChecklist, setSelectedCardForChecklist] = useState<string | null>(null);
   const [checklistsData, setChecklistsData] = useState<Record<string, Array<{
@@ -484,7 +340,6 @@ export default function BoardDetailScreen() {
     checkItemsChecked: number;
   }>>>({});
 
-  // Fonction pour ouvrir le modal d'ajout de checklist
   const handleOpenChecklistModal = (cardId: string) => {
     setSelectedCardForChecklist(cardId);
     setShowCardViewModal(false);
@@ -493,7 +348,6 @@ export default function BoardDetailScreen() {
     setShowChecklistModal(true);
   };
 
-  // Fonction pour récupérer les checklists pour toutes les cartes
   const fetchChecklistsForCards = async () => {
     try {
       const allChecklistsData: { [cardId: string]: { id: string, name: string, checkItems: any[], checkItemsChecked: number }[] } = {};
@@ -506,12 +360,10 @@ export default function BoardDetailScreen() {
           }
         });
 
-        // Pour chaque checklist, compter les éléments cochés et ajouter cardId à chaque item
         const checklists = response.data.map((checklist: any) => {
-          // Ajouter cardId à chaque checkItem
           const updatedCheckItems = checklist.checkItems.map((item: any) => ({
             ...item,
-            cardId: card.id // Stocker l'ID de la carte
+            cardId: card.id
           }));
 
           const checkItemsChecked = updatedCheckItems.filter((item: any) => item.state === 'complete').length;
@@ -534,18 +386,15 @@ export default function BoardDetailScreen() {
     }
   };
 
-  // Mise à jour de useEffect pour charger les checklists
   useEffect(() => {
     if (cards.length > 0) {
       fetchChecklistsForCards();
     }
   }, [cards]);
 
-  // Fonction pour mettre à jour l'état d'un élément de checklist
   const toggleChecklistItem = async (cardId: string, checkItemId: string, currentState: string) => {
     try {
       const newState = currentState === 'complete' ? 'incomplete' : 'complete';
-
       await axios.put(`https://api.trello.com/1/cards/${cardId}/checkItem/${checkItemId}`, null, {
         params: {
           state: newState,
@@ -553,8 +402,6 @@ export default function BoardDetailScreen() {
           token: Constants.expoConfig?.extra?.token,
         }
       });
-
-      // Rafraîchir les checklists
       fetchChecklistsForCards();
     } catch (error) {
       console.error('Erreur lors de la mise à jour de l\'élément de checklist:', error);
@@ -592,8 +439,6 @@ export default function BoardDetailScreen() {
       if (!workspaceId) {
         throw new Error('Impossible de récupérer l\'ID du workspace');
       }
-
-      console.log("Workspace ID:", workspaceId);
 
       const data = await cardServices.getWorkspaceMembers(workspaceId);
       setUsers(data);
@@ -637,14 +482,12 @@ export default function BoardDetailScreen() {
       const isAssigned = currentAssignments.includes(userId);
 
       if (isAssigned) {
-        // Désassigner l'utilisateur
         await cardServices.removeMemberFromCard(currentCardId, userId);
         setAssignedMembers(prev => ({
           ...prev,
           [currentCardId]: prev[currentCardId].filter(id => id !== userId)
         }));
       } else {
-        // Assigner l'utilisateur
         await cardServices.addMemberToCard(currentCardId, userId);
         setAssignedMembers(prev => ({
           ...prev,
@@ -698,10 +541,9 @@ export default function BoardDetailScreen() {
               onEditCard={handleEditCard}
               onViewCard={handleViewCard}
               users={users}
-              assignedMembers={assignedMembers}
+              assignedMembers={(cardId) => assignedMembers[cardId] || []}
             />
           ))}
-
           <Pressable
             style={styles.addListButton}
             onPress={() => setShowCreateModal(true)}
@@ -713,223 +555,53 @@ export default function BoardDetailScreen() {
       )}
 
       {/* List creation modal */}
-      <Modal
-        transparent
+      <CreateListModal
         visible={showCreateModal}
-        animationType="fade"
-        onRequestClose={() => setShowCreateModal(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowCreateModal(false)}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Créer une liste</Text>
-
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="Nom de la liste"
-                  placeholderTextColor="#fff"
-                  value={newListName}
-                  onChangeText={setNewListName}
-                  autoFocus
-                />
-
-                <View style={styles.modalButtonsContainer}>
-                  <Pressable
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={() => setShowCreateModal(false)}
-                  >
-                    <Text style={styles.cancelButtonText}>Annuler</Text>
-                  </Pressable>
-
-                  <Pressable
-                    style={[styles.modalButton, styles.confirmButton]}
-                    onPress={handleCreateList}
-                  >
-                    <Text style={styles.confirmButtonText}>Créer</Text>
-                  </Pressable>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+        onClose={() => setShowCreateModal(false)}
+        onCreate={handleCreateList}
+        listName={newListName}
+        setListName={setNewListName}
+      />
 
       {/* List edit modal */}
-      <Modal
-        transparent
+      <EditListModal
         visible={showEditModal}
-        animationType="fade"
-        onRequestClose={() => setShowEditModal(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowEditModal(false)}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Éditer la liste</Text>
+        onClose={() => setShowEditModal(false)}
+        onSave={handleSaveEditList}
+        listName={editingListName}
+        setListName={setEditingListName}
+      />
 
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="Nom de la liste"
-                  placeholderTextColor="#888"
-                  value={editingListName}
-                  onChangeText={setEditingListName}
-                  autoFocus
-                />
-
-                <View style={styles.modalButtonsContainer}>
-                  <Pressable
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={() => setShowEditModal(false)}
-                  >
-                    <Text style={styles.cancelButtonText}>Annuler</Text>
-                  </Pressable>
-
-                  <Pressable
-                    style={[styles.modalButton, styles.confirmButton]}
-                    onPress={handleSaveEditList}
-                  >
-                    <Text style={styles.confirmButtonText}>Enregistrer</Text>
-                  </Pressable>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-
-      {/* Modal modifié pour la création de carte avec checklist et date d'échéance */}
-      <Modal
-        transparent
+      {/* Card creation modal */}
+      <CreateCardModal
         visible={showCardModal}
-        animationType="fade"
-        onRequestClose={() => setShowCardModal(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowCardModal(false)}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Créer une carte</Text>
+        onClose={() => {
+          setShowCardModal(false);
+          setShowDescriptionInput(false);
+          setShowChecklistInput(false);
+          setNewChecklistName('');
+          setNewChecklistItems(['']);
+          setDueDate(null);
+        }}
+        onCreate={handleCreateCardWithChecklist}
+        cardName={newCardName}
+        setCardName={setNewCardName}
+        cardDesc={newCardDesc}
+        setCardDesc={setNewCardDesc}
+        showDescription={showDescriptionInput}
+        setShowDescription={setShowDescriptionInput}
+        showChecklist={showChecklistInput}
+        setShowChecklist={setShowChecklistInput}
+        checklistName={newChecklistName}
+        setChecklistName={setNewChecklistName}
+        checklistItems={newChecklistItems}
+        setChecklistItems={setNewChecklistItems}
+        addChecklistItem={addChecklistItemField}
+        updateChecklistItem={updateChecklistItem}
+        removeChecklistItem={removeChecklistItem}
+      />
 
-                <View style={styles.cardCreationForm}>
-                  <TextInput
-                    style={styles.modalInput}
-                    placeholder="Titre de la carte"
-                    placeholderTextColor="#888"
-                    value={newCardName}
-                    onChangeText={setNewCardName}
-                    autoFocus
-                  />
-
-                  <View style={styles.cardOptionsContainer}>
-                    <Pressable
-                      style={[
-                        styles.cardOptionButton,
-                        showDescriptionInput ? styles.cardOptionActive : null
-                      ]}
-                      onPress={() => {
-                        setShowDescriptionInput(!showDescriptionInput);
-                        if (showChecklistInput) setShowChecklistInput(false);
-                      }}
-                    >
-                      <Text style={styles.cardOptionText}>Description</Text>
-                    </Pressable>
-
-                    <Pressable
-                      style={[
-                        styles.cardOptionButton,
-                        showChecklistInput ? styles.cardOptionActive : null
-                      ]}
-                      onPress={() => {
-                        setShowChecklistInput(!showChecklistInput);
-                        if (showDescriptionInput) setShowDescriptionInput(false);
-                      }}
-                    >
-                      <Text style={styles.cardOptionText}>Checklist</Text>
-                    </Pressable>
-                  </View>
-
-                  {showDescriptionInput && (
-                    <TextInput
-                      style={[styles.modalInput, styles.textareaInput]}
-                      placeholder="Description"
-                      placeholderTextColor="#888"
-                      value={newCardDesc}
-                      onChangeText={setNewCardDesc}
-                      multiline
-                      numberOfLines={3}
-                    />
-                  )}
-
-                  {showChecklistInput && (
-                    <View style={styles.checklistInputContainer}>
-                      <TextInput
-                        style={styles.modalInput}
-                        placeholder="Nom de la checklist"
-                        placeholderTextColor="#888"
-                        value={newChecklistName}
-                        onChangeText={setNewChecklistName}
-                      />
-
-                      {newChecklistItems.map((item, index) => (
-                        <View key={index} style={styles.checklistItemInputRow}>
-                          <TextInput
-                            style={[styles.modalInput, styles.checklistItemInput]}
-                            placeholder={`Élément ${index + 1}`}
-                            placeholderTextColor="#888"
-                            value={item}
-                            onChangeText={(text) => updateChecklistItem(index, text)}
-                          />
-
-                          <Pressable
-                            style={styles.checklistItemRemoveButton}
-                            onPress={() => removeChecklistItem(index)}
-                          >
-                            <AntDesign name="close" size={16} color="#FF4A4A" />
-                          </Pressable>
-                        </View>
-                      ))}
-
-                      <Pressable
-                        style={styles.addChecklistItemButton}
-                        onPress={addChecklistItemField}
-                      >
-                        <AntDesign name="plus" size={16} color="#FFA500" />
-                        <Text style={styles.addChecklistItemText}>Ajouter un élément</Text>
-                      </Pressable>
-                    </View>
-                  )}
-
-                  <View style={styles.modalButtonsContainer}>
-                    <Pressable
-                      style={[styles.modalButton, styles.cancelButton]}
-                      onPress={() => {
-                        setShowCardModal(false);
-                        setShowDescriptionInput(false);
-                        setShowChecklistInput(false);
-                        setNewChecklistName('');
-                        setNewChecklistItems(['']);
-                        setDueDate(null);
-                      }}
-                    >
-                      <Text style={styles.cancelButtonText}>Annuler</Text>
-                    </Pressable>
-
-                    <Pressable
-                      style={[styles.modalButton, styles.confirmButton]}
-                      onPress={handleCreateCardWithChecklist}
-                    >
-                      <Text style={styles.confirmButtonText}>Créer</Text>
-                    </Pressable>
-                  </View>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-
-      {/* Modal pour ajouter une checklist à une carte existante */}
+      {/* Checklist modal */}
       <Modal
         transparent
         visible={showChecklistModal}
@@ -960,7 +632,6 @@ export default function BoardDetailScreen() {
                       value={item}
                       onChangeText={(text) => updateChecklistItem(index, text)}
                     />
-
                     <Pressable
                       style={styles.checklistItemRemoveButton}
                       onPress={() => removeChecklistItem(index)}
@@ -1000,252 +671,44 @@ export default function BoardDetailScreen() {
       </Modal>
 
       {/* Card edit modal */}
-      <Modal
-        transparent
+      <EditCardModal
         visible={showEditCardModal}
-        animationType="fade"
-        onRequestClose={() => setShowEditCardModal(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowEditCardModal(false)}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Éditer la carte</Text>
+        onClose={() => {
+          setShowEditCardModal(false);
+          setEditingCardId(null);
+          setEditingCardName('');
+          setEditingCardDesc('');
+        }}
+        onSave={handleSaveEditCard}
+        cardName={editingCardName}
+        setCardName={setEditingCardName}
+        cardDesc={editingCardDesc}
+        setCardDesc={setEditingCardDesc}
+      />
 
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="Titre de la carte"
-                  placeholderTextColor="#888"
-                  value={editingCardName}
-                  onChangeText={setEditingCardName}
-                  autoFocus
-                />
+      {/* Card View modal */}
+      <ViewCardModal
+        visible={showCardViewModal} 
+        onClose={() => setShowCardViewModal(false)}
+        card={viewingCard}
+        checklistsData={checklistsData}
+        onEditCard={handleEditCard}
+        onArchiveCard={handleArchiveCard}
+        onAssignCard={handleAssignCard}
+        onOpenChecklistModal={handleOpenChecklistModal}
+        onToggleChecklistItem={toggleChecklistItem}
+      />
 
-                <TextInput
-                  style={[styles.modalInput, styles.textareaInput]}
-                  placeholder="Description (optionnelle)"
-                  placeholderTextColor="#888"
-                  value={editingCardDesc}
-                  onChangeText={setEditingCardDesc}
-                  multiline
-                  numberOfLines={3}
-                />
-
-                <View style={styles.modalButtonsContainer}>
-                  <Pressable
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={() => setShowEditCardModal(false)}
-                  >
-                    <Text style={styles.cancelButtonText}>Annuler</Text>
-                  </Pressable>
-
-                  <Pressable
-                    style={[styles.modalButton, styles.confirmButton]}
-                    onPress={handleSaveEditCard}
-                  >
-                    <Text style={styles.confirmButtonText}>Enregistrer</Text>
-                  </Pressable>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-
-      {/* Modal de visualisation de carte mis à jour avec checklists et date d'échéance */}
-      <Modal
-        transparent
-        visible={showCardViewModal}
-        animationType="fade"
-        onRequestClose={() => setShowCardViewModal(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowCardViewModal(false)}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-              <View style={styles.modalContent}>
-                <View style={styles.modalHeader}>
-                    <Text style={styles.modalTitle}>{viewingCard?.name}</Text>
-
-                  <Pressable
-                    style={[styles.modalButton, styles.styloButton]}
-                    onPress={() => {
-                      setShowCardViewModal(false);
-                      viewingCard && handleEditCard(viewingCard.id);
-                    }}
-                  >
-                    <AntDesign name="edit" size={18} color="#FFFFFF" />
-                  </Pressable>
-
-                  <Pressable
-                    onPress={() => setShowCardViewModal(false)}
-                    style={styles.closeButton}
-                  >
-                    <AntDesign name="close" size={24} color="#fff" />
-                  </Pressable>
-                </View>
-
-                {/* Affichage de la date d'échéance */}
-                {viewingCard?.dueDate && (
-                  <View style={styles.dueDateContainer}>
-                    <Text style={styles.dueDateLabel}>Date d'échéance:</Text>
-                    <Text style={[
-                      styles.dueDateValue,
-                      new Date(viewingCard.dueDate) < new Date() ? styles.dueDateOverdue : null
-                    ]}>
-                      {new Date(viewingCard.dueDate).toLocaleDateString('fr-FR')}
-                    </Text>
-                  </View>
-                )}
-
-                {/* Affichage de la description */}
-                <Text style={styles.sectionTitle}>Description</Text>
-                {viewingCard?.desc ? (
-                  <View style={styles.cardViewDescription}>
-                    <Text style={styles.descriptionText}>{viewingCard.desc}</Text>
-                  </View>
-                ) : (
-                  <Text style={styles.noDescriptionText}>Pas de description</Text>
-                )}
-
-                {/* Affichage des checklists */}
-                {viewingCard && checklistsData[viewingCard.id] && checklistsData[viewingCard.id].length > 0 && (
-                  <View style={styles.checklistsContainer}>
-                    <Text style={styles.sectionTitle}>Checklists</Text>
-
-                    {checklistsData[viewingCard.id].map(checklist => (
-                      <View key={checklist.id} style={styles.checklistContainer}>
-                        <Text style={styles.checklistTitle}>{checklist.name}</Text>
-
-                        <View style={styles.checklistProgressContainer}>
-                          <View style={styles.checklistProgressBar}>
-                            <View
-                              style={[
-                                styles.checklistProgressFill,
-                                {
-                                  width: `${checklist.checkItems.length > 0
-                                    ? Math.round((checklist.checkItemsChecked / checklist.checkItems.length) * 100)
-                                    : 0}%`
-                                }
-                              ]}
-                            />
-                          </View>
-                          <Text style={styles.checklistProgressText}>
-                            {checklist.checkItemsChecked}/{checklist.checkItems.length}
-                          </Text>
-                        </View>
-
-                        {checklist.checkItems.map(item => (
-                          <Pressable
-                            key={item.id}
-                            style={styles.checklistItem}
-                            onPress={() => viewingCard && toggleChecklistItem(viewingCard.id, item.id, item.state)}
-                          >
-                            <View style={styles.checklistItemCheckbox}>
-                              {item.state === 'complete' ? (
-                                <AntDesign name="checkcircle" size={18} color="#FFA500" />
-                              ) : (
-                                <AntDesign name="checkcircleo" size={18} color="#CCC" />
-                              )}
-                            </View>
-                            <Text
-                              style={[
-                                styles.checklistItemText,
-                                item.state === 'complete' ? styles.checklistItemCompleted : null
-                              ]}
-                            >
-                              {item.name}
-                            </Text>
-                          </Pressable>
-                        ))}
-                      </View>
-                    ))}
-                  </View>
-                )}
-
-                <View style={styles.modalButtonsContainer}>
-                  <Pressable
-                    style={[styles.modalButton]}
-                    onPress={() => viewingCard && handleOpenChecklistModal(viewingCard.id)}
-                  >
-                    <AntDesign name="bars" size={18} color="#FFFFFF" />
-                  </Pressable>
-
-                  <Pressable
-                    style={[styles.modalButton, styles.assignButton]}
-                    onPress={() => viewingCard && handleAssignCard(viewingCard.id)}
-                  >
-                    <AntDesign name="user" size={18} color="#FFFFFF" />
-                  </Pressable>
-
-
-                  <Pressable
-                    style={[styles.modalButton, styles.archiveButton]}
-                    onPress={() => viewingCard && handleArchiveCard(viewingCard.id)}
-                  >
-                    <AntDesign name="delete" size={18} color="#FFFFFF" />
-                  </Pressable>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-
-      {/* Assign user modal */}
-      <Modal
-        transparent
-        visible={showAssignModal}
-        animationType="fade"
-        onRequestClose={() => setShowAssignModal(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowAssignModal(false)}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-              <View style={styles.modalContent}>
-                <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>Assigner un utilisateur</Text>
-                  <Pressable
-                    onPress={() => setShowAssignModal(false)}
-                    style={styles.closeButton}
-                  >
-                    <AntDesign name="close" size={24} color="#fff" />
-                  </Pressable>
-                </View>
-
-                {users.length > 0 ? (
-                  <FlatList
-                    data={users}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                      <Pressable
-                        style={styles.userItem}
-                        onPress={() => handleAssignUserToCard(item.id)}
-                      >
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <Text style={styles.userName}>{item.fullName}</Text>
-                          {currentCardId && assignedMembers[currentCardId]?.includes(item.id) && (
-                            <AntDesign
-                              name="check"
-                              size={20}
-                              color="green"
-                              style={{ marginLeft: 10 }}
-                            />
-                          )}
-                        </View>
-                        <Text style={styles.userEmail}>{item.username}</Text>
-                      </Pressable>
-                    )}
-                    style={styles.userList}
-                  />
-                ) : (
-                  <Text style={styles.noUsersText}>Aucun utilisateur trouvé dans ce workspace</Text>
-                )}
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-
+      {/* Assignment modal */}
+      {(currentCardId && showAssignModal) && 
+        <AssignUserModal
+          visible={showAssignModal}
+          onClose={() => setShowAssignModal(false)}
+          users={users}
+          assignedMembers={assignedMembers[currentCardId] || []}
+          onAssign={handleAssignUserToCard}
+        />
+      }
     </View>
   );
 }
