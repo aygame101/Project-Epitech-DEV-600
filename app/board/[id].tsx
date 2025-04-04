@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useChecklists } from '@/hooks/useChecklists';
+import { fetchCardAssignments, handleUserAssignment } from '@/utils/assignmentUtils';
 import axios from 'axios';
 import Constants from 'expo-constants';
 import { User } from '@/types/User';
@@ -26,6 +28,7 @@ import { styles } from '@/styles/idStyle';
 import { CardItem } from '@/components/cards/CardItem';
 import { ListCard } from '@/components/lists/ListCard';
 import { CreateListModal } from '@/components/modals/CreateListModal';
+import { ChecklistModal } from '@/components/modals/ChecklistModal';
 import { EditListModal } from '@/components/modals/EditListModal';
 import { CreateCardModal } from '@/components/modals/CreateCardModal';
 import { EditCardModal } from '@/components/modals/EditCardModal';
@@ -65,21 +68,14 @@ export default function BoardDetailScreen() {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
 
-  //checklist
-  const [showDescriptionInput, setShowDescriptionInput] = useState(false);
-  const [showChecklistInput, setShowChecklistInput] = useState(false);
-  const [newChecklistName, setNewChecklistName] = useState('');
-  const [newChecklistItems, setNewChecklistItems] = useState<string[]>(['']);
-  const [dueDate, setDueDate] = useState<Date | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
-  const {
+  const checklist = useChecklists();
+  const { 
     lists,
     isLoading: listsLoading,
-    createList,
+    createList, 
     updateList,
     archiveList,
-    fetchLists
+    fetchLists 
   } = useLists(id as string);
 
   const fetchBoardDetails = async () => {
@@ -260,20 +256,17 @@ export default function BoardDetailScreen() {
       if (!selectedListId) return;
       const newCard = await cardServices.addCard(selectedListId, newCardName, newCardDesc);
 
-      if (newChecklistName.trim() && newChecklistItems.some(item => item.trim())) {
-        const checklist = await cardServices.addChecklistToCard(newCard.id, newChecklistName);
-        for (const item of newChecklistItems.filter(item => item.trim())) {
-          await cardServices.addChecklistItem(checklist.id, item);
+      if (checklist.newChecklistName.trim() && checklist.newChecklistItems.some((item: string) => item.trim())) {
+        const checklistData = await cardServices.addChecklistToCard(newCard.id, checklist.newChecklistName);
+        for (const item of checklist.newChecklistItems.filter((item: string) => item.trim())) {
+          await cardServices.addChecklistItem(checklistData.id, item);
         }
       }
 
       setNewCardName('');
       setNewCardDesc('');
-      setShowChecklistInput(false);
-      setNewChecklistName('');
-      setNewChecklistItems(['']);
-      setDueDate(null);
-      setShowDescriptionInput(false);
+      checklist.setNewChecklistName('');
+      checklist.setNewChecklistItems(['']);
       setShowCardModal(false);
       fetchCards();
     } catch (error: any) {
@@ -282,53 +275,26 @@ export default function BoardDetailScreen() {
   };
 
   const handleAddChecklistToExistingCard = async (cardId: string) => {
-    if (!newChecklistName.trim()) {
+    if (!checklist.newChecklistName.trim()) {
       Alert.alert('Erreur', 'Le nom de la checklist est requis');
       return;
     }
 
     try {
-      const checklist = await cardServices.addChecklistToCard(cardId, newChecklistName);
-      for (const item of newChecklistItems.filter(item => item.trim())) {
-        await axios.post(`https://api.trello.com/1/checklists/${checklist.id}/checkItems`, null, {
-          params: {
-            name: item,
-            pos: 'bottom',
-            key: Constants.expoConfig?.extra?.apiKey,
-            token: Constants.expoConfig?.extra?.token,
-          }
-        });
+      const checklistData = await cardServices.addChecklistToCard(cardId, checklist.newChecklistName);
+      for (const item of checklist.newChecklistItems.filter((item: string) => item.trim())) {
+        await cardServices.addChecklistItem(checklistData.id, item);
       }
 
-      setNewChecklistName('');
-      setNewChecklistItems(['']);
-      setShowChecklistModal(false);
+      checklist.setNewChecklistName('');
+      checklist.setNewChecklistItems(['']);
+      checklist.setShowModal(false);
       fetchCards();
     } catch (error: any) {
       Alert.alert('Erreur', error.message || 'Impossible de créer la checklist');
     }
   };
 
-  const addChecklistItemField = () => {
-    setNewChecklistItems([...newChecklistItems, '']);
-  };
-
-  const updateChecklistItem = (index: number, value: string) => {
-    const updatedItems = [...newChecklistItems];
-    updatedItems[index] = value;
-    setNewChecklistItems(updatedItems);
-  };
-
-  const removeChecklistItem = (index: number) => {
-    if (newChecklistItems.length > 1) {
-      const updatedItems = [...newChecklistItems];
-      updatedItems.splice(index, 1);
-      setNewChecklistItems(updatedItems);
-    }
-  };
-
-  const [showChecklistModal, setShowChecklistModal] = useState(false);
-  const [selectedCardForChecklist, setSelectedCardForChecklist] = useState<string | null>(null);
   const [checklistsData, setChecklistsData] = useState<Record<string, Array<{
     id: string;
     name: string;
@@ -341,11 +307,11 @@ export default function BoardDetailScreen() {
   }>>>({});
 
   const handleOpenChecklistModal = (cardId: string) => {
-    setSelectedCardForChecklist(cardId);
     setShowCardViewModal(false);
-    setNewChecklistName('');
-    setNewChecklistItems(['']);
-    setShowChecklistModal(true);
+    checklist.setSelectedCard(cardId);
+    checklist.setNewChecklistName('');
+    checklist.setNewChecklistItems(['']);
+    checklist.setShowModal(true);
   };
 
   const fetchChecklistsForCards = async () => {
@@ -577,98 +543,41 @@ export default function BoardDetailScreen() {
         visible={showCardModal}
         onClose={() => {
           setShowCardModal(false);
-          setShowDescriptionInput(false);
-          setShowChecklistInput(false);
-          setNewChecklistName('');
-          setNewChecklistItems(['']);
-          setDueDate(null);
+          checklist.reset();
         }}
         onCreate={handleCreateCardWithChecklist}
         cardName={newCardName}
         setCardName={setNewCardName}
         cardDesc={newCardDesc}
         setCardDesc={setNewCardDesc}
-        showDescription={showDescriptionInput}
-        setShowDescription={setShowDescriptionInput}
-        showChecklist={showChecklistInput}
-        setShowChecklist={setShowChecklistInput}
-        checklistName={newChecklistName}
-        setChecklistName={setNewChecklistName}
-        checklistItems={newChecklistItems}
-        setChecklistItems={setNewChecklistItems}
-        addChecklistItem={addChecklistItemField}
-        updateChecklistItem={updateChecklistItem}
-        removeChecklistItem={removeChecklistItem}
+        showDescription={false}
+        setShowDescription={() => {}}
+        showChecklist={false}
+        setShowChecklist={() => {}}
+        checklistName={checklist.newChecklistName}
+        setChecklistName={checklist.setNewChecklistName}
+        checklistItems={checklist.newChecklistItems}
+        setChecklistItems={checklist.setNewChecklistItems}
+        addChecklistItem={checklist.addChecklistItem}
+        updateChecklistItem={checklist.updateChecklistItem}
+        removeChecklistItem={checklist.removeChecklistItem}
       />
 
       {/* Checklist modal */}
-      <Modal
-        transparent
-        visible={showChecklistModal}
-        animationType="fade"
-        onRequestClose={() => setShowChecklistModal(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowChecklistModal(false)}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Ajouter une checklist</Text>
-
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="Nom de la checklist"
-                  placeholderTextColor="#888"
-                  value={newChecklistName}
-                  onChangeText={setNewChecklistName}
-                  autoFocus
-                />
-
-                {newChecklistItems.map((item, index) => (
-                  <View key={index} style={styles.checklistItemInputRow}>
-                    <TextInput
-                      style={[styles.modalInput, styles.checklistItemInput]}
-                      placeholder={`Élément ${index + 1}`}
-                      placeholderTextColor="#888"
-                      value={item}
-                      onChangeText={(text) => updateChecklistItem(index, text)}
-                    />
-                    <Pressable
-                      style={styles.checklistItemRemoveButton}
-                      onPress={() => removeChecklistItem(index)}
-                    >
-                      <AntDesign name="close" size={16} color="#FF4A4A" />
-                    </Pressable>
-                  </View>
-                ))}
-
-                <Pressable
-                  style={styles.addChecklistItemButton}
-                  onPress={addChecklistItemField}
-                >
-                  <AntDesign name="plus" size={16} color="#FFA500" />
-                  <Text style={styles.addChecklistItemText}>Ajouter un élément</Text>
-                </Pressable>
-
-                <View style={styles.modalButtonsContainer}>
-                  <Pressable
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={() => setShowChecklistModal(false)}
-                  >
-                    <Text style={styles.cancelButtonText}>Annuler</Text>
-                  </Pressable>
-
-                  <Pressable
-                    style={[styles.modalButton, styles.confirmButton]}
-                    onPress={() => selectedCardForChecklist && handleAddChecklistToExistingCard(selectedCardForChecklist)}
-                  >
-                    <Text style={styles.confirmButtonText}>Ajouter</Text>
-                  </Pressable>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+      {checklist.selectedCard && (
+        <ChecklistModal
+          visible={checklist.showModal}
+          onClose={() => checklist.setShowModal(false)}
+          onSubmit={() => handleAddChecklistToExistingCard(checklist.selectedCard!)}
+          name={checklist.newChecklistName}
+          setName={checklist.setNewChecklistName}
+          items={checklist.newChecklistItems}
+          setItems={checklist.setNewChecklistItems}
+          onAddItem={checklist.addChecklistItem}
+          onUpdateItem={checklist.updateChecklistItem}
+          onRemoveItem={checklist.removeChecklistItem}
+        />
+      )}
 
       {/* Card edit modal */}
       <EditCardModal
