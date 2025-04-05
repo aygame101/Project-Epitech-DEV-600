@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useChecklists } from '@/hooks/useChecklists';
+import { useChecklists, type UseChecklistsReturn } from '@/hooks/useChecklists';
 import { fetchCardAssignments, handleUserAssignment } from '@/utils/assignmentUtils';
 import axios from 'axios';
 import Constants from 'expo-constants';
@@ -216,29 +216,9 @@ export default function BoardDetailScreen() {
       setEditingCardDesc(cardToEdit.desc || '');
       
       try {
-        // Charger explicitement les checklists de la carte
-        const existingChecklists = await cardServices.getCardChecklists(cardId);
-        
-        // Formatage des checklists pour correspondre à la structure attendue par le composant
-        const formattedChecklists = existingChecklists.map(cl => ({
-          id: cl.id,
-          name: cl.name,
-          items: cl.checkItems.map(item => item.name)
-        }));
-        
-        // Mettre à jour l'état des checklists
-        checklist.setAllChecklists(formattedChecklists);
-        
-        // Si des checklists existent, utiliser la première comme checklist active
-        if (formattedChecklists.length > 0) {
-          checklist.setNewChecklistName(formattedChecklists[0].name);
-          checklist.setNewChecklistItems(formattedChecklists[0].items);
-          setCurrentChecklistIndex(0);
-        } else {
-          checklist.reset();
-        }
-        
-        // Ouvrir la modale d'édition
+        // Déléguer toute la gestion des checklists au hook useChecklists
+        checklist.setSelectedCard(cardId);
+        await checklist.loadChecklistsForCard(cardId, true);
         setShowEditCardModal(true);
       } catch (error) {
         console.error('Erreur lors du chargement des checklists:', error);
@@ -263,6 +243,14 @@ export default function BoardDetailScreen() {
 
     try {
       if (!editingCardId) return;
+      
+      // First save checklist changes if any
+      if (showChecklist && checklist.saveChecklistChanges) {
+        checklist.setSelectedCard(editingCardId);
+        await checklist.saveChecklistChanges();
+      }
+      
+      // Then save card changes
       await cardServices.updateCard(editingCardId, {
         name: editingCardName,
         desc: editingCardDesc
@@ -271,10 +259,13 @@ export default function BoardDetailScreen() {
       setEditingCardId(null);
       setEditingCardName('');
       setEditingCardDesc('');
+      setShowChecklist(false);
+      setShowDescription(false);
       setShowEditCardModal(false);
       fetchCards();
     } catch (error: any) {
-      Alert.alert('Erreur', error.message || 'Impossible de mettre à jour la carte');
+      console.error('Save failed:', error);
+      Alert.alert('Erreur', error.message || 'Impossible de sauvegarder les modifications');
     }
   };
 
@@ -635,7 +626,7 @@ export default function BoardDetailScreen() {
         setShowChecklist={setShowChecklist}
         checklists={checklist.allChecklists}
         currentChecklistIndex={currentChecklistIndex}
-        setCurrentChecklistIndex={setCurrentChecklistIndex}
+        setCurrentChecklistIndex={checklist.setCurrentChecklistIndex}
         checklistName={checklist.newChecklistName}
         setChecklistName={checklist.setNewChecklistName}
         checklistItems={checklist.newChecklistItems}
@@ -644,6 +635,19 @@ export default function BoardDetailScreen() {
         updateChecklistItem={checklist.updateChecklistItem}
         removeChecklistItem={checklist.removeChecklistItem}
         onCreateChecklist={checklist.addNewChecklist}
+        saveChecklistChanges={async () => {
+          if (editingCardId) {
+            checklist.setSelectedCard(editingCardId);
+            return checklist.saveChecklistChanges();
+          }
+          return false;
+        }}
+        deleteChecklist={checklist.deleteChecklist}
+        isUpdating={checklist.isUpdating}
+        // Explicitly pass hook setters for better traceability
+        hookSetCurrentChecklistIndex={checklist.setCurrentChecklistIndex}
+        hookSetNewChecklistName={checklist.setNewChecklistName}
+        hookSetNewChecklistItems={checklist.setNewChecklistItems}
       />
 
       {/* Card View modal */}
