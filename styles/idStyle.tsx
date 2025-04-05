@@ -1,31 +1,30 @@
 import { StyleSheet } from 'react-native';
 
-// Styles
 export const styles = StyleSheet.create({
+  // Styles existants
   archiveButton: {
-    marginLeft: 8, // Espacement entre les boutons
+    marginLeft: 8,
   },
   archiveButtonText: {
-    color: '#FFF', // Texte blanc pour le bouton d'archivage
+    color: '#FFF',
     fontWeight: 'bold',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20, // Ajoutez un peu plus d'espace en bas
+    marginBottom: 20,
   },
   closeButton: {
     padding: 10,
   },
   modalTitle: {
-    flex: 1, // Permet au titre de prendre l'espace restant
+    flex: 1,
     color: '#FFA500',
     fontSize: 20,
     fontWeight: 'bold',
-    textAlign: 'left', // Centrer le texte
+    textAlign: 'left',
   },
-
   listCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -34,14 +33,11 @@ export const styles = StyleSheet.create({
   editButton: {
     padding: 5,
   },
-  /* PAGE CONTAINER */
   container: {
     flex: 1,
-    backgroundColor: '#000', // Fond noir
+    backgroundColor: '#000',
     paddingTop: 32,
   },
-
-  /* LOADING VIEW */
   loadingContainer: {
     flex: 1,
     backgroundColor: '#000',
@@ -56,8 +52,6 @@ export const styles = StyleSheet.create({
   loadingLists: {
     marginTop: 50,
   },
-
-  /* HEADER */
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -69,11 +63,9 @@ export const styles = StyleSheet.create({
   },
   boardTitle: {
     fontSize: 24,
-    color: '#FFA500', // Titre du tableau en orange
+    color: '#FFA500',
     fontWeight: 'bold',
   },
-
-  /* LISTS WRAPPER */
   listsContainer: {
     flex: 1,
   },
@@ -81,8 +73,6 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 8,
     alignItems: 'flex-start',
   },
-
-  /* LIST CARD */
   listCardContainer: {
     backgroundColor: '#1F1F1F',
     borderRadius: 8,
@@ -112,10 +102,8 @@ export const styles = StyleSheet.create({
     color: '#faba46',
   },
   listCardArchiveText: {
-    color: '#FF4A4A', // Couleur d'archive
+    color: '#FF4A4A',
   },
-
-  /* CARDS */
   cardsContainer: {
     flex: 1,
     marginVertical: 8,
@@ -137,8 +125,6 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     color: '#FFF',
   },
-
-  /* AJOUTER UNE LISTE BUTTON */
   addListButton: {
     width: 260,
     height: 50,
@@ -158,8 +144,6 @@ export const styles = StyleSheet.create({
     marginLeft: 6,
     fontWeight: '600',
   },
-
-  /* MODAL */
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.7)',
@@ -209,9 +193,6 @@ export const styles = StyleSheet.create({
   confirmButton: {
     backgroundColor: '#FFA500'
   },
-  styloButton: {
-    backgroundColor: ''
-  },
   confirmButtonText: {
     color: '#000',
     fontWeight: 'bold',
@@ -221,7 +202,6 @@ export const styles = StyleSheet.create({
     borderRadius: 4,
     padding: 6,
     marginBottom: 10,
-
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 1,
@@ -273,7 +253,6 @@ export const styles = StyleSheet.create({
     color: '#888',
     marginVertical: 20,
   },
-
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -317,8 +296,6 @@ export const styles = StyleSheet.create({
     marginTop: 2,
     textAlign: 'right',
   },
-  
-  // Styles pour la création de carte
   cardCreationForm: {
     width: '100%',
   },
@@ -366,8 +343,6 @@ export const styles = StyleSheet.create({
     color: '#FFF',
     fontWeight: '500',
   },
-  
-  // Styles pour les checklists
   checklistInputContainer: {
     marginBottom: 16,
   },
@@ -396,8 +371,6 @@ export const styles = StyleSheet.create({
     color: '#FFA500',
     marginLeft: 6,
   },
-  
-  // Styles pour l'affichage des checklists dans la vue de carte
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -436,9 +409,9 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   checklistItemCompleted: {
+    textDecorationLine: 'line-through',
+    color: '#888',
   },
-  
-  // New styles for avatars and due date
   avatarsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -458,8 +431,94 @@ export const styles = StyleSheet.create({
     color: '#FFA500',
     fontSize: 12,
   },
+
+  // Nouveaux styles pour l'édition de checklist
+  checklistList: {
+    marginBottom: 16,
+  },
+  checklistOption: {
+    padding: 12,
+    backgroundColor: '#252525',
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  checklistOptionActive: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#FFA500',
+  },
+  checklistActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  deleteChecklistButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#FF4A4A',
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  deleteChecklistText: {
+    color: '#FF4A4A',
+    marginLeft: 6,
+  },
   checklistButton: {
-    backgroundColor: '#4CAF50',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    borderRadius: 4,
+    backgroundColor: '#f0f0f0',
+    marginTop: 8
   },
 
+  checklistSelectorContainer: {
+    marginTop: 10,
+    marginBottom: 15,
+  },
+  checklistSelectorButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 6,
+    marginVertical: 5,
+  },
+  checklistSelectorText: {
+    marginLeft: 8,
+    color: '#333',
+    fontSize: 14,
+  },
+  createNewChecklistButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    paddingVertical: 10,
+  },
+  createNewChecklistText: {
+    marginLeft: 8,
+    color: '#FFA500',
+    fontWeight: '500',
+  },
+  noChecklistText: {
+    color: '#888',
+    fontStyle: 'italic',
+    marginVertical: 10,
+  },
+  checklistHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  changeChecklistButton: {
+    padding: 6,
+  },
+  changeChecklistButtonText: {
+    color: '#0079BF',
+    fontSize: 13,
+    fontWeight: '500',
+  }
 });
