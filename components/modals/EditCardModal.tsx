@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, TouchableWithoutFeedback, View, TextInput, Pressable, Text, ScrollView, ActivityIndicator } from 'react-native';
+import { Modal, TouchableWithoutFeedback, View, TextInput, Pressable, Text, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { styles } from '@/styles/idStyle';
 
@@ -33,6 +33,10 @@ interface EditCardModalProps {
   saveChecklistChanges?: () => Promise<boolean>;
   deleteChecklist?: (checklistId: string) => Promise<boolean>;
   isUpdating?: boolean;
+  // Nouveaux props pour les setters du hook
+  hookSetCurrentChecklistIndex?: (index: number) => void;
+  hookSetNewChecklistName?: (name: string) => void;
+  hookSetNewChecklistItems?: (items: string[]) => void;
 }
 
 export function EditCardModal({
@@ -60,17 +64,46 @@ export function EditCardModal({
   onCreateChecklist,
   saveChecklistChanges,
   deleteChecklist,
-  isUpdating = false
+  isUpdating = false,
+  // Nouveaux props pour les setters du hook
+  hookSetCurrentChecklistIndex,
+  hookSetNewChecklistName,
+  hookSetNewChecklistItems
 }: EditCardModalProps) {
   const [showChecklistSelector, setShowChecklistSelector] = useState(false);
   
   // Function to select an existing checklist
-  const handleSelectChecklist = (index: number) => {
+// In EditCardModal.tsx, modify handleSelectChecklist:
+
+const handleSelectChecklist = (index: number) => {
+  console.log('Selecting checklist at index:', index);
+  if (index >= 0 && index < checklists.length) {
+    const selectedChecklist = checklists[index];
+    
+    // Update BOTH the local state AND the hook state
     setCurrentChecklistIndex(index);
-    setChecklistName(checklists[index].name);
-    setChecklistItems(checklists[index].items);
+    
+    // This is critical - always update the hook's state whenever the index changes
+    if (hookSetCurrentChecklistIndex) {
+      hookSetCurrentChecklistIndex(index);
+      console.log('Updated hook current index to:', index);
+    }
+    
+    setChecklistName(selectedChecklist.name);
+    setChecklistItems([...selectedChecklist.items]);
+    
+    if (hookSetNewChecklistName) {
+      hookSetNewChecklistName(selectedChecklist.name);
+    }
+    if (hookSetNewChecklistItems) {
+      hookSetNewChecklistItems([...selectedChecklist.items]);
+    }
+    
     setShowChecklistSelector(false);
-  };
+  } else {
+    console.error('Invalid checklist index:', index);
+  }
+};
   
   // Function to create a new checklist
   const handleCreateNewChecklist = () => {
@@ -82,29 +115,46 @@ export function EditCardModal({
     }
   };
 
-  // Function to save changes to current checklist
-  const handleSaveChecklistChanges = async () => {
-    if (saveChecklistChanges) {
-      await saveChecklistChanges();
-    }
-  };
-
   // Function to delete the current checklist
   const handleDeleteChecklist = async () => {
     if (deleteChecklist && currentChecklistIndex >= 0 && currentChecklistIndex < checklists.length) {
       const checklistId = checklists[currentChecklistIndex].id;
-      if (!checklistId.startsWith('temp-')) { // Only delete if it's a real checklist, not a temp one
+      if (!checklistId.startsWith('temp-')) {
         await deleteChecklist(checklistId);
       }
     }
   };
 
   // Handle save and close for the entire card
-  const handleSaveAll = async () => {
-    if (showChecklist && saveChecklistChanges) {
-      await saveChecklistChanges();
+  const handleSaveAll = async () => {  
+    try {
+      // First save checklist changes if needed
+      if (showChecklist && saveChecklistChanges) {
+        console.log('Saving checklist changes...');
+        console.log('Current checklist index before save:', currentChecklistIndex);
+        
+        // ALWAYS update the hook's index before saving
+        if (hookSetCurrentChecklistIndex) {
+          hookSetCurrentChecklistIndex(currentChecklistIndex);
+          console.log('Set hook current index to:', currentChecklistIndex, 'before saving');
+        }
+        
+        const checklistSaved = await saveChecklistChanges();
+        if (!checklistSaved) {
+          Alert.alert('Erreur', 'Échec de sauvegarde de la checklist');
+          return;
+        }
+      }
+      
+      // Then save card changes
+      onSave();
+    } catch (error) {
+      console.error('Save failed:', error);
+      Alert.alert(
+        'Erreur', 
+        'Échec de sauvegarde des modifications: ' + (error instanceof Error ? error.message : 'Erreur inconnue')
+      );
     }
-    onSave();
   };
 
   return (
@@ -198,7 +248,7 @@ export function EditCardModal({
                           style={styles.createNewChecklistButton}
                           onPress={handleCreateNewChecklist}
                         >
-                          <AntDesign name="plus" size={16} color="#FFA500" />
+                          <AntDesign name="plus" size={16} color="#0079BF" />
                           <Text style={styles.createNewChecklistText}>Créer une nouvelle checklist</Text>
                         </Pressable>
                       </View>
@@ -211,7 +261,7 @@ export function EditCardModal({
                               ? `Modifier la checklist: ${checklists[currentChecklistIndex].name}`
                               : "Nouvelle checklist"}
                           </Text>
-                          <View style={styles.checklistHeaderButtons}>
+                          <View style={styles.checklistActions}>
                             <Pressable
                               style={styles.changeChecklistButton}
                               onPress={() => setShowChecklistSelector(true)}
@@ -235,7 +285,10 @@ export function EditCardModal({
                           placeholder="Nom de la checklist"
                           placeholderTextColor="#888"
                           value={checklistName}
-                          onChangeText={setChecklistName}
+                          onChangeText={(text) => {
+                            setChecklistName(text);
+                            if (hookSetNewChecklistName) hookSetNewChecklistName(text);
+                          }}
                         />
 
                         {checklistItems.map((item, index) => (
@@ -245,12 +298,28 @@ export function EditCardModal({
                               placeholder={`Élément ${index + 1}`}
                               placeholderTextColor="#888"
                               value={item}
-                              onChangeText={(text) => updateChecklistItem(index, text)}
+                              onChangeText={(text) => {
+                                updateChecklistItem(index, text);
+                                // Synchroniser les items du checklist sur le hook
+                                if (hookSetNewChecklistItems) {
+                                  const updatedItems = [...checklistItems];
+                                  updatedItems[index] = text;
+                                  hookSetNewChecklistItems(updatedItems);
+                                }
+                              }}
                             />
 
                             <Pressable
                               style={styles.checklistItemRemoveButton}
-                              onPress={() => removeChecklistItem(index)}
+                              onPress={() => {
+                                removeChecklistItem(index);
+                                // Synchroniser la suppression avec le hook
+                                if (hookSetNewChecklistItems && checklistItems.length > 1) {
+                                  const updatedItems = [...checklistItems];
+                                  updatedItems.splice(index, 1);
+                                  hookSetNewChecklistItems(updatedItems);
+                                }
+                              }}
                             >
                               <AntDesign name="close" size={16} color="#FF4A4A" />
                             </Pressable>
@@ -259,7 +328,13 @@ export function EditCardModal({
 
                         <Pressable
                           style={styles.addChecklistItemButton}
-                          onPress={addChecklistItem}
+                          onPress={() => {
+                            addChecklistItem();
+                            // Synchroniser l'ajout avec le hook
+                            if (hookSetNewChecklistItems) {
+                              hookSetNewChecklistItems([...checklistItems, '']);
+                            }
+                          }}
                         >
                           <AntDesign name="plus" size={16} color="#FFA500" />
                           <Text style={styles.addChecklistItemText}>Ajouter un élément</Text>
@@ -280,9 +355,14 @@ export function EditCardModal({
 
                 <Pressable
                   style={[styles.modalButton, styles.confirmButton]}
-                  onPress={onSave}
+                  onPress={handleSaveAll}
+                  disabled={isUpdating}
                 >
-                  <Text style={styles.confirmButtonText}>Enregistrer</Text>
+                  {isUpdating ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.confirmButtonText}>Enregistrer</Text>
+                  )}
                 </Pressable>
               </View>
             </View>
