@@ -65,8 +65,34 @@ describe('Board Management', () => {
     (cardServices.archiveCard as jest.Mock).mockResolvedValue({});
   });
 
+  it('should render board UI elements correctly', async () => {
+    const { getByText, getByRole } = render(<BoardDetailScreen />);
+
+    await waitFor(() => {
+      // Vérifier le rendu du header avec le titre du board
+      expect(getByText('Test Board')).toBeTruthy();
+
+      // Vérifier le bouton de retour via son rôle
+      const backButton = getByRole('button', { name: /back/i });
+      expect(backButton).toBeTruthy();
+
+      // Vérifier le bouton d'ajout de liste
+      const addListButton = getByText('Ajouter une liste');
+      expect(addListButton).toBeTruthy();
+    });
+  });
+
+  it('should show loading state initially', () => {
+    (boardServices.getBoardById as jest.Mock).mockImplementation(() => 
+      new Promise(() => {})
+    );
+
+    const { getByText } = render(<BoardDetailScreen />);
+    expect(getByText('Chargement du tableau...')).toBeTruthy();
+  });
+
   it('should create and delete board, list and card successfully', async () => {
-    const { getByText, getByPlaceholderText, queryByText } = render(<BoardDetailScreen />);
+    const { getByText, getByPlaceholderText } = render(<BoardDetailScreen />);
 
     // 1. Test création board
     await waitFor(() => {
@@ -75,6 +101,8 @@ describe('Board Management', () => {
 
     // 2. Test création liste
     fireEvent.press(getByText('Ajouter une liste'));
+    expect(getByPlaceholderText('Nom de la liste')).toBeTruthy();
+    
     fireEvent.changeText(getByPlaceholderText('Nom de la liste'), 'Test List');
     fireEvent.press(getByText('Créer'));
 
@@ -85,6 +113,8 @@ describe('Board Management', () => {
 
     // 3. Test création carte
     fireEvent.press(getByText('+ Carte'));
+    expect(getByPlaceholderText('Titre de la carte')).toBeTruthy();
+    
     fireEvent.changeText(getByPlaceholderText('Titre de la carte'), 'Test Card');
     fireEvent.press(getByText('Créer'));
 
@@ -92,5 +122,41 @@ describe('Board Management', () => {
       expect(cardServices.addCard).toHaveBeenCalledWith('list1', 'Test Card', '');
       expect(getByText('Test Card')).toBeTruthy();
     });
+  });
+
+  it('should render lists and cards correctly', async () => {
+    const { getByText, getAllByText } = render(<BoardDetailScreen />);
+
+    await waitFor(() => {
+      // Vérifier le rendu des listes via leur nom
+      expect(getByText('Test List')).toBeTruthy();
+
+      // Vérifier le rendu des cartes via leur nom
+      expect(getByText('Test Card')).toBeTruthy();
+    });
+  });
+
+  it('should open and close modals correctly', async () => {
+    const { getByText, getByPlaceholderText, queryByPlaceholderText } = render(<BoardDetailScreen />);
+
+    await waitFor(() => {
+      expect(getByText('Test Board')).toBeTruthy();
+    });
+
+    // Test ouverture modale création liste
+    fireEvent.press(getByText('Ajouter une liste'));
+    expect(getByPlaceholderText('Nom de la liste')).toBeTruthy();
+    
+    // Test fermeture modale création liste
+    fireEvent.press(getByText('Annuler'));
+    expect(queryByPlaceholderText('Nom de la liste')).toBeNull();
+
+    // Test ouverture modale création carte
+    fireEvent.press(getByText('+ Carte'));
+    expect(getByPlaceholderText('Titre de la carte')).toBeTruthy();
+    
+    // Test fermeture modale création carte
+    fireEvent.press(getByText('Annuler'));
+    expect(queryByPlaceholderText('Titre de la carte')).toBeNull();
   });
 });
