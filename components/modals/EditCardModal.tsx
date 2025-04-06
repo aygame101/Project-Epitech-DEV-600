@@ -76,7 +76,6 @@ export function EditCardModal({
   // In EditCardModal.tsx, modify handleSelectChecklist:
 
   const handleSelectChecklist = (index: number) => {
-    console.log('Selecting checklist at index:', index);
     if (index >= 0 && index < checklists.length) {
       const selectedChecklist = checklists[index];
 
@@ -86,7 +85,6 @@ export function EditCardModal({
       // This is critical - always update the hook's state whenever the index changes
       if (hookSetCurrentChecklistIndex) {
         hookSetCurrentChecklistIndex(index);
-        console.log('Updated hook current index to:', index);
       }
 
       setChecklistName(selectedChecklist.name);
@@ -127,28 +125,21 @@ export function EditCardModal({
 
   // Handle save and close for the entire card
   const handleSaveAll = async () => {
-    console.log('Save button clicked in EditCardModal');
-
     try {
       // First save checklist changes if needed
       if (showChecklist && saveChecklistChanges) {
-        console.log('Saving checklist changes...');
-        console.log('Current checklist index before save:', currentChecklistIndex);
 
         // Make sure all data is synchronized with the hook before saving
         if (hookSetCurrentChecklistIndex) {
           hookSetCurrentChecklistIndex(currentChecklistIndex);
-          console.log('Synchronized current index with hook:', currentChecklistIndex);
         }
 
         if (hookSetNewChecklistName) {
           hookSetNewChecklistName(checklistName);
-          console.log('Synchronized checklist name with hook:', checklistName);
         }
 
         if (hookSetNewChecklistItems) {
           hookSetNewChecklistItems([...checklistItems]);
-          console.log('Synchronized checklist items with hook:', JSON.stringify(checklistItems));
         }
 
         // Add a short delay to ensure state updates are processed
@@ -156,20 +147,17 @@ export function EditCardModal({
 
         const checklistSaved = await saveChecklistChanges();
         if (!checklistSaved) {
-          console.error('Checklist save returned false');
           Alert.alert('Erreur', 'Échec de sauvegarde de la checklist');
           return;
         }
       }
 
       // Then save card changes
-      console.log('Saving card changes...');
       onSave();
 
     } catch (error) {
-      console.error('Save failed:', error);
       Alert.alert(
-        'Erreur',
+        'Erreur', 
         'Échec de sauvegarde des modifications: ' + (error instanceof Error ? error.message : 'Erreur inconnue')
       );
       return;
@@ -287,15 +275,6 @@ export function EditCardModal({
                             >
                               <Text style={styles.changeChecklistButtonText}>Changer</Text>
                             </Pressable>
-
-                            {checklists.length > 0 && currentChecklistIndex >= 0 && !checklists[currentChecklistIndex].id.startsWith('temp-') && (
-                              <Pressable
-                                style={[styles.changeChecklistButton, { backgroundColor: '#FF4A4A' }]}
-                                onPress={handleDeleteChecklist}
-                              >
-                                <Text style={[styles.changeChecklistButtonText, { color: 'white' }]}>Supprimer</Text>
-                              </Pressable>
-                            )}
                           </View>
                         </View>
 
@@ -319,15 +298,12 @@ export function EditCardModal({
                               placeholderTextColor="#888"
                               value={item}
                               onChangeText={(text) => {
-                                // Log the update
-                                console.log(`Updating item ${index} to "${text}"`);
                                 updateChecklistItem(index, text);
 
                                 // Ensure immediate synchronization with the hook
                                 if (hookSetNewChecklistItems) {
                                   const updatedItems = [...checklistItems];
                                   updatedItems[index] = text;
-                                  console.log('Synchronized updated items with hook:', JSON.stringify(updatedItems));
                                   hookSetNewChecklistItems(updatedItems);
                                 }
                               }}

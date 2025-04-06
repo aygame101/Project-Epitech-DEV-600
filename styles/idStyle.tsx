@@ -452,13 +452,8 @@ export const styles = StyleSheet.create({
     marginTop: 10,
   },
   deleteChecklistButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-    borderWidth: 1,
-    borderColor: '#FF4A4A',
+    padding: 5,
     borderRadius: 4,
-    alignSelf: 'flex-start',
   },
   deleteChecklistText: {
     color: '#FF4A4A',
@@ -520,5 +515,12 @@ export const styles = StyleSheet.create({
     color: '#0079BF',
     fontSize: 13,
     fontWeight: '500',
-  }
+  },
+  checklistHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  
 });
