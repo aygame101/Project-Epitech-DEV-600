@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 
-// Configuration Trello
+// Config Trello
 const API_KEY = Constants.expoConfig?.extra?.apiKey;
 const API_TOKEN = Constants.expoConfig?.extra?.token;
 

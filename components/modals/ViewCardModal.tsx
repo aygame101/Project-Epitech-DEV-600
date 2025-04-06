@@ -75,7 +75,7 @@ export function ViewCardModal({
                 </Pressable>
               </View>
 
-              {/* Affichage de la description */}
+              {/* description */}
               <Text style={styles.sectionTitle}>Description</Text>
               {card.desc ? (
                 <View style={styles.cardViewDescription}>
@@ -85,7 +85,7 @@ export function ViewCardModal({
                 <Text style={styles.noDescriptionText}>Pas de description</Text>
               )}
 
-              {/* Affichage des checklists */}
+              {/* checklists */}
               {checklistsData[card.id] && checklistsData[card.id].length > 0 && (
                 <View style={styles.checklistsContainer}>
                   <Text style={styles.sectionTitle}>Checklists</Text>
@@ -95,7 +95,7 @@ export function ViewCardModal({
                       <View style={styles.checklistHeaderRow}>
                         <Text style={styles.checklistTitle}>{checklist.name}</Text>
                         
-                        {/* Bouton de suppression de checklist */}
+                        {/* Bouton de suppression des checklists */}
                         <Pressable
                           style={styles.deleteChecklistButton}
                           onPress={() => onDeleteChecklist(checklist.id)}

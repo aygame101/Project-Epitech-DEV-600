@@ -1,7 +1,6 @@
 import Constants from 'expo-constants';
 
 export function getTrelloCredentials() {
-  // Récupération directe depuis extra, sans imbrication trello
   const config = Constants.expoConfig?.extra;
 
   if (!config || !config.apiKey || !config.token) {

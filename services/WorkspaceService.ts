@@ -2,7 +2,6 @@ import trelloApi from './trelloApi';
 import { Workspace, WorkspaceMember } from '../types/Workspace';
 
 class WorkspaceService {
-  // Récupérer tous les Workspaces de l'utilisateur
   async getWorkspaces(): Promise<Workspace[]> {
     try {
       const organizations = await trelloApi.get('members/me/organizations', {
@@ -23,7 +22,6 @@ class WorkspaceService {
     }
   }
 
-  // Créer un nouveau Workspace
   async createWorkspace(workspaceData: Partial<Workspace>): Promise<Workspace> {
     try {
       const newOrg = await trelloApi.post('organizations', {
@@ -44,7 +42,6 @@ class WorkspaceService {
     }
   }
 
-  // Récupérer les membres d'un Workspace
   async getWorkspaceMembers(workspaceId: string): Promise<WorkspaceMember[]> {
     try {
       const members = await trelloApi.get(`organizations/${workspaceId}/members`, {

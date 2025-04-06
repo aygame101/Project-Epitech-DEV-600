@@ -139,7 +139,6 @@ export const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
   },
-  // New styles for template selection
   templateItem: {
     backgroundColor: '#2a2a2a',
     borderRadius: 8,

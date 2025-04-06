@@ -7,7 +7,6 @@ class TrelloApiService {
   public baseUrl = 'https://api.trello.com/1';
 
   constructor() {
-    // Récupération directe depuis extra
     const config = Constants.expoConfig?.extra;
 
     if (!config || !config.apiKey || !config.token) {
@@ -18,7 +17,6 @@ class TrelloApiService {
     this.token = config.token;
   }
 
-  // Le reste du code reste identique
   async get(endpoint: string, params: Record<string, any> = {}) {
     try {
       const response = await axios.get(`${this.baseUrl}/${endpoint}`, {
@@ -35,7 +33,6 @@ class TrelloApiService {
     }
   }
 
-  // Méthode pour les requêtes POST
   async post(endpoint: string, data: Record<string, any> = {}) {
     try {
       const response = await axios.post(`${this.baseUrl}/${endpoint}`, {

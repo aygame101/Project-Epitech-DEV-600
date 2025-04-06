@@ -17,12 +17,12 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [editingWorkspace, setEditingWorkspace] = useState<{id: string, displayName: string} | null>(null);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
-  // États pour la météo
+  // météo
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [weatherError, setWeatherError] = useState<string | null>(null);
 
-  // États pour la suppression
+  // suppression
   const [workspaceToDelete, setWorkspaceToDelete] = useState<{id: string, name: string} | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -110,7 +110,6 @@ export default function HomeScreen() {
       await updateWorkspace(editingWorkspace.id, newWorkspaceName);
       setEditingWorkspace(null);
       
-      // Update the workspace locally to avoid additional API call
       const updatedWorkspaces = workspaces.map(workspace => 
         workspace.id === editingWorkspace.id 
           ? { ...workspace, displayName: newWorkspaceName } 
@@ -153,7 +152,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Header avec titre et widget météo */}
+        {/* titre + météo */}
         <View style={styles.headerContainer}>
           <Text style={styles.title}>TrellUwU</Text>
           <WeatherWidget 

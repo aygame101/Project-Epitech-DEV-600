@@ -1,7 +1,6 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
-  // Styles existants
   archiveButton: {
     marginLeft: 8,
   },
@@ -418,7 +417,6 @@ export const styles = StyleSheet.create({
     marginVertical: 4,
   },
 
-  // Nouveaux styles pour l'édition de checklist
   checklistList: {
     marginBottom: 16,
   },
