@@ -288,7 +288,7 @@ export const styles = StyleSheet.create({
   },
   checklistProgressFill: {
     height: '100%',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#FFA500',
   },
   checklistProgressText: {
     fontSize: 10,
@@ -417,20 +417,6 @@ export const styles = StyleSheet.create({
     flexWrap: 'wrap',
     marginVertical: 4,
   },
-  dueDateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  dueDateLabel: {
-    color: '#888',
-    fontSize: 12,
-    marginRight: 4,
-  },
-  dueDateValue: {
-    color: '#FFA500',
-    fontSize: 12,
-  },
 
   // Nouveaux styles pour l'édition de checklist
   checklistList: {
@@ -452,13 +438,8 @@ export const styles = StyleSheet.create({
     marginTop: 10,
   },
   deleteChecklistButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-    borderWidth: 1,
-    borderColor: '#FF4A4A',
+    padding: 5,
     borderRadius: 4,
-    alignSelf: 'flex-start',
   },
   deleteChecklistText: {
     color: '#FF4A4A',
@@ -482,13 +463,13 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     paddingHorizontal: 8,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: '#2A2A2A',
     borderRadius: 6,
     marginVertical: 5,
   },
   checklistSelectorText: {
     marginLeft: 8,
-    color: '#333',
+    color: '#ffff',
     fontSize: 14,
   },
   createNewChecklistButton: {
@@ -516,9 +497,11 @@ export const styles = StyleSheet.create({
   changeChecklistButton: {
     padding: 6,
   },
-  changeChecklistButtonText: {
-    color: '#0079BF',
-    fontSize: 13,
-    fontWeight: '500',
-  }
+  checklistHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  
 });

@@ -71,40 +71,38 @@ export function EditCardModal({
   hookSetNewChecklistItems
 }: EditCardModalProps) {
   const [showChecklistSelector, setShowChecklistSelector] = useState(false);
-  
-  // Function to select an existing checklist
-// In EditCardModal.tsx, modify handleSelectChecklist:
 
-const handleSelectChecklist = (index: number) => {
-  console.log('Selecting checklist at index:', index);
-  if (index >= 0 && index < checklists.length) {
-    const selectedChecklist = checklists[index];
-    
-    // Update BOTH the local state AND the hook state
-    setCurrentChecklistIndex(index);
-    
-    // This is critical - always update the hook's state whenever the index changes
-    if (hookSetCurrentChecklistIndex) {
-      hookSetCurrentChecklistIndex(index);
-      console.log('Updated hook current index to:', index);
+  // Function to select an existing checklist
+  // In EditCardModal.tsx, modify handleSelectChecklist:
+
+  const handleSelectChecklist = (index: number) => {
+    if (index >= 0 && index < checklists.length) {
+      const selectedChecklist = checklists[index];
+
+      // Update BOTH the local state AND the hook state
+      setCurrentChecklistIndex(index);
+
+      // This is critical - always update the hook's state whenever the index changes
+      if (hookSetCurrentChecklistIndex) {
+        hookSetCurrentChecklistIndex(index);
+      }
+
+      setChecklistName(selectedChecklist.name);
+      setChecklistItems([...selectedChecklist.items]);
+
+      if (hookSetNewChecklistName) {
+        hookSetNewChecklistName(selectedChecklist.name);
+      }
+      if (hookSetNewChecklistItems) {
+        hookSetNewChecklistItems([...selectedChecklist.items]);
+      }
+
+      setShowChecklistSelector(false);
+    } else {
+      console.error('Invalid checklist index:', index);
     }
-    
-    setChecklistName(selectedChecklist.name);
-    setChecklistItems([...selectedChecklist.items]);
-    
-    if (hookSetNewChecklistName) {
-      hookSetNewChecklistName(selectedChecklist.name);
-    }
-    if (hookSetNewChecklistItems) {
-      hookSetNewChecklistItems([...selectedChecklist.items]);
-    }
-    
-    setShowChecklistSelector(false);
-  } else {
-    console.error('Invalid checklist index:', index);
-  }
-};
-  
+  };
+
   // Function to create a new checklist
   const handleCreateNewChecklist = () => {
     if (onCreateChecklist) {
@@ -126,34 +124,43 @@ const handleSelectChecklist = (index: number) => {
   };
 
   // Handle save and close for the entire card
-  const handleSaveAll = async () => {  
+  const handleSaveAll = async () => {
     try {
       // First save checklist changes if needed
       if (showChecklist && saveChecklistChanges) {
-        console.log('Saving checklist changes...');
-        console.log('Current checklist index before save:', currentChecklistIndex);
-        
-        // ALWAYS update the hook's index before saving
+
+        // Make sure all data is synchronized with the hook before saving
         if (hookSetCurrentChecklistIndex) {
           hookSetCurrentChecklistIndex(currentChecklistIndex);
-          console.log('Set hook current index to:', currentChecklistIndex, 'before saving');
         }
-        
+
+        if (hookSetNewChecklistName) {
+          hookSetNewChecklistName(checklistName);
+        }
+
+        if (hookSetNewChecklistItems) {
+          hookSetNewChecklistItems([...checklistItems]);
+        }
+
+        // Add a short delay to ensure state updates are processed
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         const checklistSaved = await saveChecklistChanges();
         if (!checklistSaved) {
           Alert.alert('Erreur', 'Échec de sauvegarde de la checklist');
           return;
         }
       }
-      
+
       // Then save card changes
       onSave();
+
     } catch (error) {
-      console.error('Save failed:', error);
       Alert.alert(
         'Erreur', 
         'Échec de sauvegarde des modifications: ' + (error instanceof Error ? error.message : 'Erreur inconnue')
       );
+      return;
     }
   };
 
@@ -228,7 +235,7 @@ const handleSelectChecklist = (index: number) => {
                       // Checklist selector display
                       <View style={styles.checklistSelectorContainer}>
                         <Text style={styles.sectionTitle}>Sélectionner une checklist</Text>
-                        
+
                         {checklists.length > 0 ? (
                           checklists.map((checklist, index) => (
                             <Pressable
@@ -236,21 +243,14 @@ const handleSelectChecklist = (index: number) => {
                               style={styles.checklistSelectorButton}
                               onPress={() => handleSelectChecklist(index)}
                             >
-                              <AntDesign name="checksquareo" size={16} color="#0079BF" />
+                              <AntDesign name="checksquareo" size={16} color="#faba46" />
                               <Text style={styles.checklistSelectorText}>{checklist.name}</Text>
                             </Pressable>
                           ))
                         ) : (
                           <Text style={styles.noChecklistText}>Aucune checklist disponible</Text>
                         )}
-                        
-                        <Pressable
-                          style={styles.createNewChecklistButton}
-                          onPress={handleCreateNewChecklist}
-                        >
-                          <AntDesign name="plus" size={16} color="#0079BF" />
-                          <Text style={styles.createNewChecklistText}>Créer une nouvelle checklist</Text>
-                        </Pressable>
+
                       </View>
                     ) : (
                       // Checklist editing
@@ -258,7 +258,7 @@ const handleSelectChecklist = (index: number) => {
                         <View style={styles.checklistHeaderContainer}>
                           <Text style={styles.sectionTitle}>
                             {currentChecklistIndex >= 0 && currentChecklistIndex < checklists.length
-                              ? `Modifier la checklist: ${checklists[currentChecklistIndex].name}`
+                              ? `Modifier la checklist: ${checklistName}`
                               : "Nouvelle checklist"}
                           </Text>
                           <View style={styles.checklistActions}>
@@ -266,20 +266,11 @@ const handleSelectChecklist = (index: number) => {
                               style={styles.changeChecklistButton}
                               onPress={() => setShowChecklistSelector(true)}
                             >
-                              <Text style={styles.changeChecklistButtonText}>Changer</Text>
+                              <AntDesign name="swap" size={18} color="#ffff" />
                             </Pressable>
-                            
-                            {checklists.length > 0 && currentChecklistIndex >= 0 && !checklists[currentChecklistIndex].id.startsWith('temp-') && (
-                              <Pressable
-                                style={[styles.changeChecklistButton, {backgroundColor: '#FF4A4A'}]}
-                                onPress={handleDeleteChecklist}
-                              >
-                                <Text style={[styles.changeChecklistButtonText, {color: 'white'}]}>Supprimer</Text>
-                              </Pressable>
-                            )}
                           </View>
                         </View>
-                        
+
                         <TextInput
                           style={styles.modalInput}
                           placeholder="Nom de la checklist"
@@ -293,6 +284,7 @@ const handleSelectChecklist = (index: number) => {
 
                         {checklistItems.map((item, index) => (
                           <View key={index} style={styles.checklistItemInputRow}>
+
                             <TextInput
                               style={[styles.modalInput, styles.checklistItemInput]}
                               placeholder={`Élément ${index + 1}`}
@@ -300,7 +292,8 @@ const handleSelectChecklist = (index: number) => {
                               value={item}
                               onChangeText={(text) => {
                                 updateChecklistItem(index, text);
-                                // Synchroniser les items du checklist sur le hook
+
+                                // Ensure immediate synchronization with the hook
                                 if (hookSetNewChecklistItems) {
                                   const updatedItems = [...checklistItems];
                                   updatedItems[index] = text;

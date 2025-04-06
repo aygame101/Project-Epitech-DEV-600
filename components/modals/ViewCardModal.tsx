@@ -26,6 +26,7 @@ interface ViewCardModalProps {
   onAssignCard: (cardId: string) => void;
   onOpenChecklistModal: (cardId: string) => void;
   onToggleChecklistItem: (cardId: string, checkItemId: string, currentState: string) => void;
+  onDeleteChecklist: (checklistId: string) => Promise<boolean>; // Nouveau prop pour la suppression
 }
 
 export function ViewCardModal({
@@ -37,7 +38,8 @@ export function ViewCardModal({
   onArchiveCard,
   onAssignCard,
   onOpenChecklistModal,
-  onToggleChecklistItem
+  onToggleChecklistItem,
+  onDeleteChecklist
 }: ViewCardModalProps) {
   if (!card) return null;
 
@@ -56,7 +58,7 @@ export function ViewCardModal({
                   <Text style={styles.modalTitle}>{card.name}</Text>
 
                 <Pressable
-                  style={[styles.modalButton, styles.styloButton]}
+                  style={[styles.modalButton]}
                   onPress={() => {
                     onClose();
                     onEditCard(card.id);
@@ -72,19 +74,6 @@ export function ViewCardModal({
                   <AntDesign name="close" size={24} color="#fff" />
                 </Pressable>
               </View>
-
-              {/* Affichage de la date d'échéance */}
-              {card.dueDate && (
-                <View style={styles.dueDateContainer}>
-                  <Text style={styles.dueDateLabel}>Date d'échéance:</Text>
-                  <Text style={[
-                    styles.dueDateValue,
-                    new Date(card.dueDate) < new Date() ? styles.dueDateOverdue : null
-                  ]}>
-                    {new Date(card.dueDate).toLocaleDateString('fr-FR')}
-                  </Text>
-                </View>
-              )}
 
               {/* Affichage de la description */}
               <Text style={styles.sectionTitle}>Description</Text>
@@ -103,7 +92,17 @@ export function ViewCardModal({
 
                   {checklistsData[card.id].map(checklist => (
                     <View key={checklist.id} style={styles.checklistContainer}>
-                      <Text style={styles.checklistTitle}>{checklist.name}</Text>
+                      <View style={styles.checklistHeaderRow}>
+                        <Text style={styles.checklistTitle}>{checklist.name}</Text>
+                        
+                        {/* Bouton de suppression de checklist */}
+                        <Pressable
+                          style={styles.deleteChecklistButton}
+                          onPress={() => onDeleteChecklist(checklist.id)}
+                        >
+                          <AntDesign name="delete" size={16} color="#FF4A4A" />
+                        </Pressable>
+                      </View>
 
                       <View style={styles.checklistProgressContainer}>
                         <View style={styles.checklistProgressBar}>

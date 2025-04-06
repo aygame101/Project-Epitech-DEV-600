@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useChecklists, type UseChecklistsReturn } from '@/hooks/useChecklists';
 import { fetchCardAssignments, handleUserAssignment } from '@/utils/assignmentUtils';
 import axios from 'axios';
@@ -36,6 +37,7 @@ import { ViewCardModal } from '@/components/modals/ViewCardModal';
 import { AssignUserModal } from '@/components/modals/AssignUserModal';
 
 export default function BoardDetailScreen() {
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
@@ -489,6 +491,102 @@ export default function BoardDetailScreen() {
     }
   };
 
+  interface RawChecklistItem {
+    id: unknown;
+    name: unknown;
+    state: unknown;
+  }
+
+  interface ChecklistItem {
+    id: string;
+    name: string;
+    state: 'complete' | 'incomplete';
+  }
+
+  interface TransformedChecklist {
+    id: string;
+    name: string;
+    checkItems: ChecklistItem[];
+    checkItemsChecked: number;
+  }
+
+  const isChecklistItem = (item: unknown): item is RawChecklistItem => {
+    return (
+      typeof item === 'object' &&
+      item !== null &&
+      'id' in item &&
+      'name' in item &&
+      'state' in item
+    );
+  };
+
+  const transformChecklistItem = (item: RawChecklistItem): ChecklistItem => {
+    return {
+      id: String(item.id),
+      name: String(item.name),
+      state: item.state === 'complete' ? 'complete' : 'incomplete'
+    };
+  };
+
+  const handleDeleteChecklist = async (checklistId: string) => {
+    if (!viewingCard) return false;
+    
+    return new Promise<boolean>((resolve) => {
+      Alert.alert(
+        'Supprimer la checklist',
+        'Êtes-vous sûr de vouloir supprimer cette checklist ?',
+        [
+          {
+            text: 'Annuler',
+            style: 'cancel',
+            onPress: () => resolve(false)
+          },
+          {
+            text: 'Supprimer',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                const success = await checklist.deleteChecklist(checklistId);
+                if (success) {
+                  const updatedChecklists = await checklist.loadChecklistsForCard(viewingCard.id, true);
+                  
+                  setChecklistsData(prev => {
+                    const transformedChecklists: TransformedChecklist[] = updatedChecklists.map(cl => {
+                      const items: unknown[] = Array.isArray(cl.items) ? cl.items : [];
+                      const checkItems = items
+                        .filter((item): item is RawChecklistItem => isChecklistItem(item))
+                        .map(item => transformChecklistItem(item));
+
+                      return {
+                        id: cl.id,
+                        name: cl.name,
+                        checkItems,
+                        checkItemsChecked: checkItems.filter(item => item.state === 'complete').length
+                      };
+                    });
+
+                    return {
+                      ...prev,
+                      [viewingCard.id]: transformedChecklists
+                    };
+                  });
+                  
+                  // Rafraîchir les données de la carte
+                  await fetchChecklistsForCards();
+                  await fetchCards();
+                }
+                resolve(success);
+              } catch (error) {
+                console.error('Error deleting checklist:', error);
+                resolve(false);
+              }
+            }
+          }
+        ]
+      );
+    });
+  };
+
   if (isLoading || !board) {
     return (
       <View style={styles.loadingContainer}>
@@ -499,7 +597,7 @@ export default function BoardDetailScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <AntDesign name="arrowleft" size={28} color="#FFA500" />
@@ -661,6 +759,7 @@ export default function BoardDetailScreen() {
         onAssignCard={handleAssignCard}
         onOpenChecklistModal={handleOpenChecklistModal}
         onToggleChecklistItem={toggleChecklistItem}
+        onDeleteChecklist={handleDeleteChecklist}
       />
 
       {/* Assignment modal */}
