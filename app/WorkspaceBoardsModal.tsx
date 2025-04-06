@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
@@ -171,8 +172,10 @@ const WorkspaceBoardsModal = () => {
   };
 
 
+  const insets = useSafeAreaInsets();
+  
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <Text style={styles.title}>Workspace : {workspaceName}</Text>
 
       <CreateBoardInput
@@ -241,3 +244,6 @@ const WorkspaceBoardsModal = () => {
 };
 
 export default WorkspaceBoardsModal;
+export const options = {
+  headerShown: false,
+};

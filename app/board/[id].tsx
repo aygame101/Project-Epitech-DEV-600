@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useChecklists, type UseChecklistsReturn } from '@/hooks/useChecklists';
 import { fetchCardAssignments, handleUserAssignment } from '@/utils/assignmentUtils';
 import axios from 'axios';
@@ -36,6 +37,7 @@ import { ViewCardModal } from '@/components/modals/ViewCardModal';
 import { AssignUserModal } from '@/components/modals/AssignUserModal';
 
 export default function BoardDetailScreen() {
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
@@ -595,7 +597,7 @@ export default function BoardDetailScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <AntDesign name="arrowleft" size={28} color="#FFA500" />
