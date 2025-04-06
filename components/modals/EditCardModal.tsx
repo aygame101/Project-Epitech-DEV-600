@@ -243,7 +243,7 @@ export function EditCardModal({
                               style={styles.checklistSelectorButton}
                               onPress={() => handleSelectChecklist(index)}
                             >
-                              <AntDesign name="checksquareo" size={16} color="#0079BF" />
+                              <AntDesign name="checksquareo" size={16} color="#faba46" />
                               <Text style={styles.checklistSelectorText}>{checklist.name}</Text>
                             </Pressable>
                           ))
@@ -251,13 +251,6 @@ export function EditCardModal({
                           <Text style={styles.noChecklistText}>Aucune checklist disponible</Text>
                         )}
 
-                        <Pressable
-                          style={styles.createNewChecklistButton}
-                          onPress={handleCreateNewChecklist}
-                        >
-                          <AntDesign name="plus" size={16} color="#0079BF" />
-                          <Text style={styles.createNewChecklistText}>Créer une nouvelle checklist</Text>
-                        </Pressable>
                       </View>
                     ) : (
                       // Checklist editing
@@ -273,7 +266,7 @@ export function EditCardModal({
                               style={styles.changeChecklistButton}
                               onPress={() => setShowChecklistSelector(true)}
                             >
-                              <Text style={styles.changeChecklistButtonText}>Changer</Text>
+                              <AntDesign name="swap" size={18} color="#ffff" />
                             </Pressable>
                           </View>
                         </View>
