@@ -1,12 +1,24 @@
-import { useState } from 'react';
-import { Modal, TouchableWithoutFeedback, View, TextInput, Pressable, Text } from 'react-native';
+import React, { useState } from 'react';
+import {
+  Modal,
+  TouchableWithoutFeedback,
+  View,
+  TextInput,
+  Pressable,
+  Text,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Dimensions,
+  ActivityIndicator
+} from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { styles } from '@/styles/idStyle';
 
 interface CreateCardModalProps {
   visible: boolean;
   onClose: () => void;
-  onCreate: () => void;
+  onCreate: () => Promise<void>; // Assume onCreate returns a promise
   cardName: string;
   setCardName: (name: string) => void;
   cardDesc: string;
@@ -44,6 +56,19 @@ export function CreateCardModal({
   updateChecklistItem,
   removeChecklistItem
 }: CreateCardModalProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const screenHeight = Dimensions.get('window').height;
+  const maxCardHeight = screenHeight * 0.85;
+
+  const handleCreate = async () => {
+    setIsLoading(true);
+    try {
+      await onCreate();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Modal
       transparent
@@ -54,115 +79,125 @@ export function CreateCardModal({
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.modalOverlay}>
           <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Créer une carte</Text>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={[styles.modalContent, { maxHeight: maxCardHeight }]}
+            >
+              <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                <Text style={styles.modalTitle}>Créer une carte</Text>
 
-              <View style={styles.cardCreationForm}>
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="Titre de la carte"
-                  placeholderTextColor="#888"
-                  value={cardName}
-                  onChangeText={setCardName}
-                  autoFocus
-                />
-
-                <View style={styles.cardOptionsContainer}>
-                  <Pressable
-                    style={[
-                      styles.cardOptionButton,
-                      showDescription ? styles.cardOptionActive : null
-                    ]}
-                    onPress={() => {
-                      setShowDescription(!showDescription);
-                      if (showChecklist) setShowChecklist(false);
-                    }}
-                  >
-                    <Text style={styles.cardOptionText}>Description</Text>
-                  </Pressable>
-
-                  <Pressable
-                    style={[
-                      styles.cardOptionButton,
-                      showChecklist ? styles.cardOptionActive : null
-                    ]}
-                    onPress={() => {
-                      setShowChecklist(!showChecklist);
-                      if (showDescription) setShowDescription(false);
-                    }}
-                  >
-                    <Text style={styles.cardOptionText}>Checklist</Text>
-                  </Pressable>
-                </View>
-
-                {showDescription && (
+                <View style={styles.cardCreationForm}>
                   <TextInput
-                    style={[styles.modalInput, styles.textareaInput]}
-                    placeholder="Description"
+                    style={styles.modalInput}
+                    placeholder="Titre de la carte"
                     placeholderTextColor="#888"
-                    value={cardDesc}
-                    onChangeText={setCardDesc}
-                    multiline
-                    numberOfLines={3}
+                    value={cardName}
+                    onChangeText={setCardName}
+                    autoFocus
                   />
-                )}
 
-                {showChecklist && (
-                  <View style={styles.checklistInputContainer}>
-                    <TextInput
-                      style={styles.modalInput}
-                      placeholder="Nom de la checklist"
-                      placeholderTextColor="#888"
-                      value={checklistName}
-                      onChangeText={setChecklistName}
-                    />
-
-                    {checklistItems.map((item, index) => (
-                      <View key={index} style={styles.checklistItemInputRow}>
-                        <TextInput
-                          style={[styles.modalInput, styles.checklistItemInput]}
-                          placeholder={`Élément ${index + 1}`}
-                          placeholderTextColor="#888"
-                          value={item}
-                          onChangeText={(text) => updateChecklistItem(index, text)}
-                        />
-
-                        <Pressable
-                          style={styles.checklistItemRemoveButton}
-                          onPress={() => removeChecklistItem(index)}
-                        >
-                          <AntDesign name="close" size={16} color="#FF4A4A" />
-                        </Pressable>
-                      </View>
-                    ))}
+                  <View style={styles.cardOptionsContainer}>
+                    <Pressable
+                      style={[
+                        styles.cardOptionButton,
+                        showDescription ? styles.cardOptionActive : null
+                      ]}
+                      onPress={() => {
+                        setShowDescription(!showDescription);
+                        if (showChecklist) setShowChecklist(false);
+                      }}
+                    >
+                      <Text style={styles.cardOptionText}>Description</Text>
+                    </Pressable>
 
                     <Pressable
-                      style={styles.addChecklistItemButton}
-                      onPress={addChecklistItem}
+                      style={[
+                        styles.cardOptionButton,
+                        showChecklist ? styles.cardOptionActive : null
+                      ]}
+                      onPress={() => {
+                        setShowChecklist(!showChecklist);
+                        if (showDescription) setShowDescription(false);
+                      }}
                     >
-                      <AntDesign name="plus" size={16} color="#FFA500" />
-                      <Text style={styles.addChecklistItemText}>Ajouter un élément</Text>
+                      <Text style={styles.cardOptionText}>Checklist</Text>
                     </Pressable>
                   </View>
-                )}
 
-                <View style={styles.modalButtonsContainer}>
-                  <Pressable
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={onClose}
-                  >
-                    <Text style={styles.cancelButtonText}>Annuler</Text>
-                  </Pressable>
+                  {showDescription && (
+                    <TextInput
+                      style={[styles.modalInput, styles.textareaInput]}
+                      placeholder="Description"
+                      placeholderTextColor="#888"
+                      value={cardDesc}
+                      onChangeText={setCardDesc}
+                      multiline
+                      numberOfLines={3}
+                    />
+                  )}
 
-                  <Pressable
-                    style={[styles.modalButton, styles.confirmButton]}
-                    onPress={onCreate}
-                  >
-                    <Text style={styles.confirmButtonText}>Créer</Text>
-                  </Pressable>
+                  {showChecklist && (
+                    <View style={styles.checklistInputContainer}>
+                      <TextInput
+                        style={styles.modalInput}
+                        placeholder="Nom de la checklist"
+                        placeholderTextColor="#888"
+                        value={checklistName}
+                        onChangeText={setChecklistName}
+                      />
+
+                      {checklistItems.map((item, index) => (
+                        <View key={index} style={styles.checklistItemInputRow}>
+                          <TextInput
+                            style={[styles.modalInput, styles.checklistItemInput]}
+                            placeholder={`Élément ${index + 1}`}
+                            placeholderTextColor="#888"
+                            value={item}
+                            onChangeText={(text) => updateChecklistItem(index, text)}
+                          />
+
+                          <Pressable
+                            style={styles.checklistItemRemoveButton}
+                            onPress={() => removeChecklistItem(index)}
+                          >
+                            <AntDesign name="close" size={16} color="#FF4A4A" />
+                          </Pressable>
+                        </View>
+                      ))}
+
+                      <Pressable
+                        style={styles.addChecklistItemButton}
+                        onPress={addChecklistItem}
+                      >
+                        <AntDesign name="plus" size={16} color="#FFA500" />
+                        <Text style={styles.addChecklistItemText}>Ajouter un élément</Text>
+                      </Pressable>
+                    </View>
+                  )}
+
+                  <View style={styles.modalButtonsContainer}>
+                    <Pressable
+                      style={[styles.modalButton, styles.cancelButton]}
+                      onPress={onClose}
+                    >
+                      <Text style={styles.cancelButtonText}>Annuler</Text>
+                    </Pressable>
+
+                    <Pressable
+                      style={[styles.modalButton, styles.confirmButton]}
+                      onPress={handleCreate}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      ) : (
+                        <Text style={styles.confirmButtonText}>Créer</Text>
+                      )}
+                    </Pressable>
+                  </View>
                 </View>
-              </View>
-            </View>
+              </ScrollView>
+            </KeyboardAvoidingView>
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
