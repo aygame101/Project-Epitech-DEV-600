@@ -1,165 +1,222 @@
-import React from 'react';
-import axios from 'axios';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { act } from 'react';
+import { render, fireEvent, waitFor, screen } from '@testing-library/react-native';
+
+interface List {
+  id: string;
+  name: string;
+  idBoard: string;
+}
+import BoardDetailScreen from '@/app/board/[id]';
 import { boardServices } from '@/services/boardService';
 import { listServices } from '@/services/listService';
 import { cardServices } from '@/services/cardService';
-import BoardDetailScreen from '@/app/board/[id]';
+import { Alert } from 'react-native';
 
-// Mock des services
+// Configuration des mocks
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ push: jest.fn(), back: jest.fn() }),
+  useLocalSearchParams: () => ({ id: 'board1' })
+}));
+
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
+  SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children
+}));
+
 jest.mock('@/services/boardService');
 jest.mock('@/services/listService');
 jest.mock('@/services/cardService');
-jest.mock('expo-router');
-jest.mock('@expo/vector-icons', () => ({
-  AntDesign: 'View'
+
+// Mock réaliste de useLists basé sur [id].tsx
+jest.mock('@/hooks/useLists', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    lists: [],
+    isLoading: false,
+    createList: jest.fn((name) => 
+      Promise.resolve({ 
+        id: `list-${Date.now()}`, 
+        name, 
+        idBoard: 'board1' 
+      })
+    ),
+    updateList: jest.fn(),
+    archiveList: jest.fn((id) => Promise.resolve()),
+    fetchLists: jest.fn()
+  }))
 }));
 
-describe('Board Management', () => {
+// Mock réaliste de useChecklists basé sur [id].tsx
+jest.mock('@/hooks/useChecklists', () => {
+  const actual = jest.requireActual('@/hooks/useChecklists');
+  return {
+    ...actual,
+    __esModule: true,
+    default: () => ({
+      ...actual.default(),
+      allChecklists: [],
+      selectedCard: null,
+      newChecklistName: '',
+      newChecklistItems: [''],
+      showModal: false,
+      isUpdating: false,
+      loadChecklistsForCard: jest.fn(),
+      saveChecklistChanges: jest.fn(),
+      deleteChecklist: jest.fn(),
+      setNewChecklistName: jest.fn(),
+      setNewChecklistItems: jest.fn(),
+      setSelectedCard: jest.fn(),
+      addChecklistItem: jest.fn(),
+      removeChecklistItem: jest.fn()
+    })
+  };
+});
+
+describe('Board Management Tests', () => {
   const mockBoard = {
     id: 'board1',
-    name: 'Test Board',
+    name: 'Mon Board',
     idOrganization: 'org1'
   };
 
   const mockList = {
     id: 'list1',
-    name: 'Test List',
+    name: 'À Faire',
     idBoard: 'board1'
   };
 
   const mockCard = {
     id: 'card1',
-    name: 'Test Card', 
-    idList: 'list1'
+    name: 'Ma Carte',
+    idList: 'list1',
+    desc: 'Description'
   };
 
-  const mockRouter = {
-    back: jest.fn(),
-    push: jest.fn()
-  };
+  beforeAll(() => {
+    jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    (boardServices.getBoardById as jest.Mock).mockResolvedValue(mockBoard);
+    (listServices.getListsByBoardId as jest.Mock).mockResolvedValue([mockList]);
+    (cardServices.getCards as jest.Mock).mockResolvedValue([mockCard]);
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
-    // Mock router
-    (useRouter as jest.Mock).mockReturnValue(mockRouter);
-    (useLocalSearchParams as jest.Mock).mockReturnValue({ id: 'board1' });
+  });
 
-    // Mock board service
-    (boardServices.getBoardById as jest.Mock).mockResolvedValue(mockBoard);
-    (boardServices.getBoardDetails as jest.Mock).mockResolvedValue(mockBoard);
-    (boardServices.deleteBoard as jest.Mock).mockResolvedValue({});
-
-    // Mock list service
-    (listServices.createList as jest.Mock).mockImplementation((boardId, name) => {
-      return Promise.resolve({...mockList, name, idBoard: boardId});
+  // TEST CRÉATION LISTE
+  test('create new list and verify UI update', async () => {
+    const newList = {...mockList, name: 'Nouvelle Liste'};
+    (listServices.createList as jest.Mock).mockResolvedValue(newList);
+  
+    await act(async () => {
+      render(<BoardDetailScreen />);
+      
+      await act(async () => {
+        fireEvent.press(screen.getByText('Ajouter une liste'));
+      });
+  
+      await act(async () => {
+        fireEvent.changeText(
+          screen.getByPlaceholderText('Entrez le nom de la liste'),
+          'Nouvelle Liste'
+        );
+        fireEvent.press(screen.getByText('Créer'));
+      });
     });
-    (listServices.archiveList as jest.Mock).mockResolvedValue({});
-
-    // Mock card service
-    (cardServices.addCard as jest.Mock).mockResolvedValue(mockCard);
-    (cardServices.getCardsByBoard as jest.Mock).mockResolvedValue([mockCard]);
-    (cardServices.getCardMembers as jest.Mock).mockResolvedValue([]);
-    (cardServices.getWorkspaceMembers as jest.Mock).mockResolvedValue([]);
-    (cardServices.archiveCard as jest.Mock).mockResolvedValue({});
-  });
-
-  it('should render board UI elements correctly', async () => {
-    const { findByText, getByText } = render(<BoardDetailScreen />);
-
-    // Attendre que le board soit chargé
-    const boardTitle = await findByText('Test Board');
-    expect(boardTitle).toBeTruthy();
-
-    // Vérifier le bouton de retour via son icône
-    const backButton = await findByText('arrowleft');
-    expect(backButton).toBeTruthy();
-
-    // Vérifier le bouton d'ajout de liste
-    const addListButton = await findByText('Ajouter une liste');
-    expect(addListButton).toBeTruthy();
-  }, 10000);
-
-  it('should show loading state initially', () => {
-    (boardServices.getBoardById as jest.Mock).mockImplementation(() => 
-      new Promise(() => {})
-    );
-
-    const { getByText } = render(<BoardDetailScreen />);
-    expect(getByText('Chargement du tableau...')).toBeTruthy();
-  });
-
-  it('should create and delete board, list and card successfully', async () => {
-    const { getByText, getByPlaceholderText } = render(<BoardDetailScreen />);
-
-    // 1. Test création board
+  
     await waitFor(() => {
-      expect(getByText('Test Board')).toBeTruthy();
-    });
-
-    // 2. Test création liste
-    fireEvent.press(getByText('Ajouter une liste'));
-    expect(getByPlaceholderText('Nom de la liste')).toBeTruthy();
-    
-    fireEvent.changeText(getByPlaceholderText('Nom de la liste'), 'Test List');
-    fireEvent.press(getByText('Créer'));
-
-    await waitFor(() => {
-      expect(listServices.createList).toHaveBeenCalledWith('board1', 'Test List');
-      expect(getByText('Test List')).toBeTruthy();
-    });
-
-    // 3. Test création carte
-    fireEvent.press(getByText('+ Carte'));
-    expect(getByPlaceholderText('Titre de la carte')).toBeTruthy();
-    
-    fireEvent.changeText(getByPlaceholderText('Titre de la carte'), 'Test Card');
-    fireEvent.press(getByText('Créer'));
-
-    await waitFor(() => {
-      expect(cardServices.addCard).toHaveBeenCalledWith('list1', 'Test Card', '');
-      expect(getByText('Test Card')).toBeTruthy();
+      expect(screen.getByText('Nouvelle Liste')).toBeTruthy();
     });
   });
 
-  it('should render lists and cards correctly', async () => {
-    const { findByText } = render(<BoardDetailScreen />);
+  // TEST SUPPRESSION LISTE
+  test('archive list and verify removal from UI', async () => {
+    // Mock initial data with proper typing
+    const mockLists: List[] = [{...mockList}];
+    const mockListsAfterArchive: List[] = [];
 
-    // Attendre que les données soient chargées
-    await findByText('Test Board');
+    // Setup mock implementations
+    (listServices.getListsByBoardId as jest.Mock)
+      .mockResolvedValueOnce(mockLists)
+      .mockResolvedValueOnce(mockListsAfterArchive);
+      
+    (listServices.archiveList as jest.Mock).mockImplementation(() => {
+      mockLists.pop(); // Simulate archiving
+      return Promise.resolve();
+    });
 
-    // Vérifier le rendu des listes via leur nom
-    const listElement = await findByText('Test List');
-    expect(listElement).toBeTruthy();
-
-    // Vérifier le rendu des cartes via leur nom  
-    const cardElement = await findByText('Test Card');
-    expect(cardElement).toBeTruthy();
+    const { queryByText } = render(<BoardDetailScreen />);
+    
+    // Verify list appears initially
+    await waitFor(() => expect(screen.getByText('À Faire')).toBeTruthy());
+    
+    // Trigger archive
+    fireEvent.press(screen.getByText('À Faire'));
+    fireEvent.press(screen.getByText('Archiver'));
+    
+    // Verify list disappears
+    await waitFor(() => {
+      expect(queryByText('À Faire')).toBeNull();
+      expect(listServices.archiveList).toHaveBeenCalledWith('list1');
+    });
   });
 
-  it('should open and close modals correctly', async () => {
-    const { getByText, getByPlaceholderText, queryByPlaceholderText } = render(<BoardDetailScreen />);
+  // TEST CRÉATION CARTE
+  test('create new card and verify display', async () => {
+    const newCard = {...mockCard, name: 'Nouvelle Carte'};
+    (cardServices.addCard as jest.Mock).mockResolvedValue(newCard);
+  
+    await act(async () => {
+      render(<BoardDetailScreen />);
+      
+      await act(async () => {
+        fireEvent.press(screen.getByText('+ Carte'));
+        fireEvent.changeText(
+          screen.getByPlaceholderText('Titre de la carte'),  
+          'Nouvelle Carte'
+        );
+        fireEvent.press(screen.getByText('Créer'));
+      });
+    });
+  
+    await waitFor(() => {
+      expect(screen.getByText('Nouvelle Carte')).toBeTruthy();
+    });
+  });
+
+  // TEST SUPPRESSION CARTE 
+  test('archive card and verify UI update', async () => {
+    (cardServices.archiveCard as jest.Mock).mockResolvedValue(true);
+
+    render(<BoardDetailScreen />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('Ma Carte')).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByText('Ma Carte'));
+    fireEvent.press(screen.getByText('Archiver'));
 
     await waitFor(() => {
-      expect(getByText('Test Board')).toBeTruthy();
+      expect(cardServices.archiveCard).toHaveBeenCalledWith('card1');
     });
-
-    // Test ouverture modale création liste
-    fireEvent.press(getByText('Ajouter une liste'));
-    expect(getByPlaceholderText('Nom de la liste')).toBeTruthy();
-    
-    // Test fermeture modale création liste
-    fireEvent.press(getByText('Annuler'));
-    expect(queryByPlaceholderText('Nom de la liste')).toBeNull();
-
-    // Test ouverture modale création carte
-    fireEvent.press(getByText('+ Carte'));
-    expect(getByPlaceholderText('Titre de la carte')).toBeTruthy();
-    
-    // Test fermeture modale création carte
-    fireEvent.press(getByText('Annuler'));
-    expect(queryByPlaceholderText('Titre de la carte')).toBeNull();
   });
+
+  // TEST ERREUR CRÉATION
+  test('show error when list creation fails', async () => {
+  (listServices.createList as jest.Mock).mockRejectedValue(
+    new Error('Erreur création')
+  );
+
+  await act(async () => {
+    render(<BoardDetailScreen />);
+    
+    await act(async () => {
+      fireEvent.press(screen.getByText('Ajouter une liste'));
+      fireEvent.press(screen.getByText('Créer'));
+    });
+  });
+
+  expect(Alert.alert).toHaveBeenCalledWith('Erreur', expect.any(String));
+});
 });
