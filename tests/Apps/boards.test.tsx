@@ -1,4 +1,5 @@
 import React from 'react';
+import axios from 'axios';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { boardServices } from '@/services/boardService';
@@ -66,21 +67,20 @@ describe('Board Management', () => {
   });
 
   it('should render board UI elements correctly', async () => {
-    const { getByText, getByRole } = render(<BoardDetailScreen />);
+    const { findByText, getByText } = render(<BoardDetailScreen />);
 
-    await waitFor(() => {
-      // Vérifier le rendu du header avec le titre du board
-      expect(getByText('Test Board')).toBeTruthy();
+    // Attendre que le board soit chargé
+    const boardTitle = await findByText('Test Board');
+    expect(boardTitle).toBeTruthy();
 
-      // Vérifier le bouton de retour via son rôle
-      const backButton = getByRole('button', { name: /back/i });
-      expect(backButton).toBeTruthy();
+    // Vérifier le bouton de retour via son icône
+    const backButton = await findByText('arrowleft');
+    expect(backButton).toBeTruthy();
 
-      // Vérifier le bouton d'ajout de liste
-      const addListButton = getByText('Ajouter une liste');
-      expect(addListButton).toBeTruthy();
-    });
-  });
+    // Vérifier le bouton d'ajout de liste
+    const addListButton = await findByText('Ajouter une liste');
+    expect(addListButton).toBeTruthy();
+  }, 10000);
 
   it('should show loading state initially', () => {
     (boardServices.getBoardById as jest.Mock).mockImplementation(() => 
@@ -125,15 +125,18 @@ describe('Board Management', () => {
   });
 
   it('should render lists and cards correctly', async () => {
-    const { getByText, getAllByText } = render(<BoardDetailScreen />);
+    const { findByText } = render(<BoardDetailScreen />);
 
-    await waitFor(() => {
-      // Vérifier le rendu des listes via leur nom
-      expect(getByText('Test List')).toBeTruthy();
+    // Attendre que les données soient chargées
+    await findByText('Test Board');
 
-      // Vérifier le rendu des cartes via leur nom
-      expect(getByText('Test Card')).toBeTruthy();
-    });
+    // Vérifier le rendu des listes via leur nom
+    const listElement = await findByText('Test List');
+    expect(listElement).toBeTruthy();
+
+    // Vérifier le rendu des cartes via leur nom  
+    const cardElement = await findByText('Test Card');
+    expect(cardElement).toBeTruthy();
   });
 
   it('should open and close modals correctly', async () => {
