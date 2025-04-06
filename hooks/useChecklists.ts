@@ -54,17 +54,17 @@ export const useChecklists = (): UseChecklistsReturn => {
     try {
       console.log(`Loading checklists for card: ${cardId}, preserveIndex: ${preserveIndex}`);
       const checklists = await cardServices.getCardChecklists(cardId);
-      
+
       // Format the checklists to match our expected format
       const formattedChecklists = checklists.map(cl => ({
         id: cl.id,
         name: cl.name,
         items: cl.checkItems.map(item => item.name)
       }));
-      
+
       console.log(`Loaded ${formattedChecklists.length} checklists`);
       setAllChecklists(formattedChecklists);
-      
+
       if (formattedChecklists.length > 0) {
         if (!preserveIndex) {
           console.log('Setting to first checklist (index 0)');
@@ -80,7 +80,7 @@ export const useChecklists = (): UseChecklistsReturn => {
             setNewChecklistItems([...formattedChecklists[currentChecklistIndex].items]);
           } else {
             console.log(`Current index ${currentChecklistIndex} is out of bounds, falling back to first checklist`);
-            setCurrentChecklistIndex(0); 
+            setCurrentChecklistIndex(0);
             setNewChecklistName(formattedChecklists[0].name);
             setNewChecklistItems(formattedChecklists[0].items);
           }
@@ -91,7 +91,7 @@ export const useChecklists = (): UseChecklistsReturn => {
         setNewChecklistItems(['']);
         setCurrentChecklistIndex(0);
       }
-      
+
       return formattedChecklists;
     } catch (error) {
       console.error('Error loading checklists:', error);
@@ -126,16 +126,16 @@ export const useChecklists = (): UseChecklistsReturn => {
     if (!selectedCard) return false;
     try {
       if (!newChecklistName.trim()) throw new Error('Le nom est requis');
-  
+
       const checklist = await cardServices.addChecklistToCard(
         selectedCard,
         newChecklistName
       );
-  
+
       for (const item of newChecklistItems.filter(i => i.trim())) {
         await cardServices.addChecklistItem(checklist.id, item);
       }
-  
+
       setNewChecklistName('');
       setNewChecklistItems(['']);
       setShowModal(false);
@@ -162,19 +162,21 @@ export const useChecklists = (): UseChecklistsReturn => {
   // Save changes to an existing checklist
   const saveChecklistChanges = async () => {
     if (!selectedCard) {
+      console.error('No card selected');
       Alert.alert('Erreur', 'Aucune carte sélectionnée');
       return false;
     }
-    
+
     setIsUpdating(true);
-  
+
     try {
       console.log(`Saving checklist changes with currentChecklistIndex: ${currentChecklistIndex}`);
-      
+      console.log(`Total checklists available: ${allChecklists.length}`);
+
       // Vérifier que l'index courant est valide
       if (currentChecklistIndex < 0 || currentChecklistIndex >= allChecklists.length) {
         console.error('Invalid current checklist index:', currentChecklistIndex);
-        Alert.alert('Erreur', 'Aucune checklist sélectionnée');
+        Alert.alert('Erreur', `Index de checklist invalide: ${currentChecklistIndex}, total: ${allChecklists.length}`);
         return false;
       }
 
@@ -187,10 +189,11 @@ export const useChecklists = (): UseChecklistsReturn => {
       }
 
       console.log('Saving checklist - Current index:', currentChecklistIndex);
-      console.log('Checklist ID:', checklistToUpdate.id); 
+      console.log('Checklist ID:', checklistToUpdate.id);
       console.log('Original Name:', checklistToUpdate.name);
       console.log('New Name:', newChecklistName);
-  
+      console.log('Checklist Items:', JSON.stringify(newChecklistItems));
+
       // Cas 1: Nouvelle checklist (ID temporaire)
       if (checklistToUpdate.id.startsWith('temp-')) {
         console.log('Creating new checklist...');
@@ -200,15 +203,15 @@ export const useChecklists = (): UseChecklistsReturn => {
             newChecklistName
           );
           console.log(`New checklist created with ID: ${checklist.id}`);
-  
+
           // Ajouter tous les éléments non vides
           const validItems = newChecklistItems.filter(i => i.trim());
           console.log(`Adding ${validItems.length} items to new checklist`);
-          
+
           for (const item of validItems) {
             await cardServices.addChecklistItem(checklist.id, item);
           }
-  
+
           // Mise à jour de l'état local
           const updatedChecklists = [...allChecklists];
           updatedChecklists[currentChecklistIndex] = {
@@ -221,7 +224,7 @@ export const useChecklists = (): UseChecklistsReturn => {
           console.error('Failed to create new checklist:', error);
           throw error;
         }
-      } 
+      }
       // Cas 2: Checklist existante
       else {
         // Vérifier qu'on a bien la checklist sélectionnée
@@ -231,7 +234,7 @@ export const useChecklists = (): UseChecklistsReturn => {
         }
 
         console.log(`Updating existing checklist with ID: ${selectedChecklist.id} at index ${currentChecklistIndex}`);
-        
+
         // Mise à jour du nom si nécessaire
         if (selectedChecklist.name !== newChecklistName) {
           console.log(`Updating checklist name from "${selectedChecklist.name}" to "${newChecklistName}"`);
@@ -243,15 +246,15 @@ export const useChecklists = (): UseChecklistsReturn => {
             throw error;
           }
         }
-  
+
         // Récupération des éléments existants pour comparaison
         console.log('Fetching current checklist items from server');
         const serverChecklists = await cardServices.getCardChecklists(selectedCard);
         const matchingChecklist = serverChecklists.find(cl => cl.id === selectedChecklist.id);
-  
+
         if (matchingChecklist) {
           console.log(`Found matching checklist on server with ${matchingChecklist.checkItems.length} items`);
-          
+
           // Synchronisation des éléments
           try {
             await syncChecklistItems(selectedChecklist.id, newChecklistItems, matchingChecklist.checkItems);
@@ -260,7 +263,7 @@ export const useChecklists = (): UseChecklistsReturn => {
             console.error('Failed to sync checklist items:', error);
             throw error;
           }
-          
+
           // Mise à jour de l'état local
           const updatedChecklists = [...allChecklists];
           updatedChecklists[currentChecklistIndex] = {
@@ -274,11 +277,11 @@ export const useChecklists = (): UseChecklistsReturn => {
           throw new Error('Checklist not found on server');
         }
       }
-  
+
       // Force reload from server to ensure everything is synced
       console.log('Reloading checklists from server to confirm changes');
       await loadChecklistsForCard(selectedCard, true); // Préserver l'index actuel
-      
+
       setIsUpdating(false);
       return true;
     } catch (error) {
@@ -289,38 +292,38 @@ export const useChecklists = (): UseChecklistsReturn => {
     }
   };
 
-  // New function to sync checklist items (handles additions, updates, and removals)
   const syncChecklistItems = async (
     checklistId: string,
     newItems: string[],
     existingItems: ChecklistItem[]
   ) => {
     try {
-      if (!checklistId) throw new Error('Missing checklist ID');
+      if (!checklistId) {
+        console.error('Missing checklist ID');
+        throw new Error('Missing checklist ID');
+      }
+
+      console.log(`Syncing items for checklist ID: ${checklistId}`);
+      console.log(`New items (${newItems.length}):`, JSON.stringify(newItems));
+      console.log(`Existing items (${existingItems.length}):`, JSON.stringify(existingItems));
 
       const validItems = newItems.filter(item => item.trim());
-      
-      // 1. Mettre à jour les items existants
-      for (let i = 0; i < Math.min(validItems.length, existingItems.length); i++) {
-        if (validItems[i] !== existingItems[i].name) {
-          await cardServices.updateChecklistItem(
-            checklistId,
-            existingItems[i].id,
-            validItems[i]
-          );
-        }
+      console.log(`Valid items after filtering (${validItems.length}):`, JSON.stringify(validItems));
+
+      // Alternative : supprimer tous les items existants et ajouter les nouveaux
+      // 1. Supprimer tous les items existants
+      for (const item of existingItems) {
+        console.log(`Deleting item: ${item.id} - ${item.name}`);
+        await cardServices.deleteChecklistItem(checklistId, item.id);
       }
 
-      // 2. Ajouter les nouveaux items
-      for (let i = existingItems.length; i < validItems.length; i++) {
-        await cardServices.addChecklistItem(checklistId, validItems[i]);
+      // 2. Ajouter tous les nouveaux items
+      for (const item of validItems) {
+        console.log(`Adding new item: ${item}`);
+        await cardServices.addChecklistItem(checklistId, item);
       }
 
-      // 3. Supprimer les items en trop
-      for (let i = existingItems.length - 1; i >= validItems.length; i--) {
-        await cardServices.deleteChecklistItem(checklistId, existingItems[i].id);
-      }
-
+      console.log('All checklist items successfully synchronized');
       return true;
     } catch (error) {
       console.error('Sync failed:', error);
@@ -343,11 +346,11 @@ export const useChecklists = (): UseChecklistsReturn => {
   const deleteChecklist = async (checklistId: string) => {
     try {
       await cardServices.deleteChecklist(checklistId);
-      
+
       // Update our local state
       const updatedChecklists = allChecklists.filter(cl => cl.id !== checklistId);
       setAllChecklists(updatedChecklists);
-      
+
       if (updatedChecklists.length > 0) {
         setCurrentChecklistIndex(0);
         setNewChecklistName(updatedChecklists[0].name);
@@ -356,7 +359,7 @@ export const useChecklists = (): UseChecklistsReturn => {
         setNewChecklistName('');
         setNewChecklistItems(['']);
       }
-      
+
       return true;
     } catch (error) {
       console.error('Delete checklist failed:', error);
@@ -380,7 +383,7 @@ export const useChecklists = (): UseChecklistsReturn => {
       console.error('Invalid checklist index:', index);
       return false;
     }
-    
+
     const checklist = allChecklists[index];
     setCurrentChecklistIndex(index);
     setNewChecklistName(checklist.name);
@@ -392,7 +395,7 @@ export const useChecklists = (): UseChecklistsReturn => {
   return {
     showModal,
     setShowModal,
-    newChecklistName, 
+    newChecklistName,
     setNewChecklistName,
     newChecklistItems,
     setNewChecklistItems,
@@ -402,7 +405,7 @@ export const useChecklists = (): UseChecklistsReturn => {
     setCurrentChecklistIndex,
     addChecklistItem,
     updateChecklistItem,
-    removeChecklistItem, 
+    removeChecklistItem,
     selectedCard,
     setSelectedCard,
     addNewChecklist,
