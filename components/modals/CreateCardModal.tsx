@@ -18,7 +18,7 @@ import { styles } from '@/styles/idStyle';
 interface CreateCardModalProps {
   visible: boolean;
   onClose: () => void;
-  onCreate: () => Promise<void>; // Assume onCreate returns a promise
+  onCreate: () => Promise<void>;
   cardName: string;
   setCardName: (name: string) => void;
   cardDesc: string;

@@ -18,7 +18,7 @@ import { styles } from '@/styles/idStyle';
 interface ChecklistModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: () => Promise<void>; // Assume onSubmit returns a promise
+  onSubmit: () => Promise<void>;
   name: string;
   setName: (name: string) => void;
   items: string[];

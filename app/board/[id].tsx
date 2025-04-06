@@ -218,7 +218,6 @@ export default function BoardDetailScreen() {
       setEditingCardDesc(cardToEdit.desc || '');
       
       try {
-        // Déléguer toute la gestion des checklists au hook useChecklists
         checklist.setSelectedCard(cardId);
         await checklist.loadChecklistsForCard(cardId, true);
         setShowEditCardModal(true);
@@ -246,13 +245,11 @@ export default function BoardDetailScreen() {
     try {
       if (!editingCardId) return;
       
-      // First save checklist changes if any
       if (showChecklist && checklist.saveChecklistChanges) {
         checklist.setSelectedCard(editingCardId);
         await checklist.saveChecklistChanges();
       }
       
-      // Then save card changes
       await cardServices.updateCard(editingCardId, {
         name: editingCardName,
         desc: editingCardDesc
@@ -570,8 +567,7 @@ export default function BoardDetailScreen() {
                       [viewingCard.id]: transformedChecklists
                     };
                   });
-                  
-                  // Rafraîchir les données de la carte
+
                   await fetchChecklistsForCards();
                   await fetchCards();
                 }
@@ -641,7 +637,7 @@ export default function BoardDetailScreen() {
         </ScrollView>
       )}
 
-      {/* List creation modal */}
+      {/* creation listes */}
       <CreateListModal
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -650,7 +646,7 @@ export default function BoardDetailScreen() {
         setListName={setNewListName}
       />
 
-      {/* List edit modal */}
+      {/* edition listes */}
       <EditListModal
         visible={showEditModal}
         onClose={() => setShowEditModal(false)}
@@ -659,7 +655,7 @@ export default function BoardDetailScreen() {
         setListName={setEditingListName}
       />
 
-      {/* Card creation modal */}
+      {/* creation cartes */}
       <CreateCardModal
         visible={showCardModal}
         onClose={() => {
@@ -684,7 +680,7 @@ export default function BoardDetailScreen() {
         removeChecklistItem={checklist.removeChecklistItem}
       />
 
-      {/* Checklist modal */}
+      {/* checklist */}
       {checklist.selectedCard && (
         <ChecklistModal
           visible={checklist.showModal}
@@ -700,7 +696,7 @@ export default function BoardDetailScreen() {
         />
       )}
 
-      {/* Card edit modal */}
+      {/* edition cartes */}
       <EditCardModal
         visible={showEditCardModal}
         onClose={() => {
@@ -742,13 +738,12 @@ export default function BoardDetailScreen() {
         }}
         deleteChecklist={checklist.deleteChecklist}
         isUpdating={checklist.isUpdating}
-        // Explicitly pass hook setters for better traceability
         hookSetCurrentChecklistIndex={checklist.setCurrentChecklistIndex}
         hookSetNewChecklistName={checklist.setNewChecklistName}
         hookSetNewChecklistItems={checklist.setNewChecklistItems}
       />
 
-      {/* Card View modal */}
+      {/* visualisation cartes */}
       <ViewCardModal
         visible={showCardViewModal} 
         onClose={() => setShowCardViewModal(false)}
@@ -762,7 +757,6 @@ export default function BoardDetailScreen() {
         onDeleteChecklist={handleDeleteChecklist}
       />
 
-      {/* Assignment modal */}
       {(currentCardId && showAssignModal) && 
         <AssignUserModal
           visible={showAssignModal}

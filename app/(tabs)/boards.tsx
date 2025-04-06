@@ -26,22 +26,19 @@ export default function BoardsScreen() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [boardToDelete, setBoardToDelete] = useState<string | null>(null);
   
-  // New states for workspace selection
+  // workspace selection
   const [workspaceModalVisible, setWorkspaceModalVisible] = useState(false);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
   const [selectedWorkspaceName, setSelectedWorkspaceName] = useState<string | null>(null);
 
-  // Effet classique qui charge les tableaux au montage initial
   useEffect(() => {
     fetchBoards();
   }, []);
 
-  // Nouvel effet qui recharge les tableaux chaque fois que l'écran est focalisé
   useFocusEffect(
     useCallback(() => {
       fetchBoards();
       return () => {
-        // Cleanup si nécessaire
       };
     }, [])
   );

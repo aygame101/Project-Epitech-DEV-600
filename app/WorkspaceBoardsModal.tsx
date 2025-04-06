@@ -41,7 +41,7 @@ const WorkspaceBoardsModal = () => {
   const [deletingBoardId, setDeletingBoardId] = useState<string | null>(null);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   
-  // État pour le modal de suppression
+  // suppression
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [boardToDelete, setBoardToDelete] = useState<string | null>(null);
 
@@ -94,7 +94,6 @@ const WorkspaceBoardsModal = () => {
 
     setIsCreating(true);
     try {
-      // Pass the workspaceId to createBoard
       const newBoard = await boardServices.createBoard(newBoardName, isKanban, workspaceId);
       setBoards([...boards, newBoard]);
       setNewBoardName('');
@@ -147,13 +146,11 @@ const WorkspaceBoardsModal = () => {
     }
   };
 
-  // Cette fonction affiche simplement le modal de confirmation
   const showDeleteConfirmation = (boardId: string) => {
     setBoardToDelete(boardId);
     setDeleteModalVisible(true);
   };
 
-  // Cette fonction sera exécutée après confirmation
   const confirmDeleteBoard = async () => {
     if (!boardToDelete) return;
     
