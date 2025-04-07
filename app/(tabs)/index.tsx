@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Alert, FlatList, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { fetchWorkspaces, createWorkspace, deleteWorkspace, updateWorkspace } from '@/services/indexService';
-import { fetchWeatherByCoordinates, WeatherData } from '@/services/weatherService';
 import { styles } from '../../styles/indexStyle';
 
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
@@ -17,36 +16,13 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [editingWorkspace, setEditingWorkspace] = useState<{id: string, displayName: string} | null>(null);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
-  // météo
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [weatherLoading, setWeatherLoading] = useState(true);
-  const [weatherError, setWeatherError] = useState<string | null>(null);
-
   // suppression
   const [workspaceToDelete, setWorkspaceToDelete] = useState<{id: string, name: string} | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadWorkspaces();
-    fetchWeatherData();
   }, []);
-
-  const fetchWeatherData = async () => {
-    setWeatherLoading(true);
-    try {
-      // Paris
-      const lat = 48.8566;
-      const lon = 2.3522;
-      
-      const data = await fetchWeatherByCoordinates(lat, lon);
-      setWeather(data);
-    } catch (error) {
-      console.error('Erreur détaillée:', error);
-      setWeatherError(error instanceof Error ? error.message : 'Erreur inconnue');
-    } finally {
-      setWeatherLoading(false);
-    }
-  };
 
   const loadWorkspaces = async () => {
     setIsLoading(true);
@@ -155,11 +131,7 @@ export default function HomeScreen() {
         {/* titre + météo */}
         <View style={styles.headerContainer}>
           <Text style={styles.title}>TrellUwU</Text>
-          <WeatherWidget 
-            weather={weather} 
-            loading={weatherLoading} 
-            error={weatherError} 
-          />
+          <WeatherWidget />
         </View>
         
         <View style={styles.createContainer}>

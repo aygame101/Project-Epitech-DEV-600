@@ -4,7 +4,6 @@ Créer une app de gestion de projet à la Trello.
 Date de rendu : 6 avril 2025 à 23h42  
   
 ## Gestion Avancement du Projet
-🔵 à vérifier quand meme  
 | Avancement | Tâches |
 | :--------- |:------ |
 | 🟢 Done | Possibilité de créer, lire/afficher, modifier et supprimer un espace de travail |
@@ -18,16 +17,16 @@ Date de rendu : 6 avril 2025 à 23h42
 | 🟢 Done | Le rendu offre une UX et une UI de haute qualité et soignées : les interfaces sont bien conçues pour offrir une bonne expérience à ses utilisateurs |
 | 🟢 Done | Les étudiants peuvent justifier leurs choix d'UI/UX (style, couleurs, icônes, éléments, ...) |
 | 🟢 Done | Le rendu est fonctionnel |
-| 🟠 In progress | Le code est facilement maintenable (noms lisibles, atomicité des fonctions, structure de code claire, syntaxe propre) |
-| 🟠 In progress | Au moins 3 tests unitaires sont livrés dans le dépôt | test UI
-| 🟠 In progress | Une séquence de tests unitaires est fournie et facilement exécutable |
+| 🟢 Done | Le code est facilement maintenable (noms lisibles, atomicité des fonctions, structure de code claire, syntaxe propre) |
+| 🟢 Done | Au moins 3 tests unitaires sont livrés dans le dépôt | test UI
+| 🟢 Done | Une séquence de tests unitaires est fournie et facilement exécutable |
 | 🟢 Done | Les étudiants intègrent un framework de test dans leur projet pour rendre leur stratégie de test plus complète | Jest
 | 🟢 Done | Les étudiants utilisent un outil de versioning avec un workflow approprié, incluant une stratégie de branchement, des commits réguliers, des messages descriptifs et un fichier gitignore |
 | 🟢 Done | Les étudiants fournissent un fichier README résumant le projet et son utilisation (prérequis, installation, déploiement, frameworks, ...) |
-| 🟠 In progress | Au moins un diagramme est fourni pour illustrer et expliquer les parties importantes de la solution (architecture (uml), diag classe, diag séquence, cycle de vie, ...) | peut etre UML : lucidchart
+| 🟢 Done | Au moins un diagramme est fourni pour illustrer et expliquer les parties importantes de la solution (architecture (uml), diag classe, diag séquence, cycle de vie, ...) | peut etre UML : lucidchart
 | 🟢 Done | Le projet est présenté de manière claire et professionnelle, en utilisant un support pertinent (diapositives et/ou démo) |
 | 🟢 Done | Les étudiants étayent leur présentation ou leurs choix techniques avec des arguments bien structurés, fournissant des explications logiques et des preuves |
-| 🟠 In progress | Toutes les tâches ont été effectuées |
+| 🟢 Done | Toutes les tâches ont été effectuées |
 
 
 ### Installation du projet
@@ -37,6 +36,10 @@ si probleme ```npm install --legacy-peer-deps```
   
 si probleme windows : ```npx expo install expo-router react-native-screens react-native-safe-area-context @react-navigation/native @react-navigation/native-stack```  
 ```npx expo start```  
+
+
+## Historique commit complet dispo ici :
+[https://github.com/aygame101/Project-Epitech-DEV-600](https://github.com/aygame101/Project-Epitech-DEV-600)
 
 
 In the output, you'll find options to open the app in a

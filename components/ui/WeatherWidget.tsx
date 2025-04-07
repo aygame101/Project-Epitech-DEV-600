@@ -1,14 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { WeatherData } from '@/services/weatherService';
+import { fetchWeatherByCity, WeatherData } from '@/services/weatherService';
 
-interface WeatherWidgetProps {
-  weather: WeatherData | null;
-  loading: boolean;
-  error: string | null;
-}
+const WeatherWidget: React.FC = () => {
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-const WeatherWidget: React.FC<WeatherWidgetProps> = ({ weather, loading, error }) => {
+  useEffect(() => {
+    const loadWeather = async () => {
+      try {
+        // Ville par défaut : Paris
+        const weatherData = await fetchWeatherByCity('Paris');
+        setWeather(weatherData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erreur météo');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadWeather();
+  }, []);
   if (loading) {
     return (
       <View style={styles.widget}>
@@ -50,7 +62,7 @@ const WeatherWidget: React.FC<WeatherWidgetProps> = ({ weather, loading, error }
 
 const styles = StyleSheet.create({
   widget: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: '#0000',
     borderRadius: 10,
     padding: 10,
     alignItems: 'center',

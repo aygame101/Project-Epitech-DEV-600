@@ -26,7 +26,7 @@ interface ViewCardModalProps {
   onAssignCard: (cardId: string) => void;
   onOpenChecklistModal: (cardId: string) => void;
   onToggleChecklistItem: (cardId: string, checkItemId: string, currentState: string) => void;
-  onDeleteChecklist: (checklistId: string) => Promise<boolean>; // Nouveau prop pour la suppression
+  onDeleteChecklist: (checklistId: string) => Promise<boolean>; 
 }
 
 export function ViewCardModal({

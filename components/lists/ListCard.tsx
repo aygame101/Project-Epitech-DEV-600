@@ -58,7 +58,7 @@ export function ListCard({
           <Text style={styles.listCardActionText}>+ Carte</Text>
         </Pressable>
         <Pressable onPress={() => onArchive(list.id)} style={styles.listCardActionBtn}>
-          <Text style={styles.listCardArchiveText}>Archiver</Text>
+          <AntDesign name="delete" size={18} color="#FF4A4A" />
         </Pressable>
       </View>
     </View>

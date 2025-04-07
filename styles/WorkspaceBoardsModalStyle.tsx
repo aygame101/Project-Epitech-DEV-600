@@ -7,11 +7,19 @@ export const styles = StyleSheet.create({
     paddingTop: 32,
     backgroundColor: '#121212',
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  backButton: {
+    marginRight: 16,
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#FFA500',
-    marginBottom: 20,
   },
   addBoardContainer: {
     flexDirection: 'row',

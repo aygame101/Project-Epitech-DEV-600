@@ -60,17 +60,36 @@ export default function useLists(boardId: string) {
   };
 
   const archiveList = async (listId: string) => {
-    try {
-      await listServices.archiveList(listId);
-      setLists(lists.map(list => 
-        list.id === listId ? { ...list, closed: true } : list
-      ));
-      return true;
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'An unknown error occurred';
-      Alert.alert('Error', message);
-      return false;
-    }
+    return new Promise<boolean>((resolve) => {
+      Alert.alert(
+        'Supprimer la liste',
+        'Êtes-vous sûr de vouloir supprimer cette liste ?',
+        [
+          {
+            text: 'Annuler',
+            style: 'cancel',
+            onPress: () => resolve(false)
+          },
+          {
+            text: 'Supprimer',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await listServices.archiveList(listId);
+                setLists(lists.map(list => 
+                  list.id === listId ? { ...list, closed: true } : list
+                ));
+                resolve(true);
+              } catch (error: unknown) {
+                const message = error instanceof Error ? error.message : 'Une erreur inconnue est survenue';
+                Alert.alert('Erreur', message);
+                resolve(false);
+              }
+            }
+          }
+        ]
+      );
+    });
   };
 
   const moveList = async (listId: string, position: number) => {

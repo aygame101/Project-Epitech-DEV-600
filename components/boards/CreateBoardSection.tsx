@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { styles } from '@/styles/componentStyle/CreateBoardSectionStyle';
 import CreateBoardInput from './CreateBoardInput';
+import WeatherWidget from '@/components/ui/WeatherWidget';
 
 interface CreateBoardSectionProps {
   value: string;
@@ -17,7 +18,10 @@ const CreateBoardSection: React.FC<CreateBoardSectionProps> = ({
   isLoading
 }) => (
   <View style={styles.container}>
-    <Text style={styles.title}>TrellUwU</Text>
+    <View style={styles.headerContainer}>
+      <Text style={styles.title}>TrellUwU</Text>
+      <WeatherWidget />
+    </View>
     <CreateBoardInput 
       value={value}
       onChangeText={onChangeText}

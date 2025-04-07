@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, Alert, Pressable,  } from 'react-native';
+import { AntDesign } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -173,7 +174,12 @@ const WorkspaceBoardsModal = () => {
   
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.header}>
+      <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <AntDesign name="arrowleft" size={28} color="#FFA500" />
+      </Pressable>
       <Text style={styles.title}>Workspace : {workspaceName}</Text>
+      </View>
 
       <CreateBoardInput
         value={newBoardName}

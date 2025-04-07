@@ -15,6 +15,7 @@ export const styles = StyleSheet.create({
       fontWeight: 'bold',
       color: '#FFA500',
       marginBottom: 24,
+      marginTop:18,
       alignSelf: 'flex-start',
       fontFamily: 'Pacifico',
     },
@@ -66,7 +67,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-    marginBottom: 20,
+    marginBottom: 15,
   },
     workspaceItemContainer: {
       flexDirection: 'row',

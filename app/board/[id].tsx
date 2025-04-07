@@ -156,13 +156,34 @@ export default function BoardDetailScreen() {
   };
 
   const handleArchiveCard = async (cardId: string) => {
-    try {
-      await cardServices.archiveCard(cardId);
-      setShowCardViewModal(false);
-      fetchCards();
-    } catch (error: any) {
-      Alert.alert('Erreur', error.message || 'Impossible d\'archiver la carte');
-    }
+    return new Promise<boolean>((resolve) => {
+      Alert.alert(
+        'Supprimer la carte',
+        'Êtes-vous sûr de vouloir supprimer cette carte ?',
+        [
+          {
+            text: 'Annuler',
+            style: 'cancel',
+            onPress: () => resolve(false)
+          },
+          {
+            text: 'Supprimer',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await cardServices.archiveCard(cardId);
+                setShowCardViewModal(false);
+                fetchCards();
+                resolve(true);
+              } catch (error: any) {
+                Alert.alert('Erreur', error.message || 'Impossible d\'archiver la carte');
+                resolve(false);
+              }
+            }
+          }
+        ]
+      );
+    });
   };
 
   const handleAddCard = (listId: string) => {
