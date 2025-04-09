@@ -1,7 +1,7 @@
 # Project-Epitech-T-DEV-600
 Créer une app de gestion de projet à la Trello.  
   
-**Note obtenue : 100/100**  
+**🟢 Note obtenue : 100/100**  
 Voir plus de détail plus bas  
 Date de début : 3 mars 2025  
 Date de rendu : 6 avril 2025 à 23h42  
@@ -34,19 +34,19 @@ Date de rendu : 6 avril 2025 à 23h42
 
 
 ### Installation du projet
-```npm i```
+Installer npm : ```npm i```  
 **si probleme** : ```npm install --legacy-peer-deps```  
 ```npx expo install expo-router react-native-screens react-native-safe-area-context @react-navigation/native @react-navigation/native-stackD```  
   
 si probleme windows : ```npx expo install expo-router react-native-screens react-native-safe-area-context @react-navigation/native @react-navigation/native-stack```  
-```npx expo start```  
+**Lancer le projet** : ```npx expo start```  
 
 ### Note obtenue :
-(notes/1.png)
-(notes/2.png)
-(notes/3.png)
-(notes/4.png)
-(notes/5.png)
+![1](./notes/1.png)
+![2](./notes/2.png)
+![3](./notes/3.png)
+![4](./notes/4.png)
+![5](./notes/5.png)
 
 In the output, you'll find options to open the app in a
 
