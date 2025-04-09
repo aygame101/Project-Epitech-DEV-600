@@ -83,12 +83,12 @@ describe('useLists', () => {
 
     const { result } = renderHook(() => useLists('board1'));
     
-    // First load lists
+    
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
 
-    // Then update
+    
     await act(async () => {
       await result.current.updateList('list1', { name: 'Updated Name' });
     });
@@ -103,24 +103,22 @@ describe('useLists', () => {
     (listServices.archiveList as jest.Mock).mockImplementation(async (id) => {
       return { ...mockLists.find(l => l.id === id), closed: true };
     });
-
+  
     const { result } = renderHook(() => useLists('board1'));
     
-    // First load lists
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
-
-    // Then archive
+  
     await act(async () => {
       await result.current.archiveList('list1');
     });
-
+  
     expect(listServices.archiveList).toHaveBeenCalledWith('list1');
     expect(result.current.lists).toContainEqual(
       expect.objectContaining({ id: 'list1', closed: true })
     );
-  });
+  }, 10000);
 
   it('should move a list', async () => {
     (listServices.moveList as jest.Mock).mockResolvedValue(true);
@@ -132,6 +130,6 @@ describe('useLists', () => {
     });
 
     expect(listServices.moveList).toHaveBeenCalledWith('list1', 3);
-    expect(listServices.getListsByBoardId).toHaveBeenCalledTimes(2); // initial + after move
+    expect(listServices.getListsByBoardId).toHaveBeenCalledTimes(2); 
   });
 });

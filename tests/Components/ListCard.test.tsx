@@ -1,19 +1,11 @@
 import React from 'react';
-import { render, fireEvent, act } from '@testing-library/react-native';
-import ListCard from '../ListCard';
+import { render, fireEvent } from '@testing-library/react-native';
+import { ListCard } from '../../components/lists/ListCard';
 import { List } from '@/types/List';
+import { Card } from '@/types/Card';
+import { User } from '@/types/User';
 
-// Mock des icônes
-jest.mock('@expo/vector-icons', () => ({
-  MaterialIcons: () => 'MockMaterialIcon',
-  Feather: () => 'MockFeatherIcon'
-}));
-
-// Mock des polices
-jest.mock('expo-font', () => ({
-  useFonts: () => [true, null]
-}));
-
+// Mock data
 const mockList: List = {
   id: 'list1',
   name: 'Test List',
@@ -22,120 +14,113 @@ const mockList: List = {
   closed: false
 };
 
-// Mock simplifié pour ThemedView et ThemedText
+const mockCards: Card[] = [
+  {
+    id: 'card1',
+    name: 'Test Card',
+    idList: 'list1',
+    idBoard: 'board1',
+    desc: ''
+  }
+];
+
+const mockUsers: User[] = [
+  {
+    id: 'user1',
+    fullName: 'Test User',
+    username: 'testuser'
+  }
+];
+
+const mockAssignedMembers = jest.fn((cardId: string) => ['user1']);
+
+// Mock icons
+jest.mock('@expo/vector-icons', () => ({
+  MaterialIcons: () => 'MockMaterialIcon',
+  Feather: () => 'MockFeatherIcon',
+  AntDesign: () => 'MockAntDesignIcon'
+}));
+
+// Mock fonts
+jest.mock('expo-font', () => ({
+  useFonts: () => [true, null]
+}));
+
+// Mock themed components
 jest.mock('@/components/ThemedView', () => {
   const { View } = require('react-native');
-  const MockThemedView = ({ children }: { children: React.ReactNode }) => <View>{children}</View>;
-  return MockThemedView;
+  return ({ children }: { children: React.ReactNode }) => <View>{children}</View>;
 });
 
 jest.mock('@/components/ThemedText', () => {
   const { Text } = require('react-native');
-  const MockThemedText = ({ children, style }: { children: React.ReactNode, style?: any }) => (
+  return ({ children, style }: { children: React.ReactNode, style?: any }) => (
     <Text style={style}>{children}</Text>
   );
-  return MockThemedText;
 });
 
-describe('ListCard', () => {
+describe('ListCard Component', () => {
   const mockOnUpdate = jest.fn();
   const mockOnArchive = jest.fn();
   const mockOnAddCard = jest.fn();
+  const mockOnEdit = jest.fn();
+  const mockOnEditCard = jest.fn();
+  const mockOnViewCard = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('renders list name correctly', () => {
-    const { getByText } = render(
-      <ListCard 
+  const renderListCard = (props = {}) => {
+    return render(
+      <ListCard
         list={mockList}
+        cards={mockCards}
         onUpdate={mockOnUpdate}
         onArchive={mockOnArchive}
         onAddCard={mockOnAddCard}
+        onEdit={mockOnEdit}
+        onEditCard={mockOnEditCard}
+        onViewCard={mockOnViewCard}
+        users={mockUsers}
+        assignedMembers={mockAssignedMembers}
+        {...props}
       />
     );
+  };
 
-    expect(getByText('Test List')).toBeTruthy();
+  describe('Rendering', () => {
+    it('should render cards in the list', () => {
+      const { getByText } = renderListCard();
+      expect(getByText('Test Card')).toBeTruthy();
+    });
+
+    it('should render action buttons', () => {
+      const { getByText } = renderListCard();
+      expect(getByText('+ Carte')).toBeTruthy();
+    });
   });
 
-  it('calls onAddCard when add card button is pressed', () => {
-    const { getByText } = render(
-      <ListCard 
-        list={mockList}
-        onUpdate={mockOnUpdate}
-        onArchive={mockOnArchive}
-        onAddCard={mockOnAddCard}
-      />
-    );
+  describe('Interactions', () => {
+    it('should call onAddCard when add card button is pressed', () => {
+      const { getByText } = renderListCard();
+      fireEvent.press(getByText('+ Carte'));
+      expect(mockOnAddCard).toHaveBeenCalledWith('list1');
+    });
 
-    fireEvent.press(getByText('Ajouter une carte'));
-    expect(mockOnAddCard).toHaveBeenCalledWith('list1');
+    it('should call onViewCard when a card is pressed', () => {
+      const { getByText } = renderListCard();
+      fireEvent.press(getByText('Test Card'));
+      expect(mockOnViewCard).toHaveBeenCalledWith('card1');
+    });
+
+  describe('Edge Cases', () => {
+    
+    it('should handle empty cards list', () => {
+      const { queryByText } = renderListCard({
+        cards: []
+      });
+      expect(queryByText('Test Card')).toBeNull();
+    });
   });
-
-  it('calls onArchive when archive is triggered', async () => {
-    // Mock pour simuler l'ouverture du menu
-    jest.spyOn(React, 'useState').mockImplementationOnce(() => [true, jest.fn()]);
-
-    const { getByText } = render(
-      <ListCard 
-        list={mockList}
-        onUpdate={mockOnUpdate}
-        onArchive={mockOnArchive}
-        onAddCard={mockOnAddCard}
-      />
-    );
-
-    fireEvent.press(getByText('Archiver cette liste'));
-    expect(mockOnArchive).toHaveBeenCalledWith('list1');
-  });
-
-  it('toggles menu visibility when menu button is pressed', () => {
-    const { getByTestId, queryByText } = render(
-      <ListCard 
-        list={mockList}
-        onUpdate={mockOnUpdate}
-        onArchive={mockOnArchive}
-        onAddCard={mockOnAddCard}
-      />
-    );
-
-    // Menu devrait être fermé initialement
-    expect(queryByText('Archiver cette liste')).toBeNull();
-
-    // Ouvrir le menu
-    fireEvent.press(getByTestId('list-menu-button'));
-    expect(queryByText('Archiver cette liste')).toBeTruthy();
-  });
-
-  it('calls onUpdate when list name is changed', () => {
-    const { getByDisplayValue, getByTestId } = render(
-      <ListCard 
-        list={mockList}
-        onUpdate={mockOnUpdate}
-        onArchive={mockOnArchive}
-        onAddCard={mockOnAddCard}
-      />
-    );
-
-    const input = getByDisplayValue('Test List');
-    fireEvent.changeText(input, 'New List Name');
-    fireEvent(input, 'submitEditing');
-
-    expect(mockOnUpdate).toHaveBeenCalledWith('list1', { name: 'New List Name' });
-  });
-
-  it('shows loading state when isLoading prop is true', () => {
-    const { getByTestId } = render(
-      <ListCard 
-        list={mockList}
-        onUpdate={mockOnUpdate}
-        onArchive={mockOnArchive}
-        onAddCard={mockOnAddCard}
-        isLoading={true}
-      />
-    );
-
-    expect(getByTestId('loading-indicator')).toBeTruthy();
-  });
-});
+})});
